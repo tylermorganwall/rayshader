@@ -5,27 +5,34 @@
 \title{Generate Contour Overlay}
 \usage{
 generate_contour_overlay(
-  heightmap,
+  heightmap = NULL,
   levels = NA,
-  nlevels = NA,
+  n_levels = NA,
   zscale = 1,
   width = NA,
   height = NA,
   resolution_multiply = 1,
   color = "black",
-  linewidth = 1
+  linewidth = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry
+in the matrix is the elevation at that point. If omitted, rayshader uses the
+cached hillshade or scene heightmap.}
 
 \item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
-\item{nlevels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
-this will automatically generate \code{nlevels} breaks between \code{levels[1]} and \code{levels[2]}.}
+\item{n_levels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
+this will automatically generate \code{n_levels} breaks between \code{levels[1]} and \code{levels[2]}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be
+10. If omitted, rayshader uses raster-derived or matching cached metadata.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as heightmap.}
 
@@ -39,6 +46,16 @@ in the final map.}
 \item{color}{Default \code{black}. Color.}
 
 \item{linewidth}{Default \code{1}. Line width.}
+
+\item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, use supplied or cached
+spatial metadata when deriving the default horizontal scale.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Semi-transparent overlay with contours.
@@ -47,61 +64,60 @@ Semi-transparent overlay with contours.
 Calculates and returns an overlay of contour lines for the current height map.
 }
 \examples{
-#Add contours to the montereybay dataset
-if(run_documentation()) {
-montereybay |>
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add contours to the montereybay_spatial dataset
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_contour_overlay(montereybay))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_overlay(generate_contour_overlay(montereybay_spatial))  |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
-}
 
 #Add a different contour color for above and below water, and specify levels manually
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
-breaks = seq(range(montereybay)[1],range(montereybay)[2],length.out=50)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
+monterey_range = range(raster_to_matrix(montereybay_spatial, verbose = FALSE), na.rm = TRUE)
+breaks = seq(monterey_range[1], monterey_range[2], length.out=50)
 water_breaks = breaks[breaks < 0]
 land_breaks = breaks[breaks > 0]
 
-if(run_documentation()) {
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
- add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
- add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+ add_overlay(generate_contour_overlay(
+   montereybay_spatial, levels = water_breaks, color = "white"
+ )) |>
+ add_overlay(generate_contour_overlay(
+   montereybay_spatial, levels = land_breaks, color = "black"
+ )) |>
  plot_map()
-}
-if(run_documentation()) {
 #Increase the resolution of the contour to improve the appearance of lines
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
- add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white",
-                                      height = nrow(montereybay)*2,
-                                      width  = ncol(montereybay)*2))  |>
- add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black",
-                                      height = nrow(montereybay)*2,
-                                      width  = ncol(montereybay)*2))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+ add_overlay(generate_contour_overlay(montereybay_spatial, levels = water_breaks, color="white",
+                                      height = nrow(montereybay_spatial)*2,
+                                      width  = ncol(montereybay_spatial)*2))  |>
+ add_overlay(generate_contour_overlay(montereybay_spatial, levels = land_breaks, color="black",
+                                      height = nrow(montereybay_spatial)*2,
+                                      width  = ncol(montereybay_spatial)*2))  |>
  plot_map()
-}
-if(run_documentation()) {
 #Increase the number of breaks and the transparency (via add_overlay)
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
- add_overlay(generate_contour_overlay(montereybay, linewidth=2, nlevels=100,
-                                      height = nrow(montereybay)*2, color="black",
-                                      width  = ncol(montereybay)*2), alphalayer=0.5) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+ add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, n_levels=100,
+                                      height = nrow(montereybay_spatial)*2, color="black",
+                                      width  = ncol(montereybay_spatial)*2), alpha_layer=0.5) |>
  plot_map()
-}
-if(run_documentation()) {
 #Manually specify the breaks with levels
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_overlay(generate_contour_overlay(
+   montereybay_spatial, linewidth = 2, levels = seq(-2000, 0, 100)
+ )) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

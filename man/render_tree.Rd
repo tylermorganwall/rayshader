@@ -5,9 +5,7 @@
 \title{Render Tree}
 \usage{
 render_tree(
-  lat = NULL,
-  long = NULL,
-  extent = NULL,
+  location = NULL,
   type = "basic",
   custom_obj_tree = NULL,
   custom_obj_crown = NULL,
@@ -16,6 +14,7 @@ render_tree(
   trunk_color = "#964B00",
   absolute_height = FALSE,
   tree_height = NULL,
+  tree_height_column = NULL,
   trunk_height_ratio = NULL,
   crown_width_ratio = NULL,
   crown_width = NULL,
@@ -23,24 +22,28 @@ render_tree(
   tree_zscale = TRUE,
   min_height = 0,
   max_height = Inf,
-  zscale = 1,
   lit = TRUE,
-  heightmap = NULL,
-  baseshape = "rectangle",
+  preview_simple = FALSE,
+  preview_point_size = 1,
   angle = c(0, 0, 0),
   clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  lat = NULL,
+  long = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  load_normals = FALSE,
   ...
 )
 }
 \arguments{
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
-
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
-
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered tree(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{tree_height}, \code{angle}, \code{crown_color}, and \code{trunk_color} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{type}{Default \code{"basic"}. Type of tree. Other built-in option: \code{"cone"}.}
 
@@ -55,9 +58,9 @@ model in OBJ format. This function loads a crown model and allows you to control
 \item{custom_obj_trunk}{Default \code{NULL}.  Instead of using the built-in types, users can also load a custom trunk
 model in OBJ format. This function loads a trunk model and allows you to control the crown and trunk proportions separately.}
 
-\item{crown_color}{Default \code{"darkgreen"}. Color(s) of the crown.}
+\item{crown_color}{Default \code{"darkgreen"}. Color(s) of the crown. Use \code{"height"} to color crowns by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette using \code{tree_height}.}
 
-\item{trunk_color}{Default \code{"#964B00"} (brown). Color(s) of the trunk,}
+\item{trunk_color}{Default \code{"#964B00"} (brown). Color(s) of the trunk. Use \code{"height"} to color trunks by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette using \code{tree_height}.}
 
 \item{absolute_height}{Default \code{FALSE}. Default is specifying the tree height directly, relative to the
 underlying height map. If \code{TRUE}, \code{crown_height} will specified by the actual altitude of the top of the tree.
@@ -65,7 +68,13 @@ Total tree height will be \code{crown_height + trunk_height}.}
 
 \item{tree_height}{Default \code{NULL}. Height of the tree, automatically set to \code{10} if not specified. If \code{absolute_height = TRUE}, then this is interpreted as
 the altitude of the top of the tree in the coordinate reference system used. If \code{absolute_height = FALSE}, then
-this is interpreted as the height of the tree relative to the underlying heightmap.}
+this is interpreted as the height of the tree relative to the underlying heightmap.
+Trees with negative sizes are discarded; absolute elevations are first converted
+to sizes above the terrain.}
+
+\item{tree_height_column}{Default \code{NULL}. Column name in \code{location} to use for
+\code{tree_height}. Requires \code{location} to be an \code{sf}/spatial point object with
+attribute data. Cannot be combined with an explicit \code{tree_height}.}
 
 \item{trunk_height_ratio}{Default \code{NULL}. The ratio of the height of the trunk to the total height of the tree.
 Default is 1/3rd the crown height if \code{type = "basic"}, and 1/6th the crown height if \code{type = "cone"}.}
@@ -87,83 +96,146 @@ below that height.}
 \item{max_height}{Default \code{NA}. Maximum height of a tree. Set to a positive number to filter out trees
 above that height.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
 \item{lit}{Default \code{TRUE}. Whether to apply lighting to the tree.}
 
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{preview_simple}{Default \code{FALSE}. Set to \code{TRUE} or \code{"point"} to show one
+green rgl point at each canopy while caching the full tree transforms for
+\code{\link[=render_highquality]{render_highquality()}}. Set to \code{"none"} to cache the trees without adding
+anything to the rgl preview.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
+\item{preview_point_size}{Default \code{1}. Size of the green rgl canopy points
+when \code{preview_simple = TRUE} or \code{"point"}.}
 
 \item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
-equal the length of \code{lat}/\code{long}).}
+equal the length of \code{x}/\code{y}).}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing trees.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing trees.
+A clear-only call returns without rendering a replacement.}
+
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, tree placements outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix used to determine terrain
+elevations and existing \code{NA} cells. If omitted, this is taken from the cached
+scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
+cached value.}
+
+\item{load_normals}{Default \code{FALSE}. Whether to load the model's vertex normals
+for smooth shading. Applies to both full previews and cached tree instances.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds a 3D representation of trees to an existing 3D scene generated with rayshader.
-Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as \code{extent}.
+Users can specify the trees' positions using x/y coordinates or the same coordinate reference system as \code{extent}.
 Different types of tree models can be used, including a basic and a cone-shaped tree. Users can also use their own custom tree model in
 OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
 the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
 Users can also specify the minimum and maximum height of the trees to be rendered.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Let's first start by drawing some trees in a circle around Monterey Bay
 #We won't scale these to a realistic size (yet)
 moss_landing_coord = c(36.806807, -121.793332)
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50,water=TRUE,
-         shadowcolor="#40310a", background = "tan",
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 20) |>
+ plot_3d(vertical_exaggeration = 4,water=TRUE,
+         shadow_color="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 t = seq(0,2*pi,length.out=20)
 circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
-render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+render_tree(tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long))
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the crown width ratio (compared to the height)
-render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
+render_tree(tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
            clear_previous = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long))
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the trunk height and width
-render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
+render_tree(tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long))
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the tree type
-render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30,
+render_tree(tree_zscale = FALSE, tree_height = 30,
            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long))
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the crown color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
-render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
+render_tree(tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
            crown_color = rainbow(20),  clear_previous = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long))
 render_snapshot()
-}
+
+#We will use the lidR package to generate a DEM and detect the crown tops of trees, and
+#then use rayshader to render 3D tree models scaled to those heights on the map.
+\dontshow{\}) # examplesIf}
+\dontshow{if (length(find.package("lidR", quiet = TRUE)) > 0 && length(find.package("sf", quiet = TRUE)) > 0 && length(find.package("terra", quiet = TRUE)) > 0 && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
+#Load the example data from the lidR package
+LASfile = system.file("extdata", "Topography.laz", package="lidR")
+las = lidR::readLAS(LASfile, filter = "-inside 273450 5274350 273550 5274450")
+
+#Convert the lidar point data to a DEM and detect the location of trees from the same data
+dem = lidR::rasterize_terrain(las, algorithm = lidR::tin())
+tree_top_data = lidR::locate_trees(las, lidR::lmf(ws = 5))
+tree_locations = sf::st_coordinates(tree_top_data)
+
+#Plot the ground
+dem |>
+ height_shade() |>
+ add_shadow(texture_shade(),0) |>
+ add_shadow(lamb_shade(),0) |>
+ plot_3d(window_size = 800, shadow_depth=min(raster_to_matrix(dem),na.rm=TRUE))
+render_snapshot()
+#The tree locations are given as an absolute height (as opposed to relative to the surface)
+#so we set `absolute_height = TRUE`.
+render_tree(y = tree_locations[,2],
+           x = tree_locations[,1],
+           crown_width_ratio = 0.5,
+           absolute_height = TRUE,
+           tree_height = tree_locations[,3],
+           trunk_height_ratio = 0.2 + 0.1*runif(nrow(tree_locations)),
+           crown_color = "#007700",
+           clear_previous = TRUE)
+render_camera(zoom=0.85)
+#Remove existing lights and add our own with rgl
+invisible(rgl::pop3d("lights"))
+invisible(rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000"))
+invisible(rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000"))
+render_snapshot()
+#Render tree also works with `render_highquality()`
+render_highquality(sky_sun_elevation = 30, sky_sun_azimuth=225, iso=3)
+\dontshow{\}) # examplesIf}
 }

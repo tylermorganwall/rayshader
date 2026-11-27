@@ -15,12 +15,13 @@ bool ray_intersects_multi(NumericMatrix& heightmap, NumericVector& tanangles,
                     double maxheight, double precisionval,
                     double cossunangle, double sinsunangle, 
                     int numbercols, int numberrows,
-                    double zscale, double maxdist) {
+                    double zscale, double maxdist,
+                    double row_scale, double column_scale) {
   double xcoord, ycoord, tanangheight;
   double ceilxcoord,ceilycoord,floorxcoord,floorycoord;
   for(int k = 1; k < maxdist; k++) {
-    xcoord = i + sinsunangle * k;
-    ycoord = j + cossunangle * k;
+    xcoord = i + sinsunangle * k / row_scale;
+    ycoord = j + cossunangle * k / column_scale;
     tanangheight = heightmap(i, j) + tanangles[angentry] * k * zscale;
     if(xcoord > numberrows-1 || ycoord > numbercols-1 || xcoord < 0 || ycoord < 0 || tanangheight > maxheight) {
       break;
@@ -71,18 +72,19 @@ bool ray_intersects_multi(NumericMatrix& heightmap, NumericVector& tanangles,
 }
 
 // [[Rcpp::export]]
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, 
+NumericMatrix rayshade_multicore(double sun_angle, NumericVector angle_breaks, NumericMatrix& heightmap,
                                  double zscale, NumericVector chunkindices,
-                                 double maxsearch, NumericVector& cache_mask) {
+                                 double max_search, NumericVector& cache_mask,
+                                 double row_scale, double column_scale) {
   double precisionval = 1e-10;
   
   //Cache trig functions
-  double sinsunangle = sin(sunangle);
-  double cossunangle = cos(sunangle);
-  int numberangles = anglebreaks.size();
+  double sinsunangle = sin(sun_angle);
+  double cossunangle = cos(sun_angle);
+  int numberangles = angle_breaks.size();
   NumericVector tanangles(numberangles);
   for(int i = 0; i < numberangles; i++) {
-    tanangles(i) = tan(anglebreaks[i]);
+    tanangles(i) = tan(angle_breaks[i]);
   }
   int minindex = chunkindices(0)-1;
   int maxindex = chunkindices(1)-1;
@@ -90,7 +92,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   int numberrows = heightmap.nrow();
   NumericMatrix shadowmatrix(maxindex - minindex,numbercols);
   std::fill(shadowmatrix.begin(), shadowmatrix.end(), 1.0);
-  double maxdist = maxsearch;
+  double maxdist = max_search;
   int current_min_entry = 0;
   int current_max_entry = numberangles - 1;
   int current_entry = current_max_entry/2;
@@ -110,7 +112,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
                               maxheight, precisionval,
                               cossunangle, sinsunangle, 
                               numbercols, numberrows,
-                              zscale, maxdist)) {
+                              zscale, maxdist, row_scale, column_scale)) {
               shadowmatrix(i,j) = 1 - ((double)ang + 1) * invnumberangles;
             } 
           }
@@ -121,7 +123,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
                               maxheight, precisionval,
                               cossunangle, sinsunangle, 
                               numbercols, numberrows,
-                              zscale, maxdist)) {
+                              zscale, maxdist, row_scale, column_scale)) {
               current_min_entry = current_entry;
               current_entry = (current_max_entry + current_entry)/2;
               anyfound = true;

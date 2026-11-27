@@ -4,72 +4,221 @@
 #' hemispherical UV mapping. This uses either a texture map provided by the user (as an RGB array),
 #' or a built-in color texture.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param sunangle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the [create_texture()] function).
+#'@param sun_angle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the [create_texture()] function).
 #'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`).
-#'@param normalvectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
-#'@param colorintensity Default `1`. The intensity of the color mapping. Higher values will increase the intensity of the color mapping.
-#'@param zscale Default `1/colorintensity`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
-#'Ignored unless `colorintensity` missing.
-#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
-#'@return RGB array of hillshaded texture mappings.
+#'@param normal_vectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'If omitted and `heightmap` is a spatial raster, rayshader automatically uses
+#'the raster cell resolution. Geographic longitude/latitude rasters are converted
+#'to an approximate meter-per-cell value at the raster center.
+#'If supplied, this also updates the cached hillshade `zscale` for downstream rayshader calls.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
+#'@param color_intensity Deprecated alias for `vertical_exaggeration`.
+#'@param na_color Default `NULL`. RGB color stored in the returned image for
+#'transparent `NA` heightmap cells. If `NULL`, the texture's center/up color is
+#'used. This does not affect transparency; `NA` heightmap cells are always
+#'returned with alpha `0`.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
+#'
+#'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
+#'@return RGBA array of hillshaded texture mappings.
 #'@export
 #'@examples
 #'#Basic example:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade() |>
 #'  plot_map()
 #'
-#'#Decrease the color intensity:
-#'montereybay |>
-#'  sphere_shade(colorintensity=0.1) |>
+#'#Increase the color intensity:
+#'montereybay_spatial |>
+#'  sphere_shade(vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Change to a built-in color texture:
-#'montereybay |>
-#'  sphere_shade(texture="desert") |>
+#'montereybay_spatial |>
+#'  sphere_shade(texture="desert", vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Change the highlight angle:
-#'montereybay |>
-#'  sphere_shade(texture="desert", sunangle = 45) |>
+#'montereybay_spatial |>
+#'  sphere_shade(texture="desert", sun_angle = 45, vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Create our own texture using the `create_texture` function:
-#'montereybay |>
-#'  sphere_shade(zscale=10,texture=create_texture("#E9C68D","#AF7F38",
-#'                                                "#674F30","#494D30",
-#'                                                "#B3BEA3")) |>
+#'montereybay_spatial |>
+#'  sphere_shade(texture=create_texture("#E9C68D","#AF7F38",
+#'                                      "#674F30","#494D30",
+#'                                      "#B3BEA3"),
+#'               vertical_exaggeration=10) |>
 #'  plot_map()
 sphere_shade = function(
   heightmap,
-  sunangle = 315,
+  sun_angle = 315,
   texture = "imhof1",
-  normalvectors = NULL,
-  colorintensity = 1,
+  normal_vectors = NULL,
+  color_intensity = 1,
   zscale = 1,
-  progbar = interactive()
+  vertical_exaggeration = 1,
+  na_color = NULL,
+  progress_bar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 ) {
-  if (missing(zscale)) {
-    if (colorintensity > 0 && is.numeric(colorintensity)) {
-      zscale = 1 / colorintensity
-    } else {
-      stop(
-        "colorintensity (value: ",
-        colorintensity,
-        ") must be a number greater than 0"
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      sunangle = "sun_angle",
+      normalvectors = "normal_vectors",
+      colorintensity = "color_intensity",
+      progbar = "progress_bar"
+    ),
+    "sphere_shade",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  na_color = normalize_rgb_color(na_color)
+  sunangle_missing = missing(sun_angle)
+  heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+    zscale
+  )))
+  vertical_exaggeration_missing = missing(vertical_exaggeration)
+  if (!missing(color_intensity)) {
+    .Deprecated(
+      msg = paste(
+        "`color_intensity` is deprecated in `sphere_shade()`.",
+        "Use `vertical_exaggeration` instead."
       )
+    )
+    if (vertical_exaggeration_missing) {
+      vertical_exaggeration = color_intensity
     }
   }
-  sunangle = sunangle / 180 * pi
-  if (is.null(normalvectors)) {
-    normalvectors = calculate_normal(
-      heightmap = heightmap,
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "sphere_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  } else {
+    allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  }
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  hillshade_cache_label = if (heightmap_missing) {
+    resolved_heightmap$label
+  } else {
+    heightmap_cache_label
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "sphere_shade",
+    auto_zscale = heightmap_auto_zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf(
+      "%s_auto_zscale",
+      hillshade_cache_label
+    )),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  if (!identical(resolved_zscale$source, "default")) {
+    cache_hillshade_zscale(zscale, label = zscale_cache_label)
+  }
+  zscale = apply_vertical_exaggeration(
+    zscale = zscale,
+    vertical_exaggeration = vertical_exaggeration,
+    caller = "sphere_shade"
+  )
+  if (
+    isTRUE(sunangle_missing) &&
+      isTRUE(heightmap_info$geographic_aspect$active) &&
+      is.finite(heightmap_info$geographic_aspect$north_rotation)
+  ) {
+    sun_angle = sun_angle + heightmap_info$geographic_aspect$north_rotation
+  }
+  sun_angle = sun_angle / 180 * pi
+  if (is.null(normal_vectors)) {
+    normal_heightmap = heightmap
+    attr(normal_heightmap, "rayshader_geographic_aspect") =
+      heightmap_info$geographic_aspect
+    normal_vectors = calculate_normal(
+      heightmap = normal_heightmap,
       zscale = zscale,
-      progbar = progbar
+      geographic_aspect = geographic_aspect,
+      progress_bar = progress_bar
     )
   }
+  normal_vectors = correct_normal_geographic_aspect(
+    normal_vectors,
+    heightmap_info$geographic_aspect
+  )
   heightmap = add_padding(heightmap)
   if (methods::is(texture, "character")) {
     if (
@@ -109,7 +258,13 @@ sphere_shade = function(
           "#abaf98"
         )
       } else if (texture == "bw") {
-        texture = create_texture("white", "black", "grey75", "grey25", "grey50")
+        texture = create_texture(
+          "white",
+          "black",
+          "grey75",
+          "grey25",
+          "grey50"
+        )
       } else if (texture == "desert") {
         texture = create_texture(
           "#ffe3b3",
@@ -129,16 +284,17 @@ sphere_shade = function(
   }
   center = dim(texture)[1:2] / 2
   heightmap = flipud(t(heightmap)) / zscale
-  distancemat = (1 - normalvectors[["z"]]) * center[1]
-  lengthmat = sqrt(1 - (normalvectors[["z"]])^2)
-  image_x_nocenter = ((-normalvectors[["x"]] / lengthmat * distancemat))
-  image_y_nocenter = ((normalvectors[["y"]] / lengthmat * distancemat))
+  na_mask = !is.finite(heightmap)
+  distancemat = (1 - normal_vectors[["z"]]) * center[1]
+  lengthmat = sqrt(1 - (normal_vectors[["z"]])^2)
+  image_x_nocenter = ((-normal_vectors[["x"]] / lengthmat * distancemat))
+  image_y_nocenter = ((normal_vectors[["y"]] / lengthmat * distancemat))
   image_x = floor(
-    cos(sunangle) * image_x_nocenter - sin(sunangle) * image_y_nocenter
+    cos(sun_angle) * image_x_nocenter - sin(sun_angle) * image_y_nocenter
   ) +
     center[1]
   image_y = floor(
-    sin(sunangle) * image_x_nocenter + cos(sunangle) * image_y_nocenter
+    sin(sun_angle) * image_x_nocenter + cos(sun_angle) * image_y_nocenter
   ) +
     center[2]
   image_x[is.na(image_x)] = center[1]
@@ -147,11 +303,10 @@ sphere_shade = function(
   image_y[is.nan(image_y)] = center[2]
   image_x[is.infinite(image_x)] = center[1]
   image_y[is.infinite(image_y)] = center[2]
-  image_x[image_x > dim(texture)[1]] = dim(texture)[1]
-  image_y[image_y > dim(texture)[2]] = dim(texture)[2]
-  image_x[image_x == 0] = 1
-  image_y[image_y == 0] = 1
-  returnimage = array(dim = c(nrow(heightmap), ncol(heightmap), 3))
+  # construct_matrix() indexes the texture in C++, from zero to size - 1.
+  image_x[] = pmax(0, pmin(dim(texture)[1] - 1, image_x))
+  image_y[] = pmax(0, pmin(dim(texture)[2] - 1, image_y))
+  returnimage = array(1, dim = c(nrow(heightmap), ncol(heightmap), 4))
   returnimage[,, 1] = construct_matrix(
     texture[,, 1],
     nrow(heightmap),
@@ -173,7 +328,18 @@ sphere_shade = function(
     image_x,
     image_y
   )
-  returnimageslice = array(dim = c(nrow(heightmap) - 2, ncol(heightmap) - 2, 3))
+  if (!is.null(na_color)) {
+    na_color = col2rgb_linear(na_color)
+    for (i in seq_len(3)) {
+      channel = returnimage[,, i]
+      channel[na_mask] = na_color[i]
+      returnimage[,, i] = channel
+    }
+  }
+  returnimage[,, 4][na_mask] = 0
+  returnimageslice = array(
+    dim = c(nrow(heightmap) - 2, ncol(heightmap) - 2, 4)
+  )
   returnimageslice[,, 1] = returnimage[
     c(-1, -nrow(heightmap)),
     c(-1, -ncol(heightmap)),
@@ -189,10 +355,17 @@ sphere_shade = function(
     c(-1, -ncol(heightmap)),
     3
   ]
-  return(rayimage::ray_read_image(
+  returnimageslice[,, 4] = returnimage[
+    c(-1, -nrow(heightmap)),
+    c(-1, -ncol(heightmap)),
+    4
+  ]
+  returnimage = rayimage::ray_read_image(
     returnimageslice,
     source_linear = TRUE,
     assume_colorspace = rayimage::CS_SRGB,
     assume_white = "D65"
-  ))
+  )
+  cache_hillshade_map(returnimage, label = hillshade_cache_label)
+  return(returnimage)
 }

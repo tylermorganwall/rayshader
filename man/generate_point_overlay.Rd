@@ -6,7 +6,7 @@
 \usage{
 generate_point_overlay(
   geometry,
-  extent,
+  extent = NULL,
   heightmap = NULL,
   width = NA,
   height = NA,
@@ -21,13 +21,17 @@ generate_point_overlay(
 \arguments{
 \item{geometry}{An \code{sf} object with POINT geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will infer the extent from \code{heightmap} when possible,
+otherwise reuse cached extent metadata from the active scene or the most recent
+raster-backed hillshade call.}
 
 \item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
-overlay automatically.}
+overlay automatically. If omitted, rayshader will reuse the cached heightmap
+from the active scene or the most recent hillshade call.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
@@ -64,14 +68,14 @@ Semi-transparent overlay with contours.
 Calculates and returns an overlay of points for the current map.
 }
 \examples{
-#Add the included `sf` object with roads to the montereybay dataset
-if(run_documentation()) {
- monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
- montereybay |>
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add the included `sf` object with roads to the montereybay_spatial dataset
+monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
+sf::st_crs(monterey_city) = sf::st_crs(montereybay_spatial)
+montereybay_spatial |>
    height_shade() |>
-   add_overlay(generate_point_overlay(monterey_city, color="red", size=2,
-                                   attr(montereybay,"extent"), heightmap = montereybay))  |>
-   add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+   add_overlay(generate_point_overlay(monterey_city, color="red", size=2))  |>
+   add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
    plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

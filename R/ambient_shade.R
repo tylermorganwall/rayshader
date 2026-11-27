@@ -2,125 +2,262 @@
 #'
 #'@description Calculates Ambient Occlusion Shadow Map
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap  A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param anglebreaks Default `90*cospi(seq(5, 85,by =5)/180)`. The angle(s), in degrees, as measured from the horizon from which the light originates.
-#'@param sunbreaks Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.
-#'@param maxsearch Default `30`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.
+#'@param angle_breaks Default `90*cospi(seq(5, 85,by =5)/180)`. The angle(s), in degrees, as measured from the horizon from which the light originates.
+#'@param sun_breaks Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.
+#'@param max_search Default `30`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.
 #'@param multicore Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param zscale Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
-#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Shaded texture map.
 #'@export
-#'@examples
-#'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
-#'if(run_documentation()) {
-#'plot_map(ambient_shade(heightmap = montereybay))
-#'}
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'# Here we produce a ambient occlusion map of the `montereybay_spatial` elevation map.
+#'# Increasing vertical exaggeration helps bring out details for landscapes
+#'# that are flat (due to large zscales).
+#'montereybay_spatial |>
+#'  ambient_shade(vertical_exaggeration = 20) |>
+#'  plot_map()
 #'
-#'#We can increase the distance to look for surface intersections `maxsearch`
-#'#and the density of rays sent out around the point `sunbreaks`.
-#'if(run_documentation()) {
-#'plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TRUE))
-#'}
+#'#We can increase the distance to look for surface intersections `max_search`
+#'#and the density of rays sent out around the point `sun_breaks`.
+#'montereybay_spatial |>
+#'  ambient_shade(sun_breaks = 24,max_search = 100, multicore = TRUE,
+#'                vertical_exaggeration = 20) |>
+#'  plot_map()
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-#'if(run_documentation()) {
-#'bigmb = resize_matrix(montereybay, scale=2, method="cubic")
+#'bigmb = resize_spatial(montereybay_spatial, scale=2, method_up="cubic")
 #'bigmb |>
-#'  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>
-#'  add_shadow(ambient_shade(bigmb, maxsearch = 100, multicore = TRUE,zscale=1),0) |>
-#'  add_shadow(lamb_shade(bigmb),0.5) |>
+#'  sphere_shade(texture = create_texture("red","red","red","red","white"),
+#'               vertical_exaggeration = 20) |>
+#'  add_shadow(ambient_shade(max_search = 100, multicore = TRUE,
+#'                           vertical_exaggeration = 20),0) |>
+#'  add_shadow(lamb_shade(),0.5) |>
 #'  plot_map()
-#'}
 ambient_shade = function(
-	heightmap,
-	anglebreaks = 90 * cospi(seq(5, 85, by = 5) / 180),
-	sunbreaks = 24,
-	maxsearch = 30,
-	multicore = FALSE,
-	zscale = 1,
-	cache_mask = NULL,
-	shadow_cache = NULL,
-	progbar = interactive(),
-	...
+  heightmap,
+  angle_breaks = 90 * cospi(seq(5, 85, by = 5) / 180),
+  sun_breaks = 24,
+  max_search = 30,
+  multicore = FALSE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  cache_mask = NULL,
+  shadow_cache = NULL,
+  progress_bar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 ) {
-	stopifnot(is.matrix(heightmap))
-	if (sunbreaks < 3) {
-		stop("sunbreaks needs to be at least 3")
-	}
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      anglebreaks = "angle_breaks",
+      sunbreaks = "sun_breaks",
+      maxsearch = "max_search",
+      progbar = "progress_bar"
+    ),
+    "ambient_shade"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+    zscale
+  )))
+  heightmap_auto_zscale = NA_real_
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "ambient_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  } else {
+    allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  }
+  attr(heightmap, "rayshader_geographic_aspect") =
+    heightmap_info$geographic_aspect
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "ambient_shade",
+    auto_zscale = heightmap_auto_zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf(
+      "%s_auto_zscale",
+      heightmap_cache_label
+    )),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  cache_hillshade_zscale(zscale, label = zscale_cache_label)
+  zscale = apply_vertical_exaggeration(
+    zscale = zscale,
+    vertical_exaggeration = vertical_exaggeration,
+    caller = "ambient_shade"
+  )
+  if (sun_breaks < 3) {
+    stop("sun_breaks needs to be at least 3")
+  }
 
-	shademat = matrix(0, nrow = ncol(heightmap), ncol = nrow(heightmap))
-	if (!multicore) {
-		for (angle in seq(0, 360, length.out = sunbreaks + 1)[-(sunbreaks + 1)]) {
-			shademat = shademat +
-				ray_shade(
-					heightmap,
-					anglebreaks = anglebreaks,
-					sunangle = angle,
-					maxsearch = maxsearch,
-					zscale = zscale,
-					lambert = FALSE,
-					cache_mask = cache_mask,
-					progbar = progbar,
-					...
-				)
-		}
-	} else {
-		if (is.null(options("cores")[[1]])) {
-			numbercores = parallel::detectCores()
-		} else {
-			numbercores = options("cores")[[1]]
-		}
-		cl = parallel::makeCluster(numbercores, ...)
-		doParallel::registerDoParallel(cl, cores = numbercores)
-		shademat = tryCatch(
-			{
-				foreach::foreach(
-					angle = seq(0, 360, length.out = sunbreaks + 1)[-(sunbreaks + 1)],
-					.export = c("ray_shade"),
-					.combine = "+",
-					.packages = "rayshader"
-				) %dopar%
-					{
-						ray_shade(
-							heightmap,
-							anglebreaks = anglebreaks,
-							sunangle = angle,
-							maxsearch = maxsearch,
-							zscale = zscale,
-							lambert = FALSE,
-							cache_mask = cache_mask,
-							progbar = progbar,
-							...
-						)
-					}
-			},
-			finally = {
-				tryCatch(
-					{
-						parallel::stopCluster(cl)
-					},
-					error = function(e) {
-						print(e)
-					}
-				)
-			}
-		)
-	}
-	shademat = shademat / sunbreaks
-	shademat = shademat
-	if (!is.null(shadow_cache)) {
-		cache_mask = (cache_mask)
-		shadow_cache[cache_mask == 1] = shademat[cache_mask == 1]
-		shademat = matrix(
-			shadow_cache,
-			nrow = nrow(shademat),
-			ncol = ncol(shademat)
-		)
-	}
-	return(shademat)
+  shademat = matrix(0, nrow = ncol(heightmap), ncol = nrow(heightmap))
+  if (!multicore) {
+    for (angle in seq(0, 360, length.out = sun_breaks + 1)[-(sun_breaks + 1)]) {
+      shademat = shademat +
+        with_suppressed_hillshade_zscale_cache(
+          ray_shade(
+            heightmap,
+            angle_breaks = angle_breaks,
+            sun_angle = angle,
+            max_search = max_search,
+            zscale = zscale,
+            lambert = FALSE,
+            cache_mask = cache_mask,
+            progress_bar = progress_bar,
+            geographic_aspect = geographic_aspect,
+            extent = extent,
+            crs = crs,
+            ...
+          )
+        )
+    }
+  } else {
+    if (is.null(options("cores")[[1]])) {
+      numbercores = parallel::detectCores()
+    } else {
+      numbercores = options("cores")[[1]]
+    }
+    if (is.na(numbercores) || numbercores < 1) {
+      numbercores = 1L
+    }
+    cluster_args = list(...)
+    if (is.null(cluster_args$rscript_args)) {
+      cluster_args$rscript_args = "--vanilla"
+    }
+    cl = do.call(
+      parallel::makeCluster,
+      c(list(numbercores), cluster_args)
+    )
+    doParallel::registerDoParallel(cl, cores = numbercores)
+    shademat = tryCatch(
+      {
+        foreach::foreach(
+          angle = seq(0, 360, length.out = sun_breaks + 1)[-(sun_breaks + 1)],
+          .export = c("ray_shade", "with_suppressed_hillshade_zscale_cache"),
+          .combine = "+",
+          .packages = "rayshader"
+        ) %dopar%
+          {
+            with_suppressed_hillshade_zscale_cache(
+              ray_shade(
+                heightmap,
+                angle_breaks = angle_breaks,
+                sun_angle = angle,
+                max_search = max_search,
+                zscale = zscale,
+                lambert = FALSE,
+                cache_mask = cache_mask,
+                progress_bar = FALSE,
+                geographic_aspect = geographic_aspect,
+                extent = extent,
+                crs = crs,
+                ...
+              )
+            )
+          }
+      },
+      finally = {
+        tryCatch(
+          {
+            parallel::stopCluster(cl)
+          },
+          error = function(e) {
+            print(e)
+          }
+        )
+      }
+    )
+  }
+  shademat = shademat / sun_breaks
+  shademat = shademat
+  if (!is.null(shadow_cache)) {
+    cache_mask = (cache_mask)
+    shadow_cache[cache_mask == 1] = shademat[cache_mask == 1]
+    shademat = matrix(
+      shadow_cache,
+      nrow = nrow(shademat),
+      ncol = ncol(shademat)
+    )
+  }
+  return(shademat)
 }

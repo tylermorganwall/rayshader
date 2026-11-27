@@ -25,7 +25,9 @@ generate_compass_overlay(
   halo_alpha = 1,
   halo_offset = c(0, 0),
   halo_blur = 0,
-  halo_edge_softness = 0.1
+  halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25
 )
 }
 \arguments{
@@ -39,10 +41,11 @@ the compass is located.}
 
 \item{text_size}{Default \code{1}. Text size.}
 
-\item{bearing}{Default \code{0}. Angle (in degrees) of north.}
+\item{bearing}{Default \code{0}. Angle (in degrees) of north. When omitted,
+rayshader rotates grid north to true north using cached spatial metadata.}
 
-\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
-RGB image array automatically.}
+\item{heightmap}{Default \code{NULL}. The original height map. If omitted, rayshader will reuse the
+cached heightmap from the active scene or most recent hillshade call.}
 
 \item{width}{Default \code{NA}. Width of the resulting image array. Default the same dimensions as height map.}
 
@@ -78,6 +81,10 @@ of this color.}
 \item{halo_blur}{Default \code{1}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
 
 \item{halo_edge_softness}{Default \code{0.1}. Width of the softened halo edge transition, in pixels.}
+
+\item{halo_gap_fill}{Default \code{2}. Maximum alpha gap width, in pixels, to bridge in the halo outline.}
+
+\item{halo_gap_fill_alpha_threshold}{Default \code{0.25}. Alpha threshold used to protect enclosed interior halo gaps from \code{halo_gap_fill}.}
 }
 \value{
 Semi-transparent overlay with a compass.
@@ -88,126 +95,104 @@ This adds the compass
 Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Bar, and Label with a Leader Arrow"
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 
 #Generate flat water heightmap
-mbay = montereybay
+mbay = montereybay_spatial
 mbay[mbay < 0] = 0
 
 base_map = mbay |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(lamb_shade(montereybay,zscale=50),0.3)
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 
 #Plot a compass
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay)) |>
+ add_overlay(generate_compass_overlay()) |>
  plot_map()
-}
 
-if(run_documentation()) {
 #Change the position to be over the water
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15)) |>
+ add_overlay(generate_compass_overlay(x = 0.15)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the type
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
+ add_overlay(generate_compass_overlay(x = 0.15,
                                       compass_type = "split_arrow")) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the type
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
+ add_overlay(generate_compass_overlay(x = 0.15,
                                       compass_type = "split_arrow_ring")) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the type
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
+ add_overlay(generate_compass_overlay(x = 0.15,
                                       compass_type = "triangle_circle")) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the text color for visibility
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, compass_type = "split_arrow",
+ add_overlay(generate_compass_overlay(compass_type = "split_arrow",
 x = 0.15, text_color="white")) |>
  plot_map()
-}
-if(run_documentation()) {
 #Alternatively, add a halo color to improve contrast
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.15,
              compass_type = "split_arrow", halo_color="white", halo_expand = 2)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the color scheme
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.15,
              compass_type = "split_arrow", halo_color="white",
              halo_expand = 2, color1 = "purple", color2 = "red")) |>
  plot_map()
-}
-if(run_documentation()) {
 #Remove the inner border
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.15,
              border_color=NA,compass_type = "split_arrow",
              halo_color="white", halo_expand = 2,
              color1 = "darkolivegreen4", color2 = "burlywood3")) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the size of the compass and text
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.75, y=0.75,
+ add_overlay(generate_compass_overlay(x = 0.75, y=0.75,
              halo_color="white", halo_expand = 2,compass_type = "classic",
              size=0.075*2, text_size = 1.25)) |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.45, y=0.45,
+ add_overlay(generate_compass_overlay(x = 0.45, y=0.45,
              halo_color="white", halo_expand = 2,compass_type = "split_arrow_ring",
              size=0.075)) |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.15,
              halo_color="white", halo_expand = 2,compass_type = "split_arrow",
              size=0.075/2, text_size = 0.75)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the bearing of the compass
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.15,
              halo_color="white", halo_expand = 2, bearing=30, compass_type = "classic",
              size=0.075)) |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.35, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.35, y=0.15,
              halo_color="white", halo_expand = 2, bearing=15, compass_type = "triangle_circle",
              size=0.075)) |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.35,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.35,
              halo_color="white", halo_expand = 2, bearing=-45, compass_type = "split_arrow_ring",
              size=0.075)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Create a drop shadow effect
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
+ add_overlay(generate_compass_overlay(x = 0.15, y=0.15,
              text_color="white", halo_alpha=0.7, halo_blur=3,
              halo_color="black", halo_expand = 2, halo_offset = c(0.002,-0.002))) |>
-add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.35, y=0.15,
+add_overlay(generate_compass_overlay(x = 0.35, y=0.15,
              text_color="white", halo_alpha=0.7, halo_blur=3,
              compass_type = "split_arrow",
              halo_color="black", halo_expand = 2, halo_offset = c(0.002,-0.002))) |>
-add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.35,
+add_overlay(generate_compass_overlay(x = 0.15, y=0.35,
              text_color="white", halo_alpha=0.2, halo_blur=8,
              compass_type = "split_arrow_ring",
              halo_color="white", halo_expand = 2)) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

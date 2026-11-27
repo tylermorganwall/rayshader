@@ -5,30 +5,34 @@
 \title{Transform ggplot2 objects into 3D}
 \usage{
 plot_gg(
-  ggobj,
-  ggobj_height = NULL,
+  gg_obj,
+  gg_obj_height = NULL,
   width = 3,
   height = 3,
   height_aes = NULL,
   invert = FALSE,
   shadow_intensity = 0.5,
   units = c("in", "cm", "mm"),
-  scale = 150,
-  pointcontract = 0.7,
+  scale = NULL,
+  zscale = NULL,
+  vertical_exaggeration = NULL,
+  point_contract = 0.7,
   offset_edges = FALSE,
+  flat_substrate = FALSE,
   flat_plot_render = FALSE,
   flat_distance = "auto",
   flat_transparent_bg = FALSE,
   flat_direction = "-z",
   shadow = TRUE,
-  shadowdepth = "auto",
-  shadowcolor = "auto",
+  shadow_depth = "auto",
+  shadow_color = "auto",
   shadow_darkness = 0.5,
   background = "white",
   preview = FALSE,
   raytrace = TRUE,
-  sunangle = 315,
-  anglebreaks = seq(30, 40, 0.1),
+  radiance_args = list(),
+  sun_angle = 315,
+  angle_breaks = seq(30, 40, 0.1),
   multicore = FALSE,
   lambert = TRUE,
   triangulate = FALSE,
@@ -37,6 +41,8 @@ plot_gg(
   verbose = FALSE,
   emboss_text = 0,
   emboss_grid = 0,
+  guide_bar_bleed_px = 3L,
+  guide_bar_bleed_target = c("height", "texture", "none"),
   reduce_size = NULL,
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
@@ -47,10 +53,13 @@ plot_gg(
 )
 }
 \arguments{
-\item{ggobj}{ggplot object to projected into 3D.}
+\item{gg_obj}{ggplot object to projected into 3D.}
 
-\item{ggobj_height}{Default \code{NULL}. A ggplot object that can be used to specify the 3D extrusion separately from the
-\code{ggobj}.}
+\item{gg_obj_height}{Default \code{NULL}. A ggplot object that can be used to specify the 3D extrusion separately from the
+\code{gg_obj}. If this plot includes a \code{tidyterra::geom_spatraster()} height layer,
+rayshader preserves the mapped raster data scale when building the height map
+and uses the final rendered scene spacing as the default \code{zscale} unless
+\code{zscale} is supplied.}
 
 \item{width}{Default \code{3}. Width of ggplot, in \code{units}.}
 
@@ -62,14 +71,27 @@ Automatically detected. If both \code{fill} and \code{color} aesthetics are pres
 
 \item{invert}{Default \code{FALSE}. If \code{TRUE}, the height mapping is inverted.}
 
-\item{shadow_intensity}{Default \code{0.5}. The intensity of the calculated shadows.}
+\item{shadow_intensity}{Default \code{0.5}. The intensity of the calculated shadows.
+When \code{raytrace = "radiance"}, this uses the same scale as the default raytraced
+shadowing: \code{1} means no additional shading effect, and lower values increase the
+strength of the radiance overlay.}
 
 \item{units}{Default \verb{in}. One of c("in", "cm", "mm").}
 
-\item{scale}{Default \code{150}. Multiplier for vertical scaling: a higher number increases the height
-of the 3D transformation.}
+\item{scale}{Deprecated. Use \code{vertical_exaggeration} instead.}
 
-\item{pointcontract}{Default \code{0.7}. This multiplies the size of the points and shrinks
+\item{zscale}{Default \code{NULL}. The ratio between the x/y spacing and the z axis
+for the height surface. If omitted and \code{gg_obj_height} includes a spatial raster
+height layer, rayshader derives \code{zscale} from the final rendered ggplot scene
+extent and output matrix spacing, which accounts for ggplot rasterization and
+reprojection. Otherwise, the base \code{zscale} defaults to \code{1}.}
+
+\item{vertical_exaggeration}{Default \code{NULL}. One-off multiplier applied to the
+effective relief after resolving \code{zscale}. When omitted, rayshader uses \code{1}
+for spatial raster height sources and \code{150} for non-raster ggplot height
+mappings, which preserves the legacy \code{plot_gg()} default appearance.}
+
+\item{point_contract}{Default \code{0.7}. This multiplies the size of the points and shrinks
 them around their center in the 3D surface mapping. Decrease this to reduce color bleed on edges, and set to
 \code{1} to turn off entirely. Note: If \code{size} is passed as an aesthetic to the same geom
 that is being mapped to elevation, this scaling will not be applied. If \code{alpha} varies on the variable
@@ -80,6 +102,8 @@ variable is ignored when performing the 3D projection).}
 \item{offset_edges}{Default \code{FALSE}. If \code{TRUE}, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
 If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset.
 Note: this feature may end up removing thin polygons from the plot entirely--use with care.}
+
+\item{flat_substrate}{Default \code{FALSE}. If \code{TRUE}, render the captured ggplot texture on flat solid plot panels instead of using the panel aesthetics as the surface height. Guides and legends retain their rendered height mapping, and the resulting scene can be used as a base for later \verb{render_*()} calls.}
 
 \item{flat_plot_render}{Default \code{FALSE}. Whether to render a flat version of the ggplot above (or alongside) the 3D version.}
 
@@ -92,22 +116,34 @@ Other options \code{c("z", "x", "-x", "y", "-y")}.}
 
 \item{shadow}{Default \code{TRUE}. If \code{FALSE}, no shadow is rendered.}
 
-\item{shadowdepth}{Default \code{auto}, which sets it to \code{soliddepth - soliddepth/10}. Depth of the shadow layer.}
+\item{shadow_depth}{Default \code{auto}, which sets it to \code{solid_depth - solid_depth/10}. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default \code{auto}. Color of the shadow, automatically computed as \code{shadow_darkness}
-the luminance of the \code{background} color in the CIELab colorspace if not specified.}
+\item{shadow_color}{Default \code{"auto"}. Color of the shadow. Automatically darkens
+the \code{background} color by scaling its CIELuv lightness and chroma together by
+\code{shadow_darkness}, preserving the background hue.}
 
-\item{shadow_darkness}{Default \code{0.5}. Darkness of the shadow, if \code{shadowcolor = "auto"}.}
+\item{shadow_darkness}{Default \code{0.5}. Lightness multiplier for the shadow when
+\code{shadow_color = "auto"}. Values between \code{0} and \code{1} darken the background color;
+\code{0} gives a black shadow and \code{1} matches the background.}
 
-\item{background}{Default \code{"white"}. Background color.}
+\item{background}{Default \code{"white"}. Background color for the 3D scene.
+This is independent of the ggplot \code{plot.background} fill used for the
+captured texture.}
 
 \item{preview}{Default \code{FALSE}. If \code{TRUE}, the raytraced 2D ggplot will be displayed on the current device.}
 
-\item{raytrace}{Default \code{FALSE}. Whether to add a raytraced layer.}
+\item{raytrace}{Default \code{TRUE}. Controls the additional shading applied to the
+ggplot texture. Use \code{TRUE}/\code{"raytrace"} for \code{\link[=ray_shade]{ray_shade()}}, \code{FALSE}/\code{"none"}
+for no extra shading, or \code{"radiance"} for \code{\link[=radiance_shade]{radiance_shade()}}.}
 
-\item{sunangle}{Default \code{315} (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.}
+\item{radiance_args}{Default \code{list()}. Additional arguments passed to
+\code{\link[=radiance_shade]{radiance_shade()}} when \code{raytrace = "radiance"}. By default,
+\code{light_direction} is derived from \code{sun_angle} and \code{light_altitude} from the
+midpoint of \code{angle_breaks}.}
 
-\item{anglebreaks}{Default \code{seq(30,40,0.1)}. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.}
+\item{sun_angle}{Default \code{315} (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.}
+
+\item{angle_breaks}{Default \code{seq(30,40,0.1)}. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.}
 
 \item{multicore}{Default \code{FALSE}. If raytracing and \code{TRUE}, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set \code{options("cores")} in which the multicore option will only use that many cores.}
@@ -131,8 +167,9 @@ height map, when \code{triangulate = TRUE}. Increase this if you encounter probl
 to decrease render time with \code{\link[=render_highquality]{render_highquality()}}, or need
 to save a smaller 3D OBJ file to disk with \code{\link[=save_obj]{save_obj()}},}
 
-\item{verbose}{Default \code{TRUE}, if \code{interactive()}. Prints information about the mesh triangulation
-if \code{triangulate = TRUE}.}
+\item{verbose}{Default \code{FALSE}. Prints the computed \code{zscale} and horizontal
+units. Also prints information about the mesh triangulation if
+\code{triangulate = TRUE}.}
 
 \item{emboss_text}{Default \code{0}, max \code{1}. Amount to emboss the text, where \code{1} is the tallest feature in the scene.}
 
@@ -140,20 +177,33 @@ if \code{triangulate = TRUE}.}
 By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value
 is the minor grid height).}
 
+\item{guide_bar_bleed_px}{Default \code{3L}. Number of rendered pixels to widen a continuous guide colorbar orthogonally without changing the guide layout. This ensures
+either the sidewalls of the colorbar are either solid or represent the color ramp.}
+
+\item{guide_bar_bleed_target}{Default \code{"texture"}. Which rendered grob should receive the colorbar bleed. Use \code{"height"} to keep white side walls,
+\code{"texture"} to color the side walls with the gradient, or \code{"none"} to disable it (rayshader's old default).}
+
 \item{reduce_size}{Default \code{NULL}. A number between \code{0} and \code{1} that specifies how much to reduce the resolution of the plot, for faster plotting. By
 default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.}
 
 \item{save_height_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the height matrix used for the ggplot.}
 
-\item{save_shadow_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the shadow matrix for use in future updates via the \code{shadow_cache} argument passed to \code{\link[=ray_shade]{ray_shade()}}.}
+\item{save_shadow_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return
+the computed shading layer. For \code{raytrace = TRUE}, this is the shadow matrix
+from \code{\link[=ray_shade]{ray_shade()}}. For \code{raytrace = "radiance"}, this is the RGBA radiance
+overlay from \code{\link[=radiance_shade]{radiance_shade()}}.}
 
-\item{saved_shadow_matrix}{Default \code{NULL}. A cached shadow matrix (saved by the a previous invocation of \code{\link[=plot_gg]{plot_gg()}} with \code{save_shadow_matrix = TRUE}) to use instead of raytracing a shadow map each time.}
+\item{saved_shadow_matrix}{Default \code{NULL}. A cached shading layer saved by a
+previous invocation of \code{\link[=plot_gg]{plot_gg()}} with \code{save_shadow_matrix = TRUE}. For
+\code{raytrace = TRUE}, pass a shadow matrix from \code{\link[=ray_shade]{ray_shade()}}. For
+\code{raytrace = "radiance"}, pass an RGBA radiance overlay.}
 
 \item{monitor_gamma}{Default \code{1.8}. Undo the gamma correction applied by the png device. Ignored if \code{ragg} is installed or the \code{cairo} PNG device is available.}
 
 \item{plot}{Default \code{TRUE}. Whether to plot the image when \code{preview = TRUE}, or just return the RGBA rayimg.}
 
-\item{...}{Additional arguments to be passed to \code{\link[=plot_3d]{plot_3d()}}.}
+\item{...}{Additional arguments to be passed to \code{\link[=plot_3d]{plot_3d()}}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Opens a 3D plot in rgl.
@@ -173,6 +223,7 @@ custom, solid shapes. By default in ggplot2, only the first three shapes are sol
 into 3D.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 library(ggplot2)
 library(viridis)
 \dontshow{
@@ -186,16 +237,13 @@ ggdiamonds = ggplot(diamonds, aes(x, depth)) +
  facet_wrap(clarity~.) +
  scale_fill_viridis_c(option = "A") +
  scale_color_viridis_c(option = "A")
-if(run_documentation()) {
-plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
+plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,
+       vertical_exaggeration=250,window_size=c(1400,866),
        zoom = 0.55, phi = 30)
 render_snapshot()
-}
 #Change the camera angle and take a snapshot:
-if(run_documentation()) {
 render_camera(zoom=0.5,theta=-30,phi=30)
 render_snapshot()
-}
 
 #Contours and other lines will automatically be ignored. Here is the volcano dataset:
 ggvolcano = volcano |>
@@ -210,14 +258,11 @@ ggvolcano = volcano |>
  theme(legend.position = "none")
 ggvolcano
 
-if(run_documentation()) {
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-       scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+       vertical_exaggeration = 300, window_size = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
-}
 
-if(run_documentation()) {
-#You can specify the color and height separately using the `ggobj_height()` argument.
+#You can specify the color and height separately using the `gg_obj_height()` argument.
 ggvolcano_surface = volcano |>
 reshape2::melt() |>
  ggplot() +
@@ -228,11 +273,10 @@ reshape2::melt() |>
  coord_fixed() +
  theme(legend.position = "none")
 
-plot_gg(ggvolcano_surface, ggobj_height = ggvolcano,
+plot_gg(ggvolcano_surface, gg_obj_height = ggvolcano,
       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-      scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+      vertical_exaggeration = 300, window_size = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
-}
 #Here, we will create a 3D plot of the mtcars dataset. This automatically detects
 #that the user used the `color` aesthetic instead of the `fill`.
 mtplot = ggplot(mtcars) +
@@ -240,14 +284,28 @@ mtplot = ggplot(mtcars) +
  scale_color_continuous(limits=c(0,8))
 
 #Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.
-if(run_documentation()) {
-plot_gg(mtplot, width=3.5, sunangle=225, preview = TRUE)
-}
-if(run_documentation()) {
-plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
+plot_gg(mtplot, width=3.5, sun_angle=225, preview = TRUE)
+plot_gg(mtplot, width=3.5, multicore = TRUE, window_size = c(1400,866), sun_angle=225,
        zoom = 0.60, phi = 30, theta = 45)
 render_snapshot()
-}
+
+#Colorbar side-wall bleed control with a continuous guide:
+bleedplot = ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+ geom_raster(interpolate = TRUE) +
+ scale_fill_viridis_c() +
+ theme_minimal()
+plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
+       window_size = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
+       guide_bar_bleed_target = "height")
+render_snapshot()
+plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
+       window_size = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
+       guide_bar_bleed_target = "texture")
+render_snapshot()
+plot_gg(mtplot, width=3.5, multicore = TRUE, window_size = c(1400,866), sun_angle=225,
+       zoom = 0.60, phi = 30, theta = 45)
+render_zaxis(location = "panel_bottomleft")
+render_snapshot()
 #Now let's plot a density plot in 3D.
 mtplot_density = ggplot(mtcars) +
  stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))),
@@ -257,40 +315,29 @@ mtplot_density = ggplot(mtcars) +
  scale_fill_gradient(low="pink", high="red")
 mtplot_density
 
-if(run_documentation()) {
 plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30,
-       windowsize = c(1400,866))
+       window_size = c(1400,866))
 render_snapshot()
-}
 #This also works facetted.
 mtplot_density_facet = mtplot_density + facet_wrap(~cyl)
 
 #Preview this plot in 2D:
-if(run_documentation()) {
 plot_gg(mtplot_density_facet, preview = TRUE)
-}
-if(run_documentation()) {
-plot_gg(mtplot_density_facet, windowsize=c(1400,866),
+plot_gg(mtplot_density_facet, window_size=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25)
 render_snapshot()
-}
 #That is a little cramped. Specifying a larger width will improve the readability of this plot.
-if(run_documentation()) {
 plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
-}
 
-#That's better. Let's plot it in 3D, and increase the scale.
-if(run_documentation()) {
-plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
-       zoom = 0.55, theta = -10, phi = 25, scale=300)
+#That's better. Let's plot it in 3D, and increase the vertical exaggeration.
+plot_gg(mtplot_density_facet, width = 6, window_size=c(1400,866),
+       zoom = 0.55, theta = -10, phi = 25, vertical_exaggeration=300)
 render_snapshot()
-}
 
 #We can also render a flat version of the plot alongside (or above/below) the 3D version.
-if(run_documentation()) {
-plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
-       zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
+plot_gg(mtplot_density_facet, width = 6, window_size=c(1400,866),
+       zoom = 0.65, theta = -25, phi = 35, vertical_exaggeration=300, flat_plot_render=TRUE,
        flat_direction = "x")
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

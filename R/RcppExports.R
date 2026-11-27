@@ -5,8 +5,8 @@ bilineargrid <- function(colorarray) {
     .Call(`_rayshader_bilineargrid`, colorarray)
 }
 
-calculate_normal_cpp <- function(heightmap, progbar) {
-    .Call(`_rayshader_calculate_normal_cpp`, heightmap, progbar)
+calculate_normal_cpp <- function(heightmap, progress_bar, column_scale, row_scale) {
+    .Call(`_rayshader_calculate_normal_cpp`, heightmap, progress_bar, column_scale, row_scale)
 }
 
 construct_matrix <- function(image_reference, number_rows, number_cols, index_x, index_y) {
@@ -21,12 +21,16 @@ find_groups_cpp <- function(max_z_matrix) {
     .Call(`_rayshader_find_groups_cpp`, max_z_matrix)
 }
 
+instance_obj_cpp <- function(templates, template_id, xyz, scale) {
+    .Call(`_rayshader_instance_obj_cpp`, templates, template_id, xyz, scale)
+}
+
 interpolate_color <- function(color_nw, color_ne, color_se, color_sw) {
     .Call(`_rayshader_interpolate_color`, color_nw, color_ne, color_se, color_sw)
 }
 
-lambshade_cpp <- function(heightmap, rayvector) {
-    .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector)
+lambshade_cpp <- function(heightmap, rayvector, column_scale, row_scale) {
+    .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector, column_scale, row_scale)
 }
 
 make_surface_cpp <- function(heightmap, na_matrix, normalsx, normalsy, normalsz, basedepth) {
@@ -41,12 +45,16 @@ make_water_cpp <- function(heightmap, na_matrix, waterheight) {
     .Call(`_rayshader_make_water_cpp`, heightmap, na_matrix, waterheight)
 }
 
-make_waterlines_cpp <- function(heightmap, na_matrix, waterdepth) {
-    .Call(`_rayshader_make_waterlines_cpp`, heightmap, na_matrix, waterdepth)
+make_water_mesh_cpp <- function(heightmap, waterheight) {
+    .Call(`_rayshader_make_water_mesh_cpp`, heightmap, waterheight)
 }
 
-make_baselines_cpp <- function(heightmap, na_matrix, waterdepth) {
-    .Call(`_rayshader_make_baselines_cpp`, heightmap, na_matrix, waterdepth)
+make_waterlines_cpp <- function(heightmap, na_matrix, water_input) {
+    .Call(`_rayshader_make_waterlines_cpp`, heightmap, na_matrix, water_input)
+}
+
+make_baselines_cpp <- function(heightmap, na_matrix, water_input) {
+    .Call(`_rayshader_make_baselines_cpp`, heightmap, na_matrix, water_input)
 }
 
 cubic_interpolate <- function(p0, p1, p2, p3, x) {
@@ -81,15 +89,143 @@ gen_hex_psf <- function(radius, rotation) {
     .Call(`_rayshader_gen_hex_psf`, radius, rotation)
 }
 
-psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel) {
-    .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel)
+psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokeh_intensity, bokeh_limit, rotation, progress_bar, channel) {
+    .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokeh_intensity, bokeh_limit, rotation, progress_bar, channel)
 }
 
-rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar) {
-    .Call(`_rayshader_rayshade_cpp`, sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar)
+initialize_water_geos_cpp <- function() {
+    invisible(.Call(`_rayshader_initialize_water_geos_cpp`))
 }
 
-rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask) {
-    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
+build_polygon_water_meshes_cpp <- function(footprints, terrain, zscale, tolerance, clearance, threads) {
+    .Call(`_rayshader_build_polygon_water_meshes_cpp`, footprints, terrain, zscale, tolerance, clearance, threads)
+}
+
+water_triangle_rings_cpp <- function(a, b, c, ids) {
+    .Call(`_rayshader_water_triangle_rings_cpp`, a, b, c, ids)
+}
+
+water_support_samples_cpp <- function(coordinates, face, a, b, c, exterior, tolerance) {
+    .Call(`_rayshader_water_support_samples_cpp`, coordinates, face, a, b, c, exterior, tolerance)
+}
+
+rayshade_cpp <- function(sun_angle, angle_breaks, heightmap, zscale, max_search, cache_mask, progress_bar, row_scale, column_scale) {
+    .Call(`_rayshader_rayshade_cpp`, sun_angle, angle_breaks, heightmap, zscale, max_search, cache_mask, progress_bar, row_scale, column_scale)
+}
+
+rayshade_multicore <- function(sun_angle, angle_breaks, heightmap, zscale, chunkindices, max_search, cache_mask, row_scale, column_scale) {
+    .Call(`_rayshader_rayshade_multicore`, sun_angle, angle_breaks, heightmap, zscale, chunkindices, max_search, cache_mask, row_scale, column_scale)
+}
+
+calculate_render_road_vertex_frames_cpp <- function(points, closed, miter_limit) {
+    .Call(`_rayshader_calculate_render_road_vertex_frames_cpp`, points, closed, miter_limit)
+}
+
+densify_render_highquality_path_xz_cpp <- function(points, left_edge, right_edge, center_offset, row_count, column_count) {
+    .Call(`_rayshader_densify_render_highquality_path_xz_cpp`, points, left_edge, right_edge, center_offset, row_count, column_count)
+}
+
+calculate_render_road_surface_normals_cpp <- function(left_vertices, right_vertices, closed, outward_sign, parallel) {
+    .Call(`_rayshader_calculate_render_road_surface_normals_cpp`, left_vertices, right_vertices, closed, outward_sign, parallel)
+}
+
+build_render_road_section_mesh_cpp <- function(left_bottom_matrix, right_bottom_matrix, left_top_matrix, right_top_matrix, incoming_tangent, outgoing_tangent, texture_v, closing_v, bbox_center, top_left_normal_matrix, top_right_normal_matrix, bottom_left_normal_matrix, bottom_right_normal_matrix, cap_start, cap_end, closed, parallel, geometry_tolerance = 1e-12, uv_tolerance = 1e-14) {
+    .Call(`_rayshader_build_render_road_section_mesh_cpp`, left_bottom_matrix, right_bottom_matrix, left_top_matrix, right_top_matrix, incoming_tangent, outgoing_tangent, texture_v, closing_v, bbox_center, top_left_normal_matrix, top_right_normal_matrix, bottom_left_normal_matrix, bottom_right_normal_matrix, cap_start, cap_end, closed, parallel, geometry_tolerance, uv_tolerance)
+}
+
+create_render_road_terrain_context_cpp <- function(heightmap, zscale, terrain_scale = NULL) {
+    .Call(`_rayshader_create_render_road_terrain_context_cpp`, heightmap, zscale, terrain_scale)
+}
+
+densify_render_road_paths_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL, terrain_context = NULL) {
+    .Call(`_rayshader_densify_render_road_paths_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale, terrain_context)
+}
+
+sample_render_road_sections_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL, terrain_context = NULL) {
+    .Call(`_rayshader_sample_render_road_sections_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale, terrain_context)
+}
+
+build_render_highquality_road_mesh_batch_cpp <- function(input_jobs, parallel, verbose) {
+    .Call(`_rayshader_build_render_highquality_road_mesh_batch_cpp`, input_jobs, parallel, verbose)
+}
+
+build_render_highquality_grounded_road_mesh_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL) {
+    .Call(`_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale)
+}
+
+build_render_highquality_stream_mesh_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {
+    .Call(`_rayshader_build_render_highquality_stream_mesh_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
+}
+
+sample_render_road_terrain_contacts_cpp <- function(vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain = FALSE) {
+    .Call(`_rayshader_sample_render_road_terrain_contacts_cpp`, vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain)
+}
+
+sample_render_road_terrain_contacts_batch_cpp <- function(input_jobs, heightmap, zscale, terrain_scale, parallel = FALSE, terrain_context = NULL) {
+    .Call(`_rayshader_sample_render_road_terrain_contacts_batch_cpp`, input_jobs, heightmap, zscale, terrain_scale, parallel, terrain_context)
+}
+
+evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {
+    .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
+}
+
+audit_render_road_profiles_cpp <- function(specification_list, height, grade, tolerance, diagnostics = FALSE, maximum_requests_per_relation = 1L) {
+    .Call(`_rayshader_audit_render_road_profiles_cpp`, specification_list, height, grade, tolerance, diagnostics, maximum_requests_per_relation)
+}
+
+compile_render_road_profile_problem_cpp <- function(specification_list, adaptive_list) {
+    .Call(`_rayshader_compile_render_road_profile_problem_cpp`, specification_list, adaptive_list)
+}
+
+solve_render_road_profiles_cpp <- function(specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics = FALSE, maximum_requests_per_relation = 1L) {
+    .Call(`_rayshader_solve_render_road_profiles_cpp`, specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics, maximum_requests_per_relation)
+}
+
+initialize_scene_geos_cpp <- function() {
+    invisible(.Call(`_rayshader_initialize_scene_geos_cpp`))
+}
+
+triangulate_polygon_faces_cpp <- function(coordinates, face_columns, ring_column) {
+    .Call(`_rayshader_triangulate_polygon_faces_cpp`, coordinates, face_columns, ring_column)
+}
+
+intersect_road_pairs_cpp <- function(geometry, pairs, tolerance) {
+    .Call(`_rayshader_intersect_road_pairs_cpp`, geometry, pairs, tolerance)
+}
+
+score_road_continuations_cpp <- function(xy_direction, metadata, feature, lanes, pairs, endpoint_tolerance, minimum_direction_score) {
+    .Call(`_rayshader_score_road_continuations_cpp`, xy_direction, metadata, feature, lanes, pairs, endpoint_tolerance, minimum_direction_score)
+}
+
+select_road_candidates_cpp <- function(endpoint_rows, eligible, evidence, lanes, direction, endpoint_count, margin) {
+    .Call(`_rayshader_select_road_candidates_cpp`, endpoint_rows, eligible, evidence, lanes, direction, endpoint_count, margin)
+}
+
+summarize_road_events_cpp <- function(membership, xy, fragments, stations, layers) {
+    .Call(`_rayshader_summarize_road_events_cpp`, membership, xy, fragments, stations, layers)
+}
+
+road_point_neighbors_cpp <- function(xy, tolerance) {
+    .Call(`_rayshader_road_point_neighbors_cpp`, xy, tolerance)
+}
+
+make_spatial_water_fixed_grid_terrain_mesh_cpp <- function(heightmap) {
+    .Call(`_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp`, heightmap)
+}
+
+spatial_water_face_sublevel_area_cpp <- function(terrain_mesh, face_ids, water_level, height_tol) {
+    .Call(`_rayshader_spatial_water_face_sublevel_area_cpp`, terrain_mesh, face_ids, water_level, height_tol)
+}
+
+spatial_water_traverse_seeded_clipped_faces_cpp <- function(terrain_mesh, component_seed, water_level, target_area_limit, height_tol, length_tol, area_tol, return_face_ids = FALSE) {
+    .Call(`_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp`, terrain_mesh, component_seed, water_level, target_area_limit, height_tol, length_tol, area_tol, return_face_ids)
+}
+
+build_spatial_water_full_terrain_geometry_cpp <- function(terrain_mesh, water_level, surface_area_tol) {
+    .Call(`_rayshader_build_spatial_water_full_terrain_geometry_cpp`, terrain_mesh, water_level, surface_area_tol)
+}
+
+build_spatial_water_triangle_clipped_geometry_cpp <- function(terrain_mesh, selected_face_ids, water_level, height_tol, t_tol, length_tol, area_tol, surface_area_tol) {
+    .Call(`_rayshader_build_spatial_water_triangle_clipped_geometry_cpp`, terrain_mesh, selected_face_ids, water_level, height_tol, t_tol, length_tol, area_tol, surface_area_tol)
 }
 

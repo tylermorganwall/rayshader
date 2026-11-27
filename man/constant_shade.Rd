@@ -9,7 +9,9 @@ constant_shade(heightmap, color = "white", alpha = 1)
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
-\item{color}{Default \code{"white"}. Color for the constant layer.}
+\item{color}{Default \code{"white"}. Color for the constant layer, as an R color name,
+hexadecimal code, \code{rgb(r, g, b)} string with channels from \code{0} to \code{255}, or a
+numeric RGB vector with intensities between \code{0} and \code{1}.}
 
 \item{alpha}{Default \code{1}, the alpha transparency.}
 }
@@ -18,38 +20,34 @@ RGB array of a single color layer.
 }
 \description{
 Generates a constant color layer.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Shade a red map
-montereybay |>
+montereybay_spatial |>
  constant_shade("red") |>
- add_shadow(lamb_shade(montereybay),0) |>
+ add_shadow(lamb_shade(),0) |>
  plot_map()
-}
-if(run_documentation()) {
 #Shade a green map
-montereybay |>
+montereybay_spatial |>
  constant_shade("green") |>
- add_shadow(lamb_shade(montereybay),0) |>
+ add_shadow(lamb_shade(),0) |>
  plot_map()
-}
-if(run_documentation()) {
 #Add a blue tint
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
- add_shadow(lamb_shade(montereybay,zscale=50),0) |>
+ add_overlay(constant_shade(color = "dodgerblue", alpha=0.25)) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0) |>
  plot_map()
-}
-if(run_documentation()) {
 #Use a blank map on which to draw other data
-montereybay |>
+montereybay_spatial |>
  constant_shade() |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=5, color="black",
-                                   attr(montereybay,"extent"), width = 1080, height = 1080),
-                                   alphalayer=0.8)  |>
- add_water(detect_water(montereybay < 0), "dodgerblue") |>
+                                   width = 1080, height = 1080),
+                                   alpha_layer=0.8)  |>
+ add_water(detect_water(raster_to_matrix(montereybay_spatial) < 0), "dodgerblue") |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

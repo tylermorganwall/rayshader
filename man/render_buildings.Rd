@@ -6,11 +6,9 @@
 \usage{
 render_buildings(
   polygon,
-  extent,
   material = "grey",
   roof_material = NA,
   angle = 45,
-  zscale = 1,
   scale_data = 1,
   relative_heights = TRUE,
   heights_relative_to_centroid = FALSE,
@@ -18,7 +16,6 @@ render_buildings(
   base_height = 0,
   data_column_top = NULL,
   data_column_bottom = NULL,
-  heightmap = NULL,
   holes = 0,
   alpha = 1,
   lit = TRUE,
@@ -28,6 +25,13 @@ render_buildings(
   light_intensity = 1,
   light_relative = FALSE,
   clear_previous = FALSE,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
@@ -36,11 +40,6 @@ render_buildings(
 of polygon represented in a way that can be processed by \code{xy.coords()}.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
-
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{material}{Default \code{"grey80"}. If a color string, this will specify the color of the sides/base of the building
 Alternatively (for more customization), this can be a r\code{ayvertex::material_list()} object to specify
@@ -52,11 +51,9 @@ the full color/appearance/material options for the resulting \code{ray_mesh} mes
 
 \item{angle}{Default \code{45}. Angle of the roof.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
 \item{scale_data}{Default \code{1}. How much to scale the \code{top}/\code{bottom} value when rendering. Use
 \code{zscale} to adjust the data to account for \code{x}/\code{y} grid spacing, and this argument to scale the data
-for visualization.}
+for visualization. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{relative_heights}{Default \code{TRUE}. Whether the heights specified in \code{roof_height} and \code{base_height} should
 be measured relative to the underlying heightmap.}
@@ -69,14 +66,10 @@ terms, or relative to the centroid of the polygon.}
 \item{base_height}{Default \code{0}. Height of the base of the roof.}
 
 \item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the top of the extruded polygon.}
+to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the bottom of the extruded polygon.}
-
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{holes}{Default \code{0}. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the \code{earcut} function in the \code{decido} package for more information.}
@@ -98,87 +91,263 @@ will not affect software or high quality renders.}
 \item{light_relative}{Default \code{FALSE}. Whether the light direction should be taken relative to the camera,
 or absolute.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing
+buildings. A clear-only call returns without rendering a replacement.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, building footprint data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+All points are assumed to be evenly spaced.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds 3D polygons with roofs to the current scene,
 using latitude/longitude or coordinates in the reference system defined by the extent object.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
-# Load and visualize building footprints from Open Street Map
-library(osmdata)
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+# Load and visualize building footprints from Overture Maps
+library(DBI)
+library(duckdb)
 library(sf)
-library(raster)
+library(jsonlite)
 
-osm_bbox = c(-121.9472, 36.6019, -121.9179, 36.6385)
+# Define the WGS84 bounding box for the scene in St. John's, Newfoundland.
+overture_bbox = c(-52.718925, 47.552085, -52.666397, 47.586194)
+scene_bbox = c(
+  xmin = overture_bbox[1],
+  ymin = overture_bbox[2],
+  xmax = overture_bbox[3],
+  ymax = overture_bbox[4]
+)
 
-#Get buildings from OpenStreetMap
-opq(osm_bbox) |>
-  add_osm_feature("building") |>
-  osmdata_sf() ->
-osm_data
+# Query a slightly padded area so roads and buildings that cross the scene
+# boundary are included before rayshader crops them to the rendered extent.
+query_padding = 0.001
 
-#Get roads from OpenStreetMap
-opq(osm_bbox) |>
-  add_osm_feature("highway") |>
-  osmdata_sf() ->
-osm_road
+query_bbox = c(
+  xmin = scene_bbox[["xmin"]] - query_padding,
+  ymin = scene_bbox[["ymin"]] - query_padding,
+  xmax = scene_bbox[["xmax"]] + query_padding,
+  ymax = scene_bbox[["ymax"]] + query_padding
+)
 
-#Get extent
-building_polys = osm_data$osm_polygons
-osm_dem = elevatr::get_elev_raster(building_polys, z = 11, clip = "bbox")
-e = extent(building_polys)
+# Keep an sf polygon for DEM retrieval and for documenting the exact render area.
+scene_area = sf::st_sf(
+  geometry = sf::st_as_sfc(sf::st_bbox(scene_bbox, crs = sf::st_crs(4326)))
+)
 
-# Crop DEM, but note that the cropped DEM will have an extent slightly different than what's
-# specified in `e`. Save that new extent to `new_e`.
-osm_dem |>
-  crop(e) |>
-  extent() ->
-new_e
+# Discover the current Overture release and build Parquet paths for the
+# building and transportation layers.
+overture_release = jsonlite::fromJSON(
+  "https://stac.overturemaps.org/catalog.json"
+)$latest
 
-osm_dem |>
-  crop(e) |>
-  raster_to_matrix() ->
-osm_mat
+base_string = "az://overturemapswestus2.blob.core.windows.net/release"
 
-#Visualize areas less than one meter as water (approximate tidal range)
-osm_mat[osm_mat <= 1] = -2
+building_uri = sprintf(
+  "\%s/\%s/theme=buildings/type=building/*.parquet",
+  base_string,
+  overture_release
+)
 
-osm_mat |>
-  rayimage::render_resized(mag=4) |>
-  sphere_shade(texture = "desert") |>
-  add_overlay(generate_polygon_overlay(building_polys, extent = new_e,
-                                       heightmap = osm_mat,
-                                       linewidth = 6,
-                                       resolution_multiply = 50), rescale_original = TRUE) |>
-  add_overlay(generate_line_overlay(osm_road$osm_lines, extent = new_e,
-                                    heightmap = osm_mat,
-                                    linewidth = 6,
-                                    resolution_multiply = 50), rescale_original = TRUE) |>
-  plot_3d(osm_mat, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
-          zscale = 10,
-          background = "pink")
+road_uri = sprintf(
+  "\%s/\%s/theme=transportation/type=segment/*.parquet",
+  base_string,
+  overture_release
+)
 
-#Render buildings
-render_buildings(building_polys,  flat_shading  = TRUE,
-                 angle = 30 , heightmap = osm_mat,
-                 material = "white", roof_material = "white",
-                 extent = new_e, roof_height = 3, base_height = 0,
-                 zscale=10)
-render_camera(theta=220, phi=22, zoom=0.45, fov=0)
+# Query the remote Parquet files in memory. The Overture geometry column is
+# returned as WKB so sf can reconstruct the features locally.
+con = DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+
+# Select buildings whose feature bounding boxes intersect the padded
+# query area, including buildings that cross the boundary.
+building_query = sprintf(
+  "
+SELECT
+  id,
+  height,
+  num_floors,
+  ST_AsWKB(geometry)::BLOB AS geometry
+FROM read_parquet('\%s', filename = false, hive_partitioning = 1)
+WHERE
+  bbox.xmin <= \%.10f
+  AND bbox.xmax >= \%.10f
+  AND bbox.ymin <= \%.10f
+  AND bbox.ymax >= \%.10f
+",
+  building_uri,
+  query_bbox[["xmax"]],
+  query_bbox[["xmin"]],
+  query_bbox[["ymax"]],
+  query_bbox[["ymin"]]
+)
+
+building_df = DBI::dbGetQuery(con, building_query)
+
+building_geom = sf::st_as_sfc(
+  structure(building_df$geometry, class = "WKB"),
+  crs = 4326
+)
+
+building_df$geometry = NULL
+
+building_polys = sf::st_sf(
+  building_df,
+  geometry = building_geom,
+  crs = 4326
+)
+
+# Select road segments whose feature bounding boxes intersect the padded
+# query area, including roads that cross the boundary.
+road_query = sprintf(
+  "
+SELECT
+  id,
+  names.primary AS name,
+  class AS road_class,
+  subclass AS road_subclass,
+  ST_AsWKB(geometry)::BLOB AS geometry
+FROM read_parquet('\%s', filename = false, hive_partitioning = 1)
+WHERE
+  subtype = 'road'
+  AND bbox.xmin <= \%.10f
+  AND bbox.xmax >= \%.10f
+  AND bbox.ymin <= \%.10f
+  AND bbox.ymax >= \%.10f
+",
+  road_uri,
+  query_bbox[["xmax"]],
+  query_bbox[["xmin"]],
+  query_bbox[["ymax"]],
+  query_bbox[["ymin"]]
+)
+
+road_df = DBI::dbGetQuery(con, road_query)
+
+road_geom = sf::st_as_sfc(
+  structure(road_df$geometry, class = "WKB"),
+  crs = 4326
+)
+
+road_df$geometry = NULL
+
+road_lines = sf::st_sf(
+  road_df,
+  geometry = road_geom,
+  crs = 4326
+)
+
+# Close the in-memory DuckDB connection after all remote data is loaded.
+DBI::dbDisconnect(con, shutdown = TRUE)
+
+# Fetch elevation for the render area, then crop it to the building footprint
+# extent. rayshader caches the cropped DEM extent so overlay and render calls
+# can omit extent/heightmap.
+scene_dem = elevatr::get_elev_raster(scene_area, z = 11, clip = "bbox")
+building_extent = sf::st_bbox(building_polys)
+terrain_dem = terra::crop(
+  terra::rast(scene_dem),
+  terra::ext(
+    building_extent[["xmin"]],
+    building_extent[["xmax"]],
+    building_extent[["ymin"]],
+    building_extent[["ymax"]]
+  )
+)
+
+# Create a shaded terrain image, then draw building footprints and roads over
+# it before opening the 3D scene.
+terrain_dem |>
+  sphere_shade(texture = "imhof4", vertical_exaggeration = 20) |>
+  add_overlay(
+    generate_polygon_overlay(
+      building_polys,
+      linewidth = 6,
+      resolution_multiply = 50
+    ),
+    rescale_original = TRUE
+  ) |>
+  add_overlay(
+    generate_line_overlay(
+      road_lines,
+      linewidth = 6,
+      resolution_multiply = 50
+    ),
+    rescale_original = TRUE
+  ) |>
+  plot_3d(
+    water = TRUE,
+    water_input = 0.5,
+    window_size = 800,
+    water_color = "dodgerblue",
+    background = "pink"
+  )
+
+# Overture building heights are sometimes missing. Fill those gaps before
+# using the height column to drive roof elevation.
+building_polys |>
+  dplyr::mutate(height = dplyr::if_else(is.na(height), mean(height, na.rm = TRUE), height)) ->
+building_poly_fixed
+
+# Render buildings
+render_buildings(
+  building_poly_fixed,
+  flat_shading = TRUE,
+  lit = FALSE,
+  angle = 30,
+  material = "white",
+  roof_material = "white",
+  roof_height = 3,
+  base_height = 0,
+  data_column_top = "height",
+  relative_heights = TRUE
+)
+#Render a label
+render_label(long = c(building_extent[1]+building_extent[3])/2,
+             lat =  c(building_extent[2]+building_extent[4])/2,
+             text = "St. Johns, Newfoundland",
+             text_color = "white",
+             altitude = 100
+)
+
+render_camera(theta = 220, phi = 45, zoom = 0.55, fov = 0)
 render_snapshot()
-}
 
-if(run_documentation()) {
-#Zoom in to show roof details and render with render_highquality()
-render_camera(fov=110)
-render_highquality(camera_location = c(18.22, 0.57, -50.83),
-                   camera_lookat = c(20.88, -2.83, -38.87),
-                   focal_distance = 13, samples = 16,
-                   lightdirection = 45)
+# Zoom in to show roof details and render with render_highquality()
+render_camera(fov = 120,zoom=0.7)
 
-}
+# Generate an evening sky in the winter. The camera location and direction
+# were determined using an interactive render_highquality() session by
+# hitting the P key with the camera in the desired position.
+render_highquality(
+camera_location = c(-8.17, 7.70, 15.09),
+camera_lookat = c(-1.09, -2.25, -3.63),
+samples = 100,
+iso = 100 / 30,
+datetime = as.POSIXct("2025-01-01 14:00:00", tz = "America/St_Johns"),
+sky_args = list(hosek = FALSE)
+)
+\dontshow{\}) # examplesIf}
 }

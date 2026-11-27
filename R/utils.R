@@ -8,28 +8,28 @@
 #' @examples
 #' #Fake example
 load_image = function(image, reorient) {
-	reorient_fun = function(x) return(x)
-	if (reorient) {
-		reorient_fun = function(x) {
-			rayimage::render_reorient(x, flipx = FALSE, flipy = FALSE)
-		}
-	}
-	if (is.array(image)) {
-		return(reorient_fun(image))
-	}
-	if (is.character(image)) {
-		if (!file.exists(image)) {
-			stop("file ", image, " wasn't found")
-		}
-		ext = tolower(tools::file_ext(image))
-		if (ext == "png") {
-			return(reorient_fun(png::readPNG(image)))
-		} else if (ext %in% c("jpg", "jpeg")) {
-			return(reorient_fun(jpeg::readJPEG(image)))
-		} else {
-			stop("filetype ", ext, " not supported for overlays")
-		}
-	}
+  reorient_fun = function(x) return(x)
+  if (reorient) {
+    reorient_fun = function(x) {
+      rayimage::render_reorient(x, flipx = FALSE, flipy = FALSE)
+    }
+  }
+  if (is.array(image)) {
+    return(reorient_fun(image))
+  }
+  if (is.character(image)) {
+    if (!file.exists(image)) {
+      stop("file ", image, " wasn't found")
+    }
+    ext = tolower(tools::file_ext(image))
+    if (ext == "png") {
+      return(reorient_fun(png::readPNG(image)))
+    } else if (ext %in% c("jpg", "jpeg")) {
+      return(reorient_fun(jpeg::readJPEG(image)))
+    } else {
+      stop("filetype ", ext, " not supported for overlays")
+    }
+  }
 }
 
 #' Generate Base Shape
@@ -39,68 +39,54 @@ load_image = function(image, reorient) {
 #'
 #' @examples
 #' #Fake example
-generate_base_shape = function(heightmap, baseshape, angle = 0) {
-	if (baseshape == "circle") {
-		radius = ifelse(
-			nrow(heightmap) <= ncol(heightmap),
-			nrow(heightmap) / 2 - 1,
-			ncol(heightmap) / 2 - 1
-		)
-		radmat = gen_circle_psf(radius + 1)
-		if (min(dim(heightmap)) != min(dim(radmat))) {
-			radmat = radmat[2:nrow(radmat), 2:ncol(radmat)]
-		}
-		if (max(dim(heightmap)) != max(dim(radmat))) {
-			difference = max(dim(heightmap)) - max(dim(radmat))
-			if (difference == 1) {
-				difference = difference + 1
-			}
-			radtemp = matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap))
-			if (ncol(heightmap) != ncol(radmat)) {
-				radtemp[, (difference / 2):(difference / 2 + ncol(radmat) - 1)] = radmat
-			} else {
-				radtemp[(difference / 2):(difference / 2 + nrow(radmat) - 1), ] = radmat
-			}
-			radmat = radtemp
-		}
-		heightmap[radmat == 0] = NA
-	} else if (baseshape == "hex") {
-		radius = ifelse(
-			nrow(heightmap) <= ncol(heightmap),
-			nrow(heightmap) / 2 - 1,
-			ncol(heightmap) / 2 - 1
-		)
-		radmat = gen_hex_psf(radius + 1, rotation = angle)
-		if (min(dim(heightmap)) != min(dim(radmat))) {
-			radmat = radmat[2:nrow(radmat), 2:ncol(radmat)]
-		}
-		if (max(dim(heightmap)) != max(dim(radmat))) {
-			difference = max(dim(heightmap)) - max(dim(radmat))
-			radtemp = matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap))
-			if (ncol(heightmap) != ncol(radmat)) {
-				radtemp[, (difference / 2):(difference / 2 + ncol(radmat) - 1)] = radmat
-			} else {
-				radtemp[(difference / 2):(difference / 2 + nrow(radmat) - 1), ] = radmat
-			}
-			radmat = radtemp
-		}
-		heightmap[radmat == 0] = NA
-	}
-	return(heightmap)
-}
-
-#' @title Run Documentation
-#'
-#' @description This function determines if the examples are being run in pkgdown. It is not meant to be called by the user.
-#'
-#' @export
-#'
-#' @return Boolean value.
-#' @examples
-#' # See if the documentation should be run.
-#' run_documentation()
-run_documentation = function() {
-	return(identical(Sys.getenv("IN_PKGDOWN"), "true"))
+generate_base_shape = function(heightmap, base_shape, angle = 0) {
+  if (base_shape == "circle") {
+    radius = ifelse(
+      nrow(heightmap) <= ncol(heightmap),
+      nrow(heightmap) / 2 - 1,
+      ncol(heightmap) / 2 - 1
+    )
+    radmat = gen_circle_psf(radius + 1)
+    if (min(dim(heightmap)) != min(dim(radmat))) {
+      radmat = radmat[2:nrow(radmat), 2:ncol(radmat)]
+    }
+    if (max(dim(heightmap)) != max(dim(radmat))) {
+      difference = max(dim(heightmap)) - max(dim(radmat))
+      if (difference == 1) {
+        difference = difference + 1
+      }
+      radtemp = matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap))
+      if (ncol(heightmap) != ncol(radmat)) {
+        radtemp[, (difference / 2):(difference / 2 + ncol(radmat) - 1)] = radmat
+      } else {
+        radtemp[(difference / 2):(difference / 2 + nrow(radmat) - 1), ] = radmat
+      }
+      radmat = radtemp
+    }
+    heightmap[radmat == 0] = NA
+  } else if (base_shape == "hex") {
+    radius = ifelse(
+      nrow(heightmap) <= ncol(heightmap),
+      nrow(heightmap) / 2 - 1,
+      ncol(heightmap) / 2 - 1
+    )
+    radmat = gen_hex_psf(radius + 1, rotation = angle)
+    if (min(dim(heightmap)) != min(dim(radmat))) {
+      radmat = radmat[2:nrow(radmat), 2:ncol(radmat)]
+    }
+    if (max(dim(heightmap)) != max(dim(radmat))) {
+      difference = max(dim(heightmap)) - max(dim(radmat))
+      radtemp = matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap))
+      if (ncol(heightmap) != ncol(radmat)) {
+        radtemp[, (difference / 2):(difference / 2 + ncol(radmat) - 1)] = radmat
+      } else {
+        radtemp[(difference / 2):(difference / 2 + nrow(radmat) - 1), ] = radmat
+      }
+      radmat = radtemp
+    }
+    heightmap[radmat == 0] = NA
+  }
+  return(heightmap)
 }
 
 #' Unit Vector
@@ -108,7 +94,7 @@ run_documentation = function() {
 #' @return vec
 #' @keywords internal
 unit_vector = function(x) {
-	x / sqrt(sum(x * x))
+  x / sqrt(sum(x * x))
 }
 
 #' Cross Product
@@ -116,11 +102,11 @@ unit_vector = function(x) {
 #' @return vec
 #' @keywords internal
 cross = function(u, v) {
-	return(c(
-		u[2] * v[3] - u[3] * v[2],
-		u[3] * v[1] - u[1] * v[3],
-		u[1] * v[2] - u[2] * v[1]
-	))
+  return(c(
+    u[2] * v[3] - u[3] * v[2],
+    u[3] * v[1] - u[1] * v[3],
+    u[1] * v[2] - u[2] * v[1]
+  ))
 }
 
 #' Build From W
@@ -128,23 +114,23 @@ cross = function(u, v) {
 #' @return mat
 #' @keywords internal
 build_from_w = function(dir) {
-	basis = matrix(0, 3, 3)
-	basis[3, ] = unit_vector(dir)
-	if (abs(basis[3, 1]) > 0.9) {
-		a = c(0, 1, 0)
-	} else {
-		a = c(1, 0, 0)
-	}
-	basis[2, ] = unit_vector(cross(basis[3, ], a))
-	basis[1, ] = -cross(basis[3, ], basis[2, ])
-	basis
+  basis = matrix(0, 3, 3)
+  basis[3, ] = unit_vector(dir)
+  if (abs(basis[3, 1]) > 0.9) {
+    a = c(0, 1, 0)
+  } else {
+    a = c(1, 0, 0)
+  }
+  basis[2, ] = unit_vector(cross(basis[3, ], a))
+  basis[1, ] = -cross(basis[3, ], basis[2, ])
+  basis
 }
 #' Local To World
 #'
 #' @return mat
 #' @keywords internal
 local_to_world = function(a, mat) {
-	return(a[1] * mat[1, 1] + a[2] * mat[2, ] + a[3] * mat[3, ])
+  return(a[1] * mat[1, 1] + a[2] * mat[2, ] + a[3] * mat[3, ])
 }
 
 #' Generate Rotation Matrix
@@ -152,57 +138,57 @@ local_to_world = function(a, mat) {
 #' @return mat
 #' @keywords internal
 generate_rot_matrix = function(angle, order_rotation = c(1, 2, 3)) {
-	rots = list()
-	rots[[1]] = matrix(
-		c(
-			1,
-			0,
-			0,
-			0,
-			cos(angle[1]),
-			sin(angle[1]),
-			0,
-			-sin(angle[1]),
-			cos(angle[1])
-		),
-		3,
-		3
-	)
-	rots[[2]] = matrix(
-		c(
-			cos(angle[2]),
-			0,
-			-sin(angle[2]),
-			0,
-			1,
-			0,
-			sin(angle[2]),
-			0,
-			cos(angle[2])
-		),
-		3,
-		3
-	)
-	rots[[3]] = matrix(
-		c(
-			cos(angle[3]),
-			sin(angle[3]),
-			0,
-			-sin(angle[3]),
-			cos(angle[3]),
-			0,
-			0,
-			0,
-			1
-		),
-		3,
-		3
-	)
-	returnmat = matrix(c(1, 0, 0, 0, 1, 0, 0, 0, 1), 3, 3)
-	for (i in 1:3) {
-		returnmat = returnmat %*% rots[[order_rotation[i]]]
-	}
-	return(returnmat)
+  rots = list()
+  rots[[1]] = matrix(
+    c(
+      1,
+      0,
+      0,
+      0,
+      cos(angle[1]),
+      sin(angle[1]),
+      0,
+      -sin(angle[1]),
+      cos(angle[1])
+    ),
+    3,
+    3
+  )
+  rots[[2]] = matrix(
+    c(
+      cos(angle[2]),
+      0,
+      -sin(angle[2]),
+      0,
+      1,
+      0,
+      sin(angle[2]),
+      0,
+      cos(angle[2])
+    ),
+    3,
+    3
+  )
+  rots[[3]] = matrix(
+    c(
+      cos(angle[3]),
+      sin(angle[3]),
+      0,
+      -sin(angle[3]),
+      cos(angle[3]),
+      0,
+      0,
+      0,
+      1
+    ),
+    3,
+    3
+  )
+  returnmat = matrix(c(1, 0, 0, 0, 1, 0, 0, 0, 1), 3, 3)
+  for (i in 1:3) {
+    returnmat = returnmat %*% rots[[order_rotation[i]]]
+  }
+  return(returnmat)
 }
 
 #' Generate LookAt Matrix
@@ -210,73 +196,57 @@ generate_rot_matrix = function(angle, order_rotation = c(1, 2, 3)) {
 #' @return mat
 #' @keywords internal
 lookat = function(from, to, up = c(0, 1, 0)) {
-	forward = unit_vector(from - to)
-	right = unit_vector(cross(up, forward))
-	newup = cross(forward, right)
+  forward = unit_vector(from - to)
+  right = unit_vector(cross(up, forward))
+  newup = cross(forward, right)
 
-	m = matrix(0, 4, 4)
-	m[1:3, 1] = right
-	m[1:3, 2] = newup
-	m[1:3, 3] = forward
-	m[1:3, 4] = from
-	m[4, 4] = 1
-	return(m)
+  m = matrix(0, 4, 4)
+  m[1:3, 1] = right
+  m[1:3, 2] = newup
+  m[1:3, 3] = forward
+  m[1:3, 4] = from
+  m[4, 4] = 1
+  return(m)
 }
 
 #' Add buffer underlay
 #'
+#' @param overlay RGBA overlay image.
+#' @param halo_expand Number of pixels to expand the halo.
+#' @param halo_offset Halo offset, retained for compatibility with callers that
+#' draw the offset into `overlay` before calling this helper.
+#' @param halo_color Halo color.
+#' @param halo_alpha Halo alpha multiplier.
+#' @param halo_blur Gaussian blur standard deviation applied to the halo alpha.
+#' @param halo_edge_softness Width of the softened halo edge transition, in pixels.
+#' @param halo_gap_fill Default `2`. Maximum alpha gap width, in pixels, to
+#' bridge in the halo outline.
+#' @param halo_gap_fill_alpha_threshold Default `0.25`. Alpha threshold used to
+#' protect enclosed interior halo gaps from `halo_gap_fill`.
 #' @return rayimg
 #' @keywords internal
 generate_halo_underlay = function(
-	overlay,
-	halo_expand,
-	halo_offset,
-	halo_color,
-	halo_alpha,
-	halo_blur,
-	halo_edge_softness
+  overlay,
+  halo_expand,
+  halo_offset,
+  halo_color,
+  halo_alpha,
+  halo_blur,
+  halo_edge_softness,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25
 ) {
-	if (halo_expand != 0 || any(halo_offset != 0)) {
-		temp_alpha = overlay[,, 4]
-		temp_alpha[temp_alpha > 0] = 1
-
-		booldistance = rayimage::render_boolean_distance(temp_alpha)
-
-		inner = halo_expand - halo_edge_softness
-		outer = halo_expand + halo_edge_softness
-
-		# Start with zero everywhere
-		aa_alpha = matrix(0, nrow = nrow(temp_alpha), ncol = ncol(temp_alpha))
-
-		# Fully opaque inside the inner radius
-		aa_alpha[booldistance <= inner] = 1
-
-		# Linearly fade from 1 -> 0 between inner and outer
-		band = booldistance > inner & booldistance < outer
-		aa_alpha[band] = (outer - booldistance[band]) / (outer - inner)
-
-		# Outside outer radius stays 0
-
-		col_below = col2rgb_linear(halo_color)
-		temp_array = array(0, dim = dim(overlay))
-		temp_array[,, 1] = col_below[1]
-		temp_array[,, 2] = col_below[2]
-		temp_array[,, 3] = col_below[3]
-
-		# Apply halo_alpha at the end
-		temp_array[,, 4] = aa_alpha * halo_alpha
-		overlay[] = temp_array[]
-	}
-	if (halo_blur > 0) {
-		overlay = rayimage::render_convolution_fft(
-			overlay,
-			kernel = rayimage::generate_2d_gaussian(
-				sd = halo_blur,
-				dim = 31,
-				width = 30
-			),
-			include_alpha = TRUE
-		)
-	}
-	return(overlay)
+  rayimage::render_alpha_outline(
+    image = overlay,
+    expand = halo_expand,
+    edge_softness = halo_edge_softness,
+    blur = halo_blur,
+    gap_fill = halo_gap_fill,
+    gap_fill_alpha_threshold = halo_gap_fill_alpha_threshold,
+    color = halo_color,
+    alpha = halo_alpha,
+    pad = 0,
+    composite = FALSE,
+    preview = FALSE
+  )
 }

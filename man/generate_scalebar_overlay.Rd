@@ -5,14 +5,14 @@
 \title{Generate Scalebar Overlay}
 \usage{
 generate_scalebar_overlay(
-  extent,
-  length,
+  extent = NULL,
+  length = NULL,
   x = 0.05,
   y = 0.05,
-  latlong = FALSE,
+  lat_long = NA,
   thickness = NA,
-  bearing = 90,
-  unit = "m",
+  bearing = NULL,
+  unit = NULL,
   flip_ticks = FALSE,
   labels = NA,
   text_size = 1,
@@ -36,31 +36,39 @@ generate_scalebar_overlay(
   halo_alpha = 1,
   halo_offset = c(0, 0),
   halo_blur = 0,
-  halo_edge_softness = 0.1
+  halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25,
+  ...
 )
 }
 \arguments{
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
-lat/long coordinates, be sure to set \code{latlong = TRUE}.}
+lat/long coordinates, rayshader will infer that from the spatial metadata when possible. If omitted, rayshader will infer the extent
+from \code{heightmap} when possible, otherwise from the active scene or cached hillshade metadata.}
 
-\item{length}{The length of the scale bar, in \code{units}. This should match the units used on the map,
-unless \code{extent} uses lat/long coordinates. In that case, the distance should be in meters.}
+\item{length}{Default \code{NULL}. Length of the scale bar in \code{unit}. If omitted,
+rayshader derives a pretty length approximately half of the longer map side.}
 
 \item{x}{Default \code{0.05}. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.}
 
 \item{y}{Default \code{0.05}. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.}
 
-\item{latlong}{Default \code{FALSE}. Set to \code{TRUE} if the map is in lat/long coordinates to get an accurate
-scale bar (using distance calculated with the \code{geosphere} package).}
+\item{lat_long}{Default \code{NA}. If \code{NA}, rayshader infers whether the map is in lat/long coordinates from
+spatial metadata on \code{extent}, \code{heightmap}, the active scene, or cached hillshade data. Explicit values are only
+used as a fallback for matrix heightmaps without cached spatial metadata.}
 
 \item{thickness}{Default \code{NA}, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.}
 
-\item{bearing}{Default \code{90}, horizontal. Direction (measured from north) of the scale bar.}
+\item{bearing}{Default \code{NULL}. Direction measured clockwise from grid north.
+If omitted, the scale bar follows the longer map axis.}
 
-\item{unit}{Default \code{m}. Displayed unit on the scale bar.}
+\item{unit}{Default \code{NULL}. Distance unit for \code{length} and the displayed label.
+If omitted, rayshader uses metres or kilometres for longitude/latitude scenes,
+the CRS linear units for projected scenes, and no suffix for raw matrices.}
 
 \item{flip_ticks}{Default \code{FALSE}. Whether to flip the ticks to the other side of the scale bar.}
 
@@ -118,126 +126,109 @@ of this color.}
 \item{halo_blur}{Default \code{0}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
 
 \item{halo_edge_softness}{Default \code{0.1}. Width of the softened halo edge transition, in pixels.}
+
+\item{halo_gap_fill}{Default \code{2}. Maximum alpha gap width, in pixels, to bridge in the halo outline.}
+
+\item{halo_gap_fill_alpha_threshold}{Default \code{0.25}. Alpha threshold used to protect enclosed interior halo gaps from \code{halo_gap_fill}.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Semi-transparent overlay with a scale bar.
 }
 \description{
-This function creates an overlay with a scale bar of a user-specified length.
+This function creates an overlay with a scale bar. By default,
+the scale bar spans approximately half of the longer map dimension and uses
+pretty breaks and units derived from the cached spatial metadata.
 It uses the coordinates of the map (specified by passing an extent)
 and then creates a scale bar at a specified x/y proportion across the map. If the map is not projected
 (i.e. is in lat/long coordinates) this function will use the \code{geosphere} package to create a
 scale bar of the proper length.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #Set scalebar font
 par(family = "Arial")
 
 #Generate flat water heightmap
-mbay = montereybay
+mbay = montereybay_spatial
 mbay[mbay < 0] = 0
 
 base_map = mbay |>
 height_shade() |>
-add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
-add_shadow(lamb_shade(montereybay,zscale=50),0.3)
-
-#For convenience, the extent of the montereybay dataset is included as an attribute
-mb_extent = attr(montereybay, "extent")
+add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 
 #Add a scalebar
 base_map |>
-add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
-                                      heightmap = montereybay,
-                                      latlong=TRUE)) |>
+add_overlay(generate_scalebar_overlay(length = 40000,
+                                      lat_long=TRUE)) |>
 plot_map()
-}
-if(run_documentation()) {
 #Change the text color
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
+ add_overlay(generate_scalebar_overlay(length = 40000,
                                        text_color = "white",
-                                       heightmap = montereybay,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the length
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white",
-                                       heightmap = montereybay,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the thickness (default is length/20)
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", thickness = 30000/10,
-                                       heightmap = montereybay,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the text offset (given in multiples of thickness)
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", thickness = 30000/10,
                                        text_offset = 0.75,
-                                       heightmap = montereybay,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the primary and secondary colors, along with the border and tick color
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", border_color = "white",
                                        tick_color = "white",
                                        color1 = "darkolivegreen4", color2 = "burlywood3",
-                                       heightmap = montereybay,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Add a halo
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
+ add_overlay(generate_scalebar_overlay(length = 40000,
                                        halo_color = "white", halo_expand = 1,
-                                       heightmap = montereybay, font = 2,
-                                       latlong=TRUE)) |>
+                                       font = 2,
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Change the orientation, position, text alignment, and flip the ticks to the other side
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
+ add_overlay(generate_scalebar_overlay(length = 40000, x = 0.07,
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color = "white", halo_expand = 1.5,
-                                       heightmap = montereybay, font = 2,
-                                       latlong=TRUE)) |>
+                                       font = 2,
+                                       lat_long=TRUE)) |>
  plot_map()
-}
-if(run_documentation()) {
 #64373.8 meters in 40 miles
 #Create custom labels, change font and text size, remove the border/ticks, and change the color
 #Here, we specify a width and height to double the resolution of the image (for sharper text)
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 64373.8, x = 0.07,
+ add_overlay(generate_scalebar_overlay(length = 64373.8, x = 0.07,
                                        labels = c("0", "20", "40 miles"), thickness=2500,
                                        text_size=3, font = 2, text_offset = 0,
                                        text_color="white", color2="#bf323b", border_color=NA,
                                        tick_color="red", tick_width=0,
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color="black", halo_blur=3, halo_alpha=0.5,
-                                       width = ncol(montereybay)*2,
-                                       height = nrow(montereybay)*2,
-                                       latlong=TRUE), rescale_original=TRUE) |>
+                                       width = ncol(montereybay_spatial)*2,
+                                       height = nrow(montereybay_spatial)*2,
+                                       lat_long=TRUE), rescale_original=TRUE) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

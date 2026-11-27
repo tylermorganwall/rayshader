@@ -5,7 +5,7 @@
 \title{Generate Waterline Overlay}
 \usage{
 generate_waterline_overlay(
-  heightmap,
+  heightmap = NULL,
   color = "white",
   linewidth = 1,
   boolean = FALSE,
@@ -19,18 +19,23 @@ generate_waterline_overlay(
   falloff = 1.3,
   evenly_spaced = FALSE,
   zscale = 1,
-  cutoff = 0.999,
+  cutoff = 0.9999999,
   width = NA,
   height = NA,
   resolution_multiply = 1,
-  min_area = length(heightmap)/400,
+  min_area = NULL,
   max_height = NULL,
-  return_distance_matrix = FALSE
+  return_distance_matrix = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-If \code{boolean = TRUE}, this will instead be interpreted as a logical matrix indicating areas of water.}
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry
+in the matrix is the elevation at that point. If \code{boolean = TRUE}, this will
+instead be interpreted as a logical matrix indicating areas of water. If
+omitted, rayshader uses the cached hillshade or scene heightmap.}
 
 \item{color}{Default \code{white}. Color of the lines.}
 
@@ -58,8 +63,9 @@ waterlines fade entirely, when \code{fade = TRUE}.}
 
 \item{evenly_spaced}{Default \code{FALSE}. If \code{TRUE}, \code{falloff} will be ignored and the lines will be evenly spaced.}
 
-\item{zscale}{Default \code{1}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+\item{zscale}{Default \code{1}. Base \code{zscale} used for water detection when \code{boolean = FALSE}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be
+10. If omitted, rayshader uses raster-derived or matching cached metadata.}
 
 \item{cutoff}{Default \code{0.999}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}.The lower limit of the z-component of the unit normal vector to be classified as water.}
 
@@ -72,13 +78,23 @@ increase the resolution of the overlay, which should make lines/polygons/text fi
 Should be combined with \code{\link[=add_overlay]{add_overlay()}} with \code{rescale_original = TRUE} to ensure those added details are captured
 in the final map.}
 
-\item{min_area}{Default \code{length(heightmap)/400}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
+\item{min_area}{Default \code{NULL}, equivalent to \code{length(heightmap)/400} after
+the heightmap is resolved. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if
+\code{boolean = TRUE}. Minimum area (in grid cells) to be considered water.}
 
-\item{max_height}{Default \code{NULL}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. If passed, this number will specify the maximum height a point can be considered to be water.
-\code{FALSE}, the direction will be reversed.}
+\item{max_height}{Default \code{NULL}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
 \item{return_distance_matrix}{Default \code{FALSE}. If \code{TRUE}, this function will return the boolean distance matrix instead of
 contour lines.}
+
+\item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, use supplied or cached
+spatial metadata when detecting water and measuring distance from shore.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.
+\code{FALSE}, the direction will be reversed.}
 }
 \value{
 4-layer RGB array representing the waterline overlay.
@@ -91,73 +107,55 @@ to calculate the distance to the coast. This distance matrix can be returned dir
 the \code{return_distance_matrix} argument to \code{TRUE}.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a flat body of water for Monterey Bay
-montbay = montereybay
+montbay = raster_to_matrix(montereybay_spatial)
 montbay[montbay < 0] = 0
 
 #Generate base map with no lines
 basemap = montbay |>
   height_shade() |>
-  add_water(detect_water(montbay), color="dodgerblue") |>
+  add_water(detect_water(montbay, zscale=200), color="dodgerblue4") |>
   add_shadow(texture_shade(montbay, detail=1/3, brightness = 15, contrast = 5),0) |>
-  add_shadow(lamb_shade(montbay,zscale=50),0)
+  add_shadow(lamb_shade(montbay, zscale=200, vertical_exaggeration = 4),0)
 
 plot_map(basemap)
-}
-if(run_documentation()) {
 #Add waterlines
 basemap |>
   add_overlay(generate_waterline_overlay(montbay)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Change minimum line distance:
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, min = 0.02)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Change maximum line distance
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, max = 0.4)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Smooth waterlines
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Increase number of breaks
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Make lines evenly spaced:
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Change variable distance between each line
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Turn off fading
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) |>
   plot_map()
-}
-if(run_documentation()) {
 #Fill up the entire body of water with lines and make them all 50\% transparent
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
                                          evenly_spaced = TRUE, breaks=50)) |>
   plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

@@ -6,64 +6,96 @@
 \usage{
 sphere_shade(
   heightmap,
-  sunangle = 315,
+  sun_angle = 315,
   texture = "imhof1",
-  normalvectors = NULL,
-  colorintensity = 1,
+  normal_vectors = NULL,
+  color_intensity = 1,
   zscale = 1,
-  progbar = interactive()
+  vertical_exaggeration = 1,
+  na_color = NULL,
+  progress_bar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{sunangle}{Default \code{315} (NW). The direction of the main highlight color (derived from the built-in palettes or the \code{\link[=create_texture]{create_texture()}} function).}
+\item{sun_angle}{Default \code{315} (NW). The direction of the main highlight color (derived from the built-in palettes or the \code{\link[=create_texture]{create_texture()}} function).}
 
 \item{texture}{Default \code{imhof1}. Either a square matrix indicating the spherical texture mapping, or a string indicating one
 of the built-in palettes (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4},\code{desert}, \code{bw}, and \code{unicorn}).}
 
-\item{normalvectors}{Default \code{NULL}. Cache of the normal vectors (from \code{\link[=calculate_normal]{calculate_normal()}} function). Supply this to speed up texture mapping.}
+\item{normal_vectors}{Default \code{NULL}. Cache of the normal vectors (from \code{\link[=calculate_normal]{calculate_normal()}} function). Supply this to speed up texture mapping.}
 
-\item{colorintensity}{Default \code{1}. The intensity of the color mapping. Higher values will increase the intensity of the color mapping.}
+\item{color_intensity}{Deprecated alias for \code{vertical_exaggeration}.}
 
-\item{zscale}{Default \code{1/colorintensity}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
-Ignored unless \code{colorintensity} missing.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+If omitted and \code{heightmap} is a spatial raster, rayshader automatically uses
+the raster cell resolution. Geographic longitude/latitude rasters are converted
+to an approximate meter-per-cell value at the raster center.
+If supplied, this also updates the cached hillshade \code{zscale} for downstream rayshader calls.}
 
-\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
+
+\item{na_color}{Default \code{NULL}. RGB color stored in the returned image for
+transparent \code{NA} heightmap cells. If \code{NULL}, the texture's center/up color is
+used. This does not affect transparency; \code{NA} heightmap cells are always
+returned with alpha \code{0}.}
+
+\item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
-RGB array of hillshaded texture mappings.
+RGBA array of hillshaded texture mappings.
 }
 \description{
 Calculates a color for each point on the surface using the surface normals and
 hemispherical UV mapping. This uses either a texture map provided by the user (as an RGB array),
 or a built-in color texture.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Basic example:
-montereybay |>
+montereybay_spatial |>
  sphere_shade() |>
  plot_map()
 
-#Decrease the color intensity:
-montereybay |>
- sphere_shade(colorintensity=0.1) |>
+#Increase the color intensity:
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration=10) |>
  plot_map()
 
 #Change to a built-in color texture:
-montereybay |>
- sphere_shade(texture="desert") |>
+montereybay_spatial |>
+ sphere_shade(texture="desert", vertical_exaggeration=10) |>
  plot_map()
 
 #Change the highlight angle:
-montereybay |>
- sphere_shade(texture="desert", sunangle = 45) |>
+montereybay_spatial |>
+ sphere_shade(texture="desert", sun_angle = 45, vertical_exaggeration=10) |>
  plot_map()
 
 #Create our own texture using the `create_texture` function:
-montereybay |>
- sphere_shade(zscale=10,texture=create_texture("#E9C68D","#AF7F38",
-                                               "#674F30","#494D30",
-                                               "#B3BEA3")) |>
+montereybay_spatial |>
+ sphere_shade(texture=create_texture("#E9C68D","#AF7F38",
+                                     "#674F30","#494D30",
+                                     "#B3BEA3"),
+              vertical_exaggeration=10) |>
  plot_map()
 }

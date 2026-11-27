@@ -2,17 +2,29 @@
 #'
 #'@description Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
+#'@param heightmap Default `NULL`. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'All grid points are assumed to be evenly spaced. Alternatively, if heightmap is a logical matrix, each entry
-#'specifies whether that point is water or not.
+#'specifies whether that point is water or not. If omitted, rayshader will use the cached hillshade/scene heightmap.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param cutoff Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.
-#'@param min_area Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. If omitted and a cached or raster-derived
+#'`zscale` is available, rayshader will reuse that value.
+#'@param cutoff Default `1-1e-7`. The lower limit of the z-component of the unit normal vector to be classified as water.
+#'@param min_area Default `NULL`, equivalent to `length(heightmap)/400` after
+#'the heightmap is resolved. Minimum area (in grid cells) to be considered a
+#'body of water.
 #'@param max_height Default `NULL`. If passed, this number will specify the maximum height a point can be considered to be water.
-#'@param normalvectors Default `NULL`. Pre-computed array of normal vectors from the [calculate_normal()] function. Supplying this will speed up water detection.
+#'@param normal_vectors Default `NULL`. Pre-computed array of normal vectors from the [calculate_normal()] function. Supplying this will speed up water detection.
 #'@param keep_groups Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.
-#'@param progbar Default `FALSE`. If `TRUE`, turns on progress bar.
+#'@param progress_bar Default `FALSE`. If `TRUE`, turns on progress bar.
+#'@param geographic_aspect Default `TRUE`. If `TRUE`, account for unequal
+#'horizontal cell sizes using the supplied or cached spatial metadata.
+#'@param extent Default `NULL`. Spatial extent for a matrix heightmap. If
+#'omitted, rayshader uses matching cached metadata when available.
+#'@param crs Default `NULL`. CRS describing the input heightmap. An explicit
+#'value overrides embedded metadata on a copy of the input.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.
 #'@export
 #'@examples
@@ -22,24 +34,120 @@
 #'
 #'#Setting a minimum area avoids classifying small flat areas as water:
 #'island_volcano |>
-#'  sphere_shade(texture="imhof3") |>
-#'  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") |>
+#'  sphere_shade(texture="imhof3", vertical_exaggeration = 20) |>
+#'  add_water(detect_water(min_area = 400),color="imhof3") |>
 #'  plot_map()
 detect_water = function(
-  heightmap,
+  heightmap = NULL,
   zscale = 1,
-  cutoff = 0.999,
-  min_area = length(heightmap) / 400,
+  cutoff = 0.9999999,
+  min_area = NULL,
   max_height = NULL,
-  normalvectors = NULL,
+  normal_vectors = NULL,
   keep_groups = FALSE,
-  progbar = FALSE
+  progress_bar = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 ) {
-  if (is.logical(heightmap) && is.matrix(heightmap)) {
-    return(flipud(heightmap))
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(normalvectors = "normal_vectors", progbar = "progress_bar"),
+    "detect_water",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
   }
-  if (!is.null(normalvectors)) {
-    zmatrix = abs(normalvectors$z)
+  heightmap_missing = missing(heightmap) || is.null(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  heightmap_auto_zscale = NA_real_
+  if (is.logical(heightmap) && is.matrix(heightmap)) {
+    aspect = if (isTRUE(geographic_aspect)) {
+      normalize_geographic_aspect(attr(
+        heightmap,
+        "rayshader_geographic_aspect",
+        exact = TRUE
+      ))
+    } else {
+      identity_geographic_aspect()
+    }
+    result = flipud(heightmap)
+    attr(result, "rayshader_geographic_aspect") = aspect
+    return(result)
+  }
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "detect_water"
+    )
+    heightmap = resolved_heightmap$heightmap
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  } else {
+    allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  } else {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  attr(heightmap, "rayshader_geographic_aspect") =
+    heightmap_info$geographic_aspect
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "detect_water",
+    auto_zscale = heightmap_auto_zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  if (is.null(min_area)) {
+    min_area = length(heightmap) / 400
+  }
+  if (!is.null(normal_vectors)) {
+    normal_vectors = correct_normal_geographic_aspect(
+      normal_vectors,
+      heightmap_info$geographic_aspect
+    )
+    zmatrix = abs(normal_vectors$z)
     zmatrix = abs(zmatrix)
     zmatrix[zmatrix < cutoff] = 0
     zmatrix[zmatrix >= cutoff] = 1
@@ -48,7 +156,11 @@ detect_water = function(
     zmatrix[nrow(zmatrix), ] = 0
     zmatrix[, ncol(zmatrix)] = 0
   } else {
-    zmatrix = calculate_normal(heightmap, zscale = zscale, progbar = progbar)$z
+    zmatrix = calculate_normal(
+      heightmap,
+      zscale = zscale,
+      progress_bar = progress_bar
+    )$z
     zmatrix = abs(zmatrix)
     zmatrix[zmatrix < cutoff] = 0
     zmatrix[zmatrix >= cutoff] = 1
@@ -84,5 +196,8 @@ detect_water = function(
     c(-1, -2, -nrow(water_groups) + 1, -nrow(water_groups)),
     c(-1, -2, -ncol(water_groups) + 1, -ncol(water_groups))
   ]
-  return(flipud(t(water_groups2)))
+  result = flipud(t(water_groups2))
+  attr(result, "rayshader_geographic_aspect") =
+    heightmap_info$geographic_aspect
+  return(result)
 }

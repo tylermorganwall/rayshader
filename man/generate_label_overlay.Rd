@@ -6,7 +6,7 @@
 \usage{
 generate_label_overlay(
   labels,
-  extent,
+  extent = NULL,
   x = NULL,
   y = NULL,
   heightmap = NULL,
@@ -27,23 +27,29 @@ generate_label_overlay(
   halo_offset = c(0, 0),
   halo_blur = 0,
   halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25,
   seed = NA
 )
 }
 \arguments{
 \item{labels}{A character vector of labels, or an \code{sf} object with \code{POINT} geometry and a column for labels.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will infer the extent from \code{heightmap} when possible,
+otherwise reuse cached extent metadata from the active scene or the most recent
+raster-backed hillshade call.}
 
 \item{x}{Default \code{NULL}. The x-coordinate, if \code{labels} is not an \code{sf} object.}
 
 \item{y}{Default \code{NULL}. The y-coordinate, if \code{labels} is not an \code{sf} object.}
 
 \item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
-overlay automatically.}
+overlay automatically. If omitted, rayshader will reuse the cached heightmap
+from the active scene or the most recent hillshade call.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
@@ -93,6 +99,10 @@ of this color.}
 
 \item{halo_edge_softness}{Default \code{0.1}. Width of the softened halo edge transition, in pixels.}
 
+\item{halo_gap_fill}{Default \code{2}. Maximum alpha gap width, in pixels, to bridge in the halo outline.}
+
+\item{halo_gap_fill_alpha_threshold}{Default \code{0.25}. Alpha threshold used to protect enclosed interior halo gaps from \code{halo_gap_fill}.}
+
 \item{seed}{Default \code{NA}, no seed. Random seed for ensuring the consistent placement of labels around points.}
 }
 \value{
@@ -103,86 +113,69 @@ This uses the \code{car::placeLabel()} function to generate labels for the given
 use an \code{sf} object or manually specify the x/y coordinates and label.
 }
 \examples{
-#Add the included `sf` object with roads to the montereybay dataset
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add the included `sf` object with roads to the montereybay_spatial dataset
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #Set label font
 par(family = "Arial")
 
 #We're plotting the polygon data here for counties around Monterey Bay. We'll first
 #plot the county names at the polygon centroids.
 bathy_hs |>
- add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
- add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-                                      extent = attr(montereybay,"extent"),
-                                      heightmap = montereybay)) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
+ add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow)) |>
  add_overlay(generate_label_overlay(labels=monterey_counties_sf,
                                     color="black", point_size = 1, text_size = 1,
                                     data_label_column = "NAME",
-                                    extent= attr(montereybay,"extent"), heightmap = montereybay,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
 #It's hard to read these values, so we'll add a white halo.
 bathy_hs |>
- add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
- add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-                                      extent = attr(montereybay,"extent"),
-                                      heightmap = montereybay)) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
+ add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow)) |>
  add_overlay(generate_label_overlay(labels=monterey_counties_sf,
                                     color="black", point_size = 1, text_size = 1,
                                     data_label_column = "NAME",
-                                    extent= attr(montereybay,"extent"), heightmap = montereybay,
                                     halo_color = "white", halo_expand = 3,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
 #Plot the actual town locations, using the manual plotting interface instead of the `sf` object
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
- add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
                                     color="black", point_size = 1, text_size = 1,
-                                    extent= attr(montereybay,"extent"), heightmap = montereybay,
                                     halo_color = "white", halo_expand = 3,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
 #Adding a softer blurred halo
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
- add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
                                     color="black", point_size = 1, text_size = 1,
-                                    extent= attr(montereybay,"extent"), heightmap = montereybay,
                                     halo_color = "white", halo_expand = 3, halo_blur=10,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
 #Changing the seed changes the locations of the labels
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
- add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
                                     color="black", point_size = 1, text_size = 1,
-                                    extent= attr(montereybay,"extent"), heightmap = montereybay,
                                     halo_color = "white", halo_expand = 3, halo_blur=10,
                                     seed=2))  |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

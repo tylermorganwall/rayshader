@@ -7,14 +7,14 @@
 render_floating_overlay(
   overlay = NULL,
   altitude = NULL,
-  heightmap = NULL,
-  zscale = 1,
   alpha = 1,
-  baseshape = "rectangle",
   remove_na = TRUE,
   reorient = TRUE,
   clear_layers = FALSE,
   horizontal_offset = c(0, 0),
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
@@ -23,22 +23,27 @@ render_floating_overlay(
 
 \item{altitude}{Altitude to place the overlay.}
 
-\item{heightmap}{The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
-
 \item{alpha}{Default \code{1}. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the overlay. Options are \code{c("rectangle", "circle", "hex")}.}
+\item{remove_na}{Default \code{TRUE}. Whether to make the overlay transparent above
+empty spaces represented by \code{NA} values in the active heightmap.}
 
-\item{remove_na}{Default \code{TRUE}. Whether to make the overlay transparent above empty spaces (represented by \code{NA} values) in the underlying elevation matrix.}
-
-\item{reorient}{Default \code{TRUE}. Whether to reorient the image array to match the 3D plot.}
+\item{reorient}{Default \code{TRUE}. Whether to transpose the heightmap's \code{NA} mask
+to match the overlay texture orientation.}
 
 \item{clear_layers}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
 
 \item{horizontal_offset}{Default \code{c(0,0)}. Distance (in 3D space) to offset the floating offset in the x/y directions.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix whose existing \code{NA} cells mask
+the overlay when \code{remove_na = TRUE}. If omitted, this is taken from the cached
+scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
+cached value.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
@@ -48,39 +53,41 @@ Adds a 3D floating layer to the map. No return value.
 \description{
 Render a 2D floating overlay over the map.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 Note: Multiple layers with transparency can cause rendering issues in rgl.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the road network as a floating overlay layer, along with a label annotation and a floating
 #point annotation
 if(all(length(find.package("sf", quiet = TRUE)) > 0,
       length(find.package("magick", quiet = TRUE)) > 0)) {
  monterey = c(-121.892933,36.603053)
  monterey_city = sf::st_sfc(sf::st_point(monterey))
+ sf::st_crs(monterey_city) = sf::st_crs(montereybay_spatial)
 
  #Generate Overlays
- road_overlay = generate_line_overlay(monterey_roads_sf, attr(montereybay,"extent"),
-                                      heightmap = montereybay)
+ road_overlay = generate_line_overlay(monterey_roads_sf, heightmap = montereybay_spatial)
  point_overlay = generate_point_overlay(monterey_city, color="red", size=1,
-                                        attr(montereybay,"extent"), heightmap = montereybay)
+                                        heightmap = montereybay_spatial)
 
  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
- montereybay |>
+ montereybay_spatial |>
    height_shade() |>
-   add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-   plot_3d(montereybay, water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
+   add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+   plot_3d(water = TRUE, water_alpha = 1, window_size = 800,
+           water_color = "lightblue", vertical_exaggeration = 4)
  render_camera(theta=-55,phi=45,zoom=0.8)
 
  #Render label
- render_label(montereybay, lat = monterey[2], long = monterey[1], altitude = 9900,
-              extent = attr(montereybay, "extent"),
-              zscale = 50, text = "Monterey", textcolor = "black", linecolor="darkred")
+ render_label(lat = monterey[2], long = monterey[1], altitude = 9900,
+              text = "Monterey", text_color = "black", line_color="darkred")
 
  #Render Floating Overlays
- render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
- render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
+ render_floating_overlay(road_overlay, altitude = 10000)
+ render_floating_overlay(point_overlay, altitude = 100)
  render_snapshot()
 }
-}
+\dontshow{\}) # examplesIf}
 }

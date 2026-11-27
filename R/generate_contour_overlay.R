@@ -2,12 +2,15 @@
 #'
 #'@description Calculates and returns an overlay of contour lines for the current height map.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. A two-dimensional matrix, where each entry
+#'in the matrix is the elevation at that point. If omitted, rayshader uses the
+#'cached hillshade or scene heightmap.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be
+#'10. If omitted, rayshader uses raster-derived or matching cached metadata.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
-#'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
-#'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
+#'@param n_levels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
+#'this will automatically generate `n_levels` breaks between `levels[1]` and `levels[2]`.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to
@@ -16,77 +19,141 @@
 #'in the final map.
 #'@param color Default `black`. Color.
 #'@param linewidth Default `1`. Line width.
+#'@param geographic_aspect Default `TRUE`. If `TRUE`, use supplied or cached
+#'spatial metadata when deriving the default horizontal scale.
+#'@param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#'@param crs Default `NULL`. CRS describing the input heightmap. An explicit
+#'value overrides embedded metadata on a copy of the input.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Semi-transparent overlay with contours.
 #'@export
-#'@examples
-#'#Add contours to the montereybay dataset
-#'if(run_documentation()) {
-#'montereybay |>
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add contours to the montereybay_spatial dataset
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_contour_overlay(montereybay))  |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial))  |>
+#'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
-#'}
 #'
 #'#Add a different contour color for above and below water, and specify levels manually
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
-#'breaks = seq(range(montereybay)[1],range(montereybay)[2],length.out=50)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
+#'monterey_range = range(raster_to_matrix(montereybay_spatial, verbose = FALSE), na.rm = TRUE)
+#'breaks = seq(monterey_range[1], monterey_range[2], length.out=50)
 #'water_breaks = breaks[breaks < 0]
 #'land_breaks = breaks[breaks > 0]
 #'
-#'if(run_documentation()) {
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+#'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_contour_overlay(
+#'    montereybay_spatial, levels = water_breaks, color = "white"
+#'  )) |>
+#'  add_overlay(generate_contour_overlay(
+#'    montereybay_spatial, levels = land_breaks, color = "black"
+#'  )) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Increase the resolution of the contour to improve the appearance of lines
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white",
-#'                                       height = nrow(montereybay)*2,
-#'                                       width  = ncol(montereybay)*2))  |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black",
-#'                                       height = nrow(montereybay)*2,
-#'                                       width  = ncol(montereybay)*2))  |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+#'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, levels = water_breaks, color="white",
+#'                                       height = nrow(montereybay_spatial)*2,
+#'                                       width  = ncol(montereybay_spatial)*2))  |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, levels = land_breaks, color="black",
+#'                                       height = nrow(montereybay_spatial)*2,
+#'                                       width  = ncol(montereybay_spatial)*2))  |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Increase the number of breaks and the transparency (via add_overlay)
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay, linewidth=2, nlevels=100,
-#'                                       height = nrow(montereybay)*2, color="black",
-#'                                       width  = ncol(montereybay)*2), alphalayer=0.5) |>
+#'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, n_levels=100,
+#'                                       height = nrow(montereybay_spatial)*2, color="black",
+#'                                       width  = ncol(montereybay_spatial)*2), alpha_layer=0.5) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Manually specify the breaks with levels
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+#'  add_overlay(generate_contour_overlay(
+#'    montereybay_spatial, linewidth = 2, levels = seq(-2000, 0, 100)
+#'  )) |>
+#'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
-#'}
 generate_contour_overlay = function(
-  heightmap,
+  heightmap = NULL,
   levels = NA,
-  nlevels = NA,
+  n_levels = NA,
   zscale = 1,
   width = NA,
   height = NA,
   resolution_multiply = 1,
   color = "black",
-  linewidth = 1
+  linewidth = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(nlevels = "n_levels"),
+    "generate_contour_overlay",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  color = normalize_rgb_color(color)
+  heightmap_missing = missing(heightmap) || is.null(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "generate_contour_overlay"
+    )
+    heightmap = resolved_heightmap$heightmap
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(
+      heightmap_info,
+      label = format_scene_cache_label(deparse(substitute(heightmap)))
+    )
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "generate_contour_overlay",
+    auto_zscale = heightmap_info$zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = heightmap_missing &&
+      identical(resolved_heightmap$source, "scene")
+  )
+  zscale = resolved_zscale$zscale
+  heightmap = heightmap_info$heightmap / zscale
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
   }
@@ -94,14 +161,14 @@ generate_contour_overlay = function(
     stop("`isoband` package required for generate_contour_overlay()")
   }
   if (is.na(levels[1])) {
-    if (is.na(nlevels[1])) {
-      nlevels = 10
+    if (is.na(n_levels[1])) {
+      n_levels = 10
     }
     rangelevels = range(heightmap, na.rm = TRUE)
-    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-  } else if (length(levels) == 2 && !is.na(nlevels)) {
+    levels = seq(rangelevels[1], rangelevels[2], length.out = n_levels + 2)
+  } else if (length(levels) == 2 && !is.na(n_levels)) {
     rangelevels = range(levels, na.rm = TRUE)
-    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = n_levels + 2)
   }
   levels = levels[levels > min(heightmap, na.rm = TRUE)]
   levels = levels[levels < max(heightmap, na.rm = TRUE)]

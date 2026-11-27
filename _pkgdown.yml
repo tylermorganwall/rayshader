@@ -44,6 +44,7 @@ reference:
     desc: "Functions for displaying/saving 2D visualizations and 3D prints/models"
     contents:
       - starts_with("plot")
+      - spatialize_image
       - starts_with("save")
       - starts_with("convert")
   - title: "Manipulate and Capture 3D Maps"
@@ -57,18 +58,18 @@ reference:
       - starts_with("raster")
       - starts_with("resize")
       - starts_with("reduce_matrix_size")
+      - starts_with("shift")
+      - "volcano_spatial"
   - title: "Included Data"
     desc: "Elevation data included with rayshader"
     contents:
       - "montereybay"
+      - "montereybay_spatial"
       - "monterey_counties_sf"
       - "monterey_roads_sf"
+      - "volcano_trails"
       - "washington_monument_multipolygonz"
       - starts_with("flag")
-  - title: "pkgdown utils"
-    desc: "Internal but must be exported to meet CRAN guidelines"
-    contents:
-      - starts_with("run")
 
 navbar: 
   title: "rayshader"

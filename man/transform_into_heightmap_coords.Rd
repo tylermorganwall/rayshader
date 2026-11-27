@@ -13,8 +13,20 @@ transform_into_heightmap_coords(
   offset = 0,
   zscale = 1,
   use_altitude = TRUE,
-  filter_bounds = FALSE
+  filter_bounds = FALSE,
+  crs = NULL,
+  panel = NULL,
+  transform_scene = TRUE,
+  caller = NULL,
+  missing_height_group = NULL,
+  curve = TRUE
 )
+}
+\arguments{
+\item{missing_height_group}{Default \code{NULL}. Optional grouping vector used to
+replace missing heights with the minimum height from the same path.}
+
+\item{curve}{Default \code{TRUE}. Apply scene curvature to output elevations.}
 }
 \value{
 x/y/z

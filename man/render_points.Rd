@@ -5,54 +5,81 @@
 \title{Render Points}
 \usage{
 render_points(
-  lat = NULL,
-  long = NULL,
-  altitude = NULL,
-  extent = NULL,
-  zscale = 1,
-  heightmap = NULL,
+  location = NULL,
   size = 0.5,
   color = "black",
+  clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  altitude = NULL,
   offset = 5,
-  clear_previous = FALSE
+  lat = NULL,
+  long = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered point(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{size}, \code{color}, and \code{altitude} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{x} and \code{y}) specifying
+a size for each point.}
+
+\item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point. Use \code{"height"} to color points by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
+
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing points.
+A clear-only call returns without rendering a replacement.}
+
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
 
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value,
 all data will be rendered at that altitude.}
 
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, points outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
 \item{extent}{Either an object representing the spatial extent of the 3D scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
-
-\item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{lat} and \code{long}) specifying
-a size for each point.}
-
-\item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point.}
-
-\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
-
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
 }
 \description{
-Adds 3D datapoints to the current scene, using latitude/longitude or coordinates in the reference
+Adds 3D datapoints to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset
 above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used (unless that
 value is NA, in which the point will be removed).
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
 
@@ -75,53 +102,58 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 
 
 #Render the 3D map
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50,water=TRUE,
-         shadowcolor="#40310a", background = "tan",
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 20) |>
+ plot_3d(vertical_exaggeration = 4,water=TRUE,
+         shadow_color="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
-#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#dataset) and the latitudes, longitudes, and altitudes of the track.
-render_points(extent = attr(montereybay,"extent"),
-             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
-             altitude = z_out, zscale=50,color="white")
+#Pass in the latitude/longitude coordinates and altitudes of the track.
+render_points(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+             altitude = z_out, color="white")
 render_snapshot()
-}
-if(run_documentation()) {
 #We'll set the altitude to zero to give the tracks a "shadow" over the water.
-render_points(extent = attr(montereybay,"extent"),
-             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
-             offset = 0, zscale=50, color="black")
+render_points(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+             offset = 0, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
-}
-if(run_documentation()) {
 #Remove the points:
 render_points(clear_previous=TRUE)
 
 # Finally, we can also plot just GPS coordinates offset from the surface by leaving altitude `NULL`
-# Here we plot a circle of values surrounding Moss Landing. This requires the original heightmap.
+# Here we plot a circle of values surrounding Moss Landing.
 
 t = seq(0,2*pi,length.out=100)
 circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
-render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
-           zscale=50, color="red", offset=100, size=5)
+render_points(lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+           color="red", offset=100, size=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
-}
-if(run_documentation()) {
 #And all of these work with `render_highquality()`
 render_highquality(point_radius = 1, min_variance = 0, samples = 16)
-}
 
-if(run_documentation()) {
-#We can also change the material of the objects by setting the `point_material` and
-#`point_material_args` arguments in `render_highquality()`
+#We can also change the material of the objects by setting the `rgl_materials`
+#argument in `render_highquality()`
 render_highquality(point_radius = 1, min_variance = 0, samples = 16,
-                  point_material = rayrender::glossy,
-                  point_material_args = list(gloss = 0.5, reflectance = 0.2))
-}
+                  rgl_materials = list(points3d = list(
+                    material = rayrender::glossy,
+                    args = list(gloss = 0.5, reflectance = 0.2)
+                  )))
+#Render the points with a neon light material
+render_highquality(
+	light = FALSE,
+	samples = 32,
+	point_radius = 0.5,
+	ground_size = 0,
+ min_variance = 0, min_adaptive_size = 1,
+	use_extruded_paths = TRUE,
+	rgl_materials = list(
+		points3d = list(
+			material = rayrender::light,
+			args = list(importance_sample = FALSE, color = "purple", intensity = 100)
+		)
+	)
+)
+\dontshow{\}) # examplesIf}
 }

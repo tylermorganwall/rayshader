@@ -4,14 +4,18 @@
 #'use an `sf` object or manually specify the x/y coordinates and label.
 #'
 #'@param labels A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.
-#'@param extent Either an object representing the spatial extent of the scene
+#'@param extent Default `NULL`. Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#'If omitted, rayshader will infer the extent from `heightmap` when possible,
+#'otherwise reuse cached extent metadata from the active scene or the most recent
+#'raster-backed hillshade call.
 #'@param x Default `NULL`. The x-coordinate, if `labels` is not an `sf` object.
 #'@param y Default `NULL`. The y-coordinate, if `labels` is not an `sf` object.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
-#'overlay automatically.
+#'overlay automatically. If omitted, rayshader will reuse the cached heightmap
+#'from the active scene or the most recent hillshade call.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to
@@ -43,271 +47,294 @@
 #'@param halo_offset Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in units of `geometry`.
 #'@param halo_blur Default `0`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.
 #'@param halo_edge_softness Default `0.1`. Width of the softened halo edge transition, in pixels.
+#'@param halo_gap_fill Default `2`. Maximum alpha gap width, in pixels, to bridge in the halo outline.
+#'@param halo_gap_fill_alpha_threshold Default `0.25`. Alpha threshold used to protect enclosed interior halo gaps from `halo_gap_fill`.
 #'@param seed Default `NA`, no seed. Random seed for ensuring the consistent placement of labels around points.
 #'@return Semi-transparent overlay with labels.
 #'@export
-#'@examples
-#'#Add the included `sf` object with roads to the montereybay dataset
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add the included `sf` object with roads to the montereybay_spatial dataset
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #'#Set label font
 #'par(family = "Arial")
 #'
 #'#We're plotting the polygon data here for counties around Monterey Bay. We'll first
 #'#plot the county names at the polygon centroids.
 #'bathy_hs |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-#'                                       extent = attr(montereybay,"extent"),
-#'                                       heightmap = montereybay)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow)) |>
 #'  add_overlay(generate_label_overlay(labels=monterey_counties_sf,
 #'                                     color="black", point_size = 1, text_size = 1,
 #'                                     data_label_column = "NAME",
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#It's hard to read these values, so we'll add a white halo.
 #'bathy_hs |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-#'                                       extent = attr(montereybay,"extent"),
-#'                                       heightmap = montereybay)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow)) |>
 #'  add_overlay(generate_label_overlay(labels=monterey_counties_sf,
 #'                                     color="black", point_size = 1, text_size = 1,
 #'                                     data_label_column = "NAME",
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Plot the actual town locations, using the manual plotting interface instead of the `sf` object
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
 #'                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
 #'                                     color="black", point_size = 1, text_size = 1,
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Adding a softer blurred halo
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
 #'                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
 #'                                     color="black", point_size = 1, text_size = 1,
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Changing the seed changes the locations of the labels
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
 #'                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
 #'                                     color="black", point_size = 1, text_size = 1,
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=2))  |>
 #'  plot_map()
-#'}
 generate_label_overlay = function(
-	labels,
-	extent,
-	x = NULL,
-	y = NULL,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	text_size = 1,
-	color = "black",
-	font = 1,
-	pch = 16,
-	point_size = 1,
-	point_color = NA,
-	offset = c(0, 0),
-	data_label_column = NULL,
-	halo_color = NA,
-	halo_expand = 0,
-	halo_alpha = 1,
-	halo_offset = c(0, 0),
-	halo_blur = 0,
-	halo_edge_softness = 0.1,
-	seed = NA
+  labels,
+  extent = NULL,
+  x = NULL,
+  y = NULL,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  text_size = 1,
+  color = "black",
+  font = 1,
+  pch = 16,
+  point_size = 1,
+  point_color = NA,
+  offset = c(0, 0),
+  data_label_column = NULL,
+  halo_color = NA,
+  halo_expand = 0,
+  halo_alpha = 1,
+  halo_offset = c(0, 0),
+  halo_blur = 0,
+  halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25,
+  seed = NA
 ) {
-	if (!is.na(seed)) {
-		set.seed(seed)
-	} else {
-		seed = .Random.seed
-	}
-	if (is.na(point_color)) {
-		point_color = color
-	}
-	if (!(length(find.package("car", quiet = TRUE)) > 0)) {
-		stop("{car} package required for generate_label_overlay()")
-	}
-	if (
-		(inherits(labels, "sf") || inherits(labels, "sfc")) &&
-			(is.null(x) && is.null(y)) &&
-			!is.null(data_label_column)
-	) {
-		if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-			stop("{sf} package required for {sf} object support")
-		}
-		geometry_list = sf::st_geometry(labels)
-		xycoords = list()
-		for (i in seq_len(length(geometry_list))) {
-			if (
-				inherits(geometry_list[[i]], "POLYGON") ||
-					inherits(geometry_list[[i]], "MULTIPOLYGON")
-			) {
-				xycoords[[i]] = sf::st_coordinates(sf::st_centroid(geometry_list[[i]]))
-			} else {
-				xycoords[[i]] = sf::st_coordinates(geometry_list[[i]])
-			}
-		}
-		xycoords = do.call(rbind, xycoords)
-		labels = as.character(labels[[data_label_column]])
-		x = xycoords[, 1]
-		y = xycoords[, 2]
-	}
-	if (is.null(extent)) {
-		stop("`extent` must not be NULL")
-	}
-	stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
-	stopifnot(!missing(extent))
-	stopifnot(!missing(labels))
+  color = normalize_rgb_color(color)
+  point_color = normalize_rgb_color(point_color)
+  halo_color = normalize_rgb_color(halo_color)
+  if (!is.na(seed)) {
+    set.seed(seed)
+  } else {
+    seed = .Random.seed
+  }
+  if (is.na(point_color)) {
+    point_color = color
+  }
+  if (!(length(find.package("car", quiet = TRUE)) > 0)) {
+    stop("{car} package required for generate_label_overlay()")
+  }
+  if (missing(labels)) {
+    stop("`labels` must be supplied.", call. = FALSE)
+  }
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_label_overlay"
+  )
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_label_overlay"
+  )
+  if (
+    (inherits(labels, "sf") || inherits(labels, "sfc")) &&
+      (is.null(x) && is.null(y)) &&
+      !is.null(data_label_column)
+  ) {
+    if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+      stop("{sf} package required for {sf} object support")
+    }
+    scene_labels = auto_transform_scene_sf(
+      sf_object = labels,
+      extent = extent,
+      heightmap = heightmap,
+      crs = tryCatch(sf::st_crs(labels), error = function(e) NULL),
+      caller = "generate_label_overlay"
+    )
+    labels = scene_labels$object
+    if (!is.null(scene_labels$extent)) {
+      extent = scene_labels$extent
+    }
+    geometry_list = sf::st_geometry(labels)
+    xycoords = list()
+    for (i in seq_len(length(geometry_list))) {
+      if (
+        inherits(geometry_list[[i]], "POLYGON") ||
+          inherits(geometry_list[[i]], "MULTIPOLYGON")
+      ) {
+        xycoords[[i]] = sf::st_coordinates(sf::st_centroid(geometry_list[[i]]))
+      } else {
+        xycoords[[i]] = sf::st_coordinates(geometry_list[[i]])
+      }
+    }
+    xycoords = do.call(rbind, xycoords)
+    labels = as.character(labels[[data_label_column]])
+    x = xycoords[, 1]
+    y = xycoords[, 2]
+  }
+  if (!is.null(x) && !is.null(y)) {
+    scene_xy = auto_transform_scene_xy(
+      x = x,
+      y = y,
+      extent = extent,
+      heightmap = heightmap,
+      caller = "generate_label_overlay"
+    )
+    x = scene_xy$x
+    y = scene_xy$y
+    if (!is.null(scene_xy$extent)) {
+      extent = scene_xy$extent
+    }
+  }
+  extent = get_extent(extent)
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
 
-	extent = get_extent(extent)
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
-
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width,
-		height = height,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot(
-		x = x + offset[1],
-		y = y + offset[2],
-		xlim = c(extent["xmin"], extent["xmax"]),
-		ylim = c(extent["ymin"], extent["ymax"]),
-		asp = 1,
-		pch = pch,
-		bty = "n",
-		axes = FALSE,
-		xaxs = "i",
-		yaxs = "i",
-		cex = point_size,
-		col = point_color
-	)
-	car::pointLabel(
-		x = x + offset[1],
-		y = y + offset[2],
-		labels = labels,
-		cex = text_size,
-		xlim = c(extent["xmin"], extent["xmax"]),
-		bty = "n",
-		ylim = c(extent["ymin"], extent["ymax"]),
-		asp = 1,
-		font = font,
-		xaxs = "i",
-		yaxs = "i",
-		col = color
-	)
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	if (!is.na(halo_color)) {
-		if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
-			stop("{rayimage} package required for `halo_color`")
-		}
-		set.seed(seed)
-		tempoverlay = tempfile(fileext = ".png")
-		png_device(
-			filename = tempoverlay,
-			width = width,
-			height = height,
-			units = "px",
-			bg = "transparent"
-		)
-		graphics::par(mar = c(0, 0, 0, 0))
-		graphics::plot(
-			x = x + halo_offset[1],
-			y = y + halo_offset[2],
-			xlim = c(extent["xmin"], extent["xmax"]),
-			ylim = c(extent["ymin"], extent["ymax"]),
-			asp = 1,
-			pch = pch,
-			bty = "n",
-			axes = FALSE,
-			xaxs = "i",
-			yaxs = "i",
-			cex = point_size,
-			col = halo_color
-		)
-		car::pointLabel(
-			x = x + halo_offset[1],
-			y = y + halo_offset[2],
-			labels = labels,
-			cex = text_size,
-			xlim = c(extent["xmin"], extent["xmax"]),
-			bty = "n",
-			ylim = c(extent["ymin"], extent["ymax"]),
-			asp = 1,
-			font = font,
-			xaxs = "i",
-			yaxs = "i",
-			col = halo_color
-		)
-		grDevices::dev.off() #resets par
-		overlay_temp_under = rayimage::ray_read_image(tempoverlay)
-		overlay_temp_under = generate_halo_underlay(
-			overlay_temp_under,
-			halo_expand,
-			halo_offset,
-			halo_color,
-			halo_alpha,
-			halo_blur,
-			halo_edge_softness
-		)
-		overlay_temp = rayimage::render_image_overlay(
-			overlay_temp_under,
-			overlay_temp
-		)
-	}
-	return(overlay_temp)
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width,
+    height = height,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(
+    x = x + offset[1],
+    y = y + offset[2],
+    xlim = c(extent["xmin"], extent["xmax"]),
+    ylim = c(extent["ymin"], extent["ymax"]),
+    asp = 1,
+    pch = pch,
+    bty = "n",
+    axes = FALSE,
+    xaxs = "i",
+    yaxs = "i",
+    cex = point_size,
+    col = point_color
+  )
+  car::pointLabel(
+    x = x + offset[1],
+    y = y + offset[2],
+    labels = labels,
+    cex = text_size,
+    xlim = c(extent["xmin"], extent["xmax"]),
+    bty = "n",
+    ylim = c(extent["ymin"], extent["ymax"]),
+    asp = 1,
+    font = font,
+    xaxs = "i",
+    yaxs = "i",
+    col = color
+  )
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  if (!is.na(halo_color)) {
+    if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
+      stop("{rayimage} package required for `halo_color`")
+    }
+    set.seed(seed)
+    tempoverlay = tempfile(fileext = ".png")
+    png_device(
+      filename = tempoverlay,
+      width = width,
+      height = height,
+      units = "px",
+      bg = "transparent"
+    )
+    graphics::par(mar = c(0, 0, 0, 0))
+    graphics::plot(
+      x = x + halo_offset[1],
+      y = y + halo_offset[2],
+      xlim = c(extent["xmin"], extent["xmax"]),
+      ylim = c(extent["ymin"], extent["ymax"]),
+      asp = 1,
+      pch = pch,
+      bty = "n",
+      axes = FALSE,
+      xaxs = "i",
+      yaxs = "i",
+      cex = point_size,
+      col = halo_color
+    )
+    car::pointLabel(
+      x = x + halo_offset[1],
+      y = y + halo_offset[2],
+      labels = labels,
+      cex = text_size,
+      xlim = c(extent["xmin"], extent["xmax"]),
+      bty = "n",
+      ylim = c(extent["ymin"], extent["ymax"]),
+      asp = 1,
+      font = font,
+      xaxs = "i",
+      yaxs = "i",
+      col = halo_color
+    )
+    grDevices::dev.off() #resets par
+    overlay_temp_under = rayimage::ray_read_image(tempoverlay)
+    overlay_temp_under = generate_halo_underlay(
+      overlay_temp_under,
+      halo_expand,
+      halo_offset,
+      halo_color,
+      halo_alpha,
+      halo_blur,
+      halo_edge_softness,
+      halo_gap_fill,
+      halo_gap_fill_alpha_threshold
+    )
+    overlay_temp = rayimage::render_image_overlay(
+      overlay_temp_under,
+      overlay_temp
+    )
+  }
+  return(overlay_temp)
 }

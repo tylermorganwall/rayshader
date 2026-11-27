@@ -6,23 +6,34 @@
 \usage{
 generate_altitude_overlay(
   hillshade,
-  heightmap,
+  heightmap = NULL,
   start_transition,
   end_transition = NULL,
-  lower = TRUE
+  lower = TRUE,
+  relative = FALSE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
 \item{hillshade}{The hillshade to transition into.}
 
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry
+in the matrix is the elevation at that point. If omitted, rayshader uses the
+cached hillshade or scene heightmap.}
 
-\item{start_transition}{Elevation above which \code{hillshade} is completely transparent.}
+\item{start_transition}{Elevation threshold, or proportion of the height range if \code{relative = TRUE}.}
 
-\item{end_transition}{Default \code{NULL}. Elevation below which \code{hillshade} is completely opaque. By default, this is equal to \code{start_transition}.}
+\item{end_transition}{Default \code{NULL}. Elevation threshold, or proportion of the height range if \code{relative = TRUE}. By default, this is equal to \code{start_transition}.}
 
-\item{lower}{Default \code{TRUE}. This makes \code{hillshade} completely opaque below \code{start_transition}. If
-\code{FALSE}, the direction will be reversed.}
+\item{lower}{Default \code{TRUE}. If \code{TRUE}, the overlay is most opaque at lower elevations. If \code{FALSE}, the direction is reversed.}
+
+\item{relative}{Default \code{FALSE}. If \code{TRUE}, interpret \code{start_transition} and \code{end_transition} as proportions of the height range in 0..1.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.}
 }
 \value{
 4-layer RGB array representing the semi-transparent hillshade.
@@ -32,33 +43,29 @@ Using a hillshade and the height map, generates a semi-transparent hillshade to
 layer onto an existing map.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a bathymetric hillshade
-if(run_documentation()) {
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 plot_map(bathy_hs)
-}
 
-if(run_documentation()) {
 #Set everything below 0m to water palette
-montereybay |>
- sphere_shade(zscale=10) |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+montereybay_spatial |>
+ sphere_shade() |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
-}
 
 #Add snow peaks by setting `lower = FALSE`
 snow_palette = "white"
-snow_hs = height_shade(montereybay, texture = snow_palette)
+snow_hs = height_shade(montereybay_spatial, texture = snow_palette)
 
-if(run_documentation()) {
 #Set the snow transition region from 500m to 1200m
-montereybay |>
- sphere_shade(zscale=10, texture = "desert") |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_overlay(generate_altitude_overlay(snow_hs, montereybay, 500, 1200, lower=FALSE))  |>
- add_shadow(ambient_shade(montereybay,zscale=50,maxsearch=100),0) |>
+montereybay_spatial |>
+ sphere_shade(texture = "desert") |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(snow_hs, montereybay_spatial, 500, 1200, lower=FALSE))  |>
+ add_shadow(ambient_shade(vertical_exaggeration = 4,max_search=100),0) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

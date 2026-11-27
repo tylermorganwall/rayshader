@@ -16,10 +16,11 @@ Reduced matrix.
 Reduce Matrix Size (defunct)
 }
 \examples{
-if(run_documentation()) {
-montbaysmall = resize_matrix(montereybay, scale=0.5)
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+montereybay_matrix = raster_to_matrix(montereybay_spatial, verbose = FALSE)
+montbaysmall = resize_matrix(montereybay_matrix, scale=0.5)
 montbaysmall |>
  sphere_shade() |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

@@ -6,13 +6,11 @@
 \usage{
 render_polygons(
   polygon,
-  extent,
   color = "red",
   top = 1,
   bottom = NA,
   data_column_top = NULL,
   data_column_bottom = NULL,
-  heightmap = NULL,
   scale_data = 1,
   parallel = FALSE,
   holes = 0,
@@ -22,7 +20,15 @@ render_polygons(
   light_direction = c(315, 135),
   light_intensity = 0.3,
   light_relative = FALSE,
-  clear_previous = FALSE
+  clear_previous = FALSE,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  ...
 )
 }
 \arguments{
@@ -31,31 +37,25 @@ of polygon represented in a way that can be processed by \code{xy.coords()}.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
 
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
-
-\item{color}{Default \code{black}. Color of the polygon.}
+\item{color}{Default \code{black}. Color of the polygon. Use \code{"height"} to color polygons by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette using \code{data_column_top}, \code{data_column_bottom}, or \code{top}.}
 
 \item{top}{Default \code{1}. Extruded top distance. If this equals \code{bottom}, the polygon will not be
 extruded and just the one side will be rendered.}
 
-\item{bottom}{Default \code{0}. Extruded bottom distance. If this equals \code{top}, the polygon will not be
+\item{bottom}{Default \code{NA}. Extruded bottom distance. With \code{NA}, places the bottom halfway between the scene's base and lowest surface. If this equals \code{top}, the polygon will not be
 extruded and just the one side will be rendered.}
 
 \item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the top of the extruded polygon.}
+to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the bottom of the extruded polygon.}
-
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
-much to scale that value when rendering.}
+much to scale that value when rendering. When omitted in a mapped \code{\link[=plot_gg]{plot_gg()}} scene,
+data-column values use the cached ggplot height scale. Supplying \code{scale_data} explicitly
+uses raw values multiplied by this factor instead. Explicit \code{top} and \code{bottom} remain
+in scene height units. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{parallel}{Default \code{FALSE}. If \code{TRUE}, polygons will be extruded in parallel, which
 may be faster (depending on how many geometries are in \code{polygon}).}
@@ -76,19 +76,46 @@ the holes in the polygon. See the \code{earcut} function in the \code{decido} pa
 \item{light_relative}{Default \code{FALSE}. Whether the light direction should be taken relative to the camera,
 or absolute.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing
+polygons. A clear-only call returns without rendering a replacement.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+All points are assumed to be evenly spaced.}
+
+\item{...}{Additional arguments passed to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference
 system defined by the extent object.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the county borders as polygons in Monterey Bay
-montereybay |>
-  sphere_shade(texture = "desert") |>
-  add_shadow(ray_shade(montereybay,zscale = 50)) |>
-  plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue")
+montereybay_spatial |>
+  sphere_shade(texture = "desert", vertical_exaggeration = 20) |>
+  add_shadow(ray_shade(vertical_exaggeration = 4)) |>
+  plot_3d(water = TRUE, vertical_exaggeration = 4, window_size = 800, water_color = "dodgerblue")
 render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 
 #We will apply a negative buffer to create space between adjacent polygons. You may
@@ -96,32 +123,25 @@ render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 sf::sf_use_s2(FALSE)
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
-render_polygons(mont_county_buff,
-                extent = attr(montereybay,"extent"), top = 10,
+render_polygons(mont_county_buff, top = 2000,
                 parallel = FALSE)
 render_snapshot()
-}
-if(run_documentation()) {
 #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
 #by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.
 render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
-render_polygons(mont_county_buff,
-                extent = attr(montereybay,"extent"), bottom = 190, top=200,
+render_polygons(mont_county_buff, bottom = 24000, top=25000,
                 parallel=FALSE,clear_previous=TRUE)
 render_snapshot()
-}
-if(run_documentation()) {
 #We can set the height of the data to a column in the sf object: we'll use the land area.
 #We'll have to scale this value because its max value is 2.6 billion:
-render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
-render_polygons(mont_county_buff,
-                extent = attr(montereybay, "extent"), data_column_top = "ALAND",
-                scale_data = 300/(2.6E9), color = "chartreuse4",
+render_camera(theta=-60,  phi=40, zoom = 0.85, fov=30)
+render_polygons(mont_county_buff, data_column_top = "ALAND",
+                scale_data = 300/(5E7), color = "chartreuse4",
                 clear_previous = TRUE)
+render_zaxis(data = "polygon", location = "topright",
+             title_location = "top")
 render_snapshot()
-}
-if(run_documentation()) {
 #This function also works with `render_highquality()`
 render_highquality(samples = 16, min_variance = 0)
-}
+\dontshow{\}) # examplesIf}
 }

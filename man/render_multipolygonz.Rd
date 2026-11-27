@@ -5,37 +5,28 @@
 \title{Render MULTIPOLYGON Z Geometry}
 \usage{
 render_multipolygonz(
-  sfobj,
-  extent = NULL,
-  zscale = 1,
-  heightmap = NULL,
+  sf_obj,
   color = "grey50",
-  offset = 0,
   obj_zscale = TRUE,
   swap_yz = TRUE,
-  clear_previous = FALSE,
-  baseshape = "rectangle",
   rgl_tag = "_multipolygon",
+  clear_previous = FALSE,
+  offset = 0,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  verbose = FALSE,
   ...
 )
 }
 \arguments{
-\item{sfobj}{An sf object with MULTIPOLYGON Z geometry.}
-
-\item{extent}{Either an object representing the spatial extent of the scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{sf_obj}{An sf object with MULTIPOLYGON Z geometry.}
 
 \item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
-
-\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
 \item{obj_zscale}{Default \code{TRUE}. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
@@ -43,26 +34,67 @@ the size of the map. If zscale is very big, this will make the model very small.
 \item{swap_yz}{Default \code{TRUE}. Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
-
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
-
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
 
-\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing rendered
+multipolygons for \code{rgl_tag}. A clear-only call returns without rendering a
+replacement.}
+
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix containing the scene terrain
+and its existing \code{NA} cells. If omitted, this is taken from the cached scene
+set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached
+value.}
+
+\item{verbose}{Default \code{FALSE}. Report triangulation and scene-upload stages.}
+
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified
 \code{extent} argument as-is.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 You can also use \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} manually to convert sf objects
 }
+\details{
+Faces with more than three vertices or holes require the \code{decido}
+package. Concave boundaries and interior holes are preserved when triangulating
+horizontal, vertical, and sloping faces. Crossed or overlapping rings are
+repaired in the face plane, with new intersection vertices interpolated along
+the original 3D edges. By default, \code{options(rayshader.multipolygonz_repair = TRUE)}
+also repairs ambiguous projected intersections, retaining existing vertices
+and choosing the nearest projected source edge for new vertex depths (first
+edge breaks ties). This is a heuristic for nonplanar faces. Set
+\code{options(rayshader.multipolygonz_repair = FALSE)} to drop those faces with a
+summary warning instead. Unambiguous planar repairs occur in either mode.
+Zero-area faces and faces that still cannot be triangulated are warned about
+and skipped in either mode. If no faces remain, nothing is added to the scene. Some
+touching-hole cases require sf/GEOS constrained triangulation support.
+}
 \examples{
-run_examples = length(find.package("sf", quiet = TRUE)) &&
-              length(find.package("elevatr", quiet = TRUE)) &&
-              length(find.package("raster", quiet = TRUE)) &&
-              run_documentation()
-if(run_examples) {
+\dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 library(sf)
 #Set location of washington monument
 washington_monument_location =  st_point(c(-77.035249, 38.889462))
@@ -85,24 +117,19 @@ dc_elevation_matrix[dc_elevation_matrix < 0] = 0
 #Plot a 3D map of the national mall
 dc_elevation_matrix |>
  height_shade() |>
- add_shadow(lamb_shade(dc_elevation_matrix), 0) |>
- plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1,
-         soliddepth=-50, windowsize = 800)
+ add_shadow(lamb_shade(), 0) |>
+ plot_3d(zscale=3.7, water = TRUE, water_input = 1,
+         solid_depth=-50, window_size = 800,
+         extent = raster::extent(cropped_data))
 render_snapshot()
-}
-if(run_examples) {
 #Zoom in on the monument
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #Render the national monument
 rgl::par3d(ignoreExtent = TRUE)
 render_multipolygonz(washington_monument_multipolygonz,
-                    extent = raster::extent(cropped_data),
-                    zscale = 4, color = "grey80",
-                    heightmap = dc_elevation_matrix)
+                    zscale = 4, color = "grey80")
 render_snapshot()
-}
-if(run_examples) {
 #This works with `render_highquality()`
 render_highquality(min_variance = 0, samples = 16)
-}
+\dontshow{\}) # examplesIf}
 }

@@ -5,41 +5,61 @@
 \title{Detect water}
 \usage{
 detect_water(
-  heightmap,
+  heightmap = NULL,
   zscale = 1,
-  cutoff = 0.999,
-  min_area = length(heightmap)/400,
+  cutoff = 0.9999999,
+  min_area = NULL,
   max_height = NULL,
-  normalvectors = NULL,
+  normal_vectors = NULL,
   keep_groups = FALSE,
-  progbar = FALSE
+  progress_bar = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All grid points are assumed to be evenly spaced. Alternatively, if heightmap is a logical matrix, each entry
-specifies whether that point is water or not.}
+specifies whether that point is water or not. If omitted, rayshader will use the cached hillshade/scene heightmap.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. If omitted and a cached or raster-derived
+\code{zscale} is available, rayshader will reuse that value.}
 
-\item{cutoff}{Default \code{0.999}. The lower limit of the z-component of the unit normal vector to be classified as water.}
+\item{cutoff}{Default \code{1-1e-7}. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
-\item{min_area}{Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
+\item{min_area}{Default \code{NULL}, equivalent to \code{length(heightmap)/400} after
+the heightmap is resolved. Minimum area (in grid cells) to be considered a
+body of water.}
 
 \item{max_height}{Default \code{NULL}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
-\item{normalvectors}{Default \code{NULL}. Pre-computed array of normal vectors from the \code{\link[=calculate_normal]{calculate_normal()}} function. Supplying this will speed up water detection.}
+\item{normal_vectors}{Default \code{NULL}. Pre-computed array of normal vectors from the \code{\link[=calculate_normal]{calculate_normal()}} function. Supplying this will speed up water detection.}
 
 \item{keep_groups}{Default \code{FALSE}. If \code{TRUE}, the matrix returned will retain the numbered grouping information.}
 
-\item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+\item{progress_bar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+
+\item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, account for unequal
+horizontal cell sizes using the supplied or cached spatial metadata.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap. If
+omitted, rayshader uses matching cached metadata when available.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.
 }
 \description{
 Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Here we even out a portion of the volcano dataset to simulate water:
@@ -48,7 +68,7 @@ island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 
 #Setting a minimum area avoids classifying small flat areas as water:
 island_volcano |>
- sphere_shade(texture="imhof3") |>
- add_water(detect_water(island_volcano, min_area = 400),color="imhof3") |>
+ sphere_shade(texture="imhof3", vertical_exaggeration = 20) |>
+ add_water(detect_water(min_area = 400),color="imhof3") |>
  plot_map()
 }

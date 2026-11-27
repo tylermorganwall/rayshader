@@ -35,8 +35,6 @@ render_snapshot(
   line_offset = 1e-07,
   thick_lines = TRUE,
   line_radius = 0.25,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
@@ -44,6 +42,8 @@ render_snapshot(
   rayvertex_lights = NULL,
   rayvertex_shadow_map = FALSE,
   plot = TRUE,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 )
 }
@@ -126,11 +126,6 @@ render the lines using a single-pixel anti-aliased line algorithm.}
 
 \item{line_radius}{Default \code{0.25}. The radius of the thick cylinders if \code{thick_lines = TRUE} and \code{software_render = TRUE}.}
 
-\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
-each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
-
-\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
-
 \item{new_page}{Default \code{TRUE}. Whether to call \code{grid::grid.newpage()} before plotting the image.}
 
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
@@ -149,6 +144,11 @@ be applied to the rendered scene.}
 
 \item{plot}{Default \code{TRUE}. Whether to plot the snapshot.}
 
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
+
 \item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
 }
 \value{
@@ -158,18 +158,14 @@ Displays snapshot of current rgl plot (or saves to disk), as well as invisibly r
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-if(run_documentation()) {
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
-}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 20) |>
+ plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 
-if(run_documentation()) {
 render_snapshot()
-}
 
 #Create a title
-if(run_documentation()) {
 render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
                title_font = "Helvetica", title_position = "north")
@@ -180,20 +176,16 @@ render_snapshot(title_text = "Monterey Bay, California",
                title_color = "white", title_bar_color = "darkgreen",
                vignette = TRUE, title_offset=c(0,20),
                title_font = "Helvetica", title_position = "north")
-}
 #Use software rendering to render a scene with shadow mapping
-if(run_documentation()) {
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
+ plot_3d(shadow=FALSE, solid_line_color = NULL, vertical_exaggeration = 4)
 #No shadows
 render_snapshot(software_render = TRUE)
-}
-if(run_documentation()) {
 #Now with shadow mapped shadows, calculated in rayvertex
 render_snapshot(rayvertex_lighting = TRUE,
                rayvertex_lights = rayvertex::directional_light(intensity = 1.2,
                                                                direction = c(-1, 1, -1)),
                rayvertex_shadow_map = TRUE, software_render = TRUE)
-}
+\dontshow{\}) # examplesIf}
 }

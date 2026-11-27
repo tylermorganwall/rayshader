@@ -7,7 +7,7 @@
 make_lines(
   heightmap,
   basedepth = 0,
-  linecolor = "grey20",
+  line_color = "grey20",
   zscale = 1,
   alpha = 1,
   linewidth = 2,
@@ -19,7 +19,7 @@ make_lines(
 
 \item{basedepth}{Default \code{0}.}
 
-\item{linecolor}{Default \code{grey40}.}
+\item{line_color}{Default \code{grey40}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}

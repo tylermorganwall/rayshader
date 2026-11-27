@@ -2,159 +2,191 @@
 #'
 #'@description Render a 2D floating overlay over the map.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'Note: Multiple layers with transparency can cause rendering issues in rgl.
 #'
 #'@param overlay Overlay (4D RGBA array) to be rendered on the 3D map.
 #'@param altitude Altitude to place the overlay.
-#'@param heightmap The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
+#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above
+#'empty spaces represented by `NA` values in the active heightmap.
+#'@param reorient Default `TRUE`. Whether to transpose the heightmap's `NA` mask
+#'to match the overlay texture orientation.
+#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
+#'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
-#'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
-#'@param baseshape Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.
-#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
-#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
-#'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
-#'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix whose existing `NA` cells mask
+#'the overlay when `remove_na = TRUE`. If omitted, this is taken from the cached
+#'scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the
+#'cached value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the road network as a floating overlay layer, along with a label annotation and a floating
 #'#point annotation
 #'if(all(length(find.package("sf", quiet = TRUE)) > 0,
 #'       length(find.package("magick", quiet = TRUE)) > 0)) {
 #'  monterey = c(-121.892933,36.603053)
 #'  monterey_city = sf::st_sfc(sf::st_point(monterey))
+#'  sf::st_crs(monterey_city) = sf::st_crs(montereybay_spatial)
 #'
 #'  #Generate Overlays
-#'  road_overlay = generate_line_overlay(monterey_roads_sf, attr(montereybay,"extent"),
-#'                                       heightmap = montereybay)
+#'  road_overlay = generate_line_overlay(monterey_roads_sf, heightmap = montereybay_spatial)
 #'  point_overlay = generate_point_overlay(monterey_city, color="red", size=1,
-#'                                         attr(montereybay,"extent"), heightmap = montereybay)
+#'                                         heightmap = montereybay_spatial)
 #'
 #'  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
-#'  montereybay |>
+#'  montereybay_spatial |>
 #'    height_shade() |>
-#'    add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'    plot_3d(montereybay, water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
+#'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+#'    plot_3d(water = TRUE, water_alpha = 1, window_size = 800,
+#'            water_color = "lightblue", vertical_exaggeration = 4)
 #'  render_camera(theta=-55,phi=45,zoom=0.8)
 #'
 #'  #Render label
-#'  render_label(montereybay, lat = monterey[2], long = monterey[1], altitude = 9900,
-#'               extent = attr(montereybay, "extent"),
-#'               zscale = 50, text = "Monterey", textcolor = "black", linecolor="darkred")
+#'  render_label(lat = monterey[2], long = monterey[1], altitude = 9900,
+#'               text = "Monterey", text_color = "black", line_color="darkred")
 #'
 #'  #Render Floating Overlays
-#'  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
-#'  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
+#'  render_floating_overlay(road_overlay, altitude = 10000)
+#'  render_floating_overlay(point_overlay, altitude = 100)
 #'  render_snapshot()
 #'}
-#'}
 render_floating_overlay = function(
-	overlay = NULL,
-	altitude = NULL,
-	heightmap = NULL,
-	zscale = 1,
-	alpha = 1,
-	baseshape = "rectangle",
-	remove_na = TRUE,
-	reorient = TRUE,
-	clear_layers = FALSE,
-	horizontal_offset = c(0, 0),
-	...
+  overlay = NULL,
+  altitude = NULL,
+  alpha = 1,
+  remove_na = TRUE,
+  reorient = TRUE,
+  clear_layers = FALSE,
+  horizontal_offset = c(0, 0),
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  ...
 ) {
-	if (clear_layers) {
-		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
-		if (is.null(overlay)) {
-			return(invisible())
-		}
-	}
-	if (is.null(overlay)) {
-		stop("Must specify overlay")
-	}
-	if (is.null(altitude)) {
-		stop("Must specify altitude")
-	}
-	overlay = rayimage::ray_read_image(overlay)
-	if (alpha != 1 && length(dim(overlay)) == 3) {
-		if (dim(overlay)[3] == 4) {
-			overlay[,, 4] = overlay[,, 4] * alpha
-		}
-		if (dim(overlay)[3] == 2) {
-			overlay[,, 2] = overlay[,, 2] * alpha
-		}
-	}
-	if (missing(altitude)) {
-		stop("Must pass altitude value")
-	}
-	overlay = rayimage::render_clamp(overlay)
+  if (
+    !is.logical(reorient) ||
+      length(reorient) != 1L ||
+      is.na(reorient)
+  ) {
+    stop("`reorient` must be a single logical value.", call. = FALSE)
+  }
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_floating_overlay"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_floating_overlay"
+  )
+  if (clear_layers) {
+    rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
+    if (is.null(overlay)) {
+      return(invisible())
+    }
+  }
+  if (is.null(overlay)) {
+    stop("Must specify overlay")
+  }
+  if (is.null(altitude)) {
+    stop("Must specify altitude")
+  }
+  overlay = rayimage::ray_read_image(overlay)
+  if (alpha != 1 && length(dim(overlay)) == 3) {
+    if (dim(overlay)[3] == 4) {
+      overlay[,, 4] = overlay[,, 4] * alpha
+    }
+    if (dim(overlay)[3] == 2) {
+      overlay[,, 2] = overlay[,, 2] * alpha
+    }
+  }
+  if (missing(altitude)) {
+    stop("Must pass altitude value")
+  }
+  overlay = rayimage::render_clamp(overlay)
 
-	hm = matrix(altitude, nrow = dim(overlay)[1], ncol = dim(overlay)[2])
-	tempmap = tempfile(fileext = ".png")
-	if (baseshape != "rectangle") {
-		overlay_alpha = is.na(generate_base_shape(
-			overlay[,, 1],
-			baseshape,
-			angle = 30 * pi / 180
-		))
-		overlay[,, 4][overlay_alpha] = 0
-	}
-	if (remove_na && !is.null(heightmap)) {
-		if (
-			any(dim(overlay)[1:2] != dim(heightmap)[1:2]) && any(is.na(heightmap))
-		) {
-			stop(
-				"If `remove_na = TRUE`, `heightmap` and `overlay` must have same number of rows and columns to make overlay transparent at those points"
-			)
-		}
-		if (any(is.na(heightmap))) {
-			overlay[,, 4][is.na(heightmap)] = 0
-		}
-	}
-	if (is.null(heightmap)) {
-		rows = nrow(hm)
-		cols = ncol(hm)
-	} else {
-		rows = nrow(heightmap)
-		cols = ncol(heightmap)
-	}
+  hm = matrix(altitude, nrow = dim(overlay)[1], ncol = dim(overlay)[2])
+  tempmap = tempfile(fileext = ".png")
+  if (remove_na && !is.null(heightmap)) {
+    heightmap_na_mask = is.na(heightmap)
+    if (reorient) {
+      heightmap_na_mask = t(heightmap_na_mask)
+    }
+    if (
+      any(dim(overlay)[1:2] != dim(heightmap_na_mask)) &&
+        any(heightmap_na_mask)
+    ) {
+      stop(
+        paste0(
+          "If `remove_na = TRUE`, the oriented heightmap mask and `overlay` ",
+          "must have the same number of rows and columns."
+        )
+      )
+    }
+    if (any(heightmap_na_mask)) {
+      overlay[,, 4][heightmap_na_mask] = 0
+    }
+  }
+  if (is.null(heightmap)) {
+    rows = nrow(hm)
+    cols = ncol(hm)
+  } else {
+    rows = nrow(heightmap)
+    cols = ncol(heightmap)
+    dim(heightmap) = unname(dim(heightmap))
+  }
 
-	rayimage::ray_write_image(overlay, tempmap)
-	dim(heightmap) = unname(dim(heightmap))
-	rowmin = min((+1):(rows) - rows / 2) + horizontal_offset[1]
-	rowmax = max((+1):(rows) - rows / 2) + horizontal_offset[1]
-	colmin = min(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
-	colmax = max(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
-	depth = altitude / zscale
+  rayimage::ray_write_image(overlay, tempmap)
+  scene_aspect = get_scene_geographic_aspect()
+  rowmin = min((+1):(rows) - rows / 2) *
+    scene_aspect$scale[["x"]] +
+    horizontal_offset[1]
+  rowmax = max((+1):(rows) - rows / 2) *
+    scene_aspect$scale[["x"]] +
+    horizontal_offset[1]
+  colmin = min(-(+1):-(cols) + cols / 2 + 1) *
+    scene_aspect$scale[["z"]] +
+    horizontal_offset[2]
+  colmax = max(-(+1):-(cols) + cols / 2 + 1) *
+    scene_aspect$scale[["z"]] +
+    horizontal_offset[2]
+  depth = altitude / zscale
 
-	tri1 = matrix(
-		c(rowmax, rowmax, rowmin, depth, depth, depth, colmax, colmin, colmin),
-		nrow = 3,
-		ncol = 3
-	)
-	tri2 = matrix(
-		c(rowmin, rowmax, rowmin, depth, depth, depth, colmax, colmax, colmin),
-		nrow = 3,
-		ncol = 3
-	)
-	rgl::triangles3d(
-		x = rbind(tri1, tri2),
-		texcoords = matrix(
-			c(1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1),
-			nrow = 6,
-			ncol = 2
-		),
-		normals = matrix(
-			c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0),
-			nrow = 6,
-			ncol = 3
-		),
-		texture = tempmap,
-		color = "white",
-		lit = FALSE,
-		tag = "floating_overlay_tris",
-		textype = "rgba",
-		...
-	)
+  tri1 = matrix(
+    c(rowmax, rowmax, rowmin, depth, depth, depth, colmax, colmin, colmin),
+    nrow = 3,
+    ncol = 3
+  )
+  tri2 = matrix(
+    c(rowmin, rowmax, rowmin, depth, depth, depth, colmax, colmax, colmin),
+    nrow = 3,
+    ncol = 3
+  )
+  vertices = rbind(tri1, tri2)
+  texcoords = matrix(c(1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1), ncol = 2)
+  # Interpolate UVs along with position when the curved sheet needs more faces.
+  overlay_vertices = curve_scene_primitives(cbind(vertices, texcoords))
+  rgl::triangles3d(
+    x = overlay_vertices[, 1:3, drop = FALSE],
+    texcoords = overlay_vertices[, 4:5, drop = FALSE],
+    normals = if (get_scene_earth_curvature()) {
+      NULL
+    } else {
+      matrix(rep(c(0, 1, 0), 6), ncol = 3, byrow = TRUE)
+    },
+    texture = tempmap,
+    color = "white",
+    lit = FALSE,
+    tag = "floating_overlay_tris",
+    textype = "rgba",
+    ...
+  )
 }

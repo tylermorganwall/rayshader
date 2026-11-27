@@ -23,6 +23,12 @@ the \code{montereybay} dataset.
 \examples{
 # This is the full code (commented out) used to generate this dataset from the original data:
 #counties = sf::st_read("tl_2016_06_cousub.shp")
-#monterey_counties_sf = sf::st_crop(counties, attr(montereybay,"extent"))
+#monterey_bbox = sf::st_bbox(c(
+#  xmin = terra::xmin(montereybay_spatial),
+#  ymin = terra::ymin(montereybay_spatial),
+#  xmax = terra::xmax(montereybay_spatial),
+#  ymax = terra::ymax(montereybay_spatial)
+#), crs = sf::st_crs(terra::crs(montereybay_spatial)))
+#monterey_counties_sf = sf::st_crop(counties, monterey_bbox)
 }
 \keyword{datasets}

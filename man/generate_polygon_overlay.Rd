@@ -6,28 +6,33 @@
 \usage{
 generate_polygon_overlay(
   geometry,
-  extent,
+  extent = NULL,
   heightmap = NULL,
   width = NA,
   height = NA,
   resolution_multiply = 1,
   offset = c(0, 0),
   data_column_fill = NULL,
-  linecolor = "black",
+  line_color = "black",
   palette = "white",
-  linewidth = 1
+  linewidth = 1,
+  ...
 )
 }
 \arguments{
 \item{geometry}{An \code{sf} object with POLYGON geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will infer the extent from \code{heightmap} when possible,
+otherwise reuse cached extent metadata from the active scene or the most recent
+raster-backed hillshade call.}
 
 \item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
-overlay automatically.}
+overlay automatically. If omitted, rayshader will reuse the cached heightmap
+from the active scene or the most recent hillshade call.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
@@ -42,7 +47,7 @@ in the final map.}
 
 \item{data_column_fill}{Default \code{NULL}. The column to map the polygon fill color to.}
 
-\item{linecolor}{Default \code{black}. Color of the lines.}
+\item{line_color}{Default \code{black}. Color of the lines.}
 
 \item{palette}{Default \code{black}. Single color, named vector color palette, or palette function.
 If this is a named vector and \code{data_column_fill} is not \code{NULL},
@@ -50,6 +55,8 @@ it will map the colors in the vector to the names. If \code{data_column_fill} is
 this will give a continuous mapping.}
 
 \item{linewidth}{Default \code{1}. Line width.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Image overlay representing the input polygon data.
@@ -58,48 +65,39 @@ Image overlay representing the input polygon data.
 Transforms an input \code{sf} object into an image overlay for the current height map.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Plot the counties around Monterey Bay, CA
-if(run_documentation()) {
 generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-                        extent = attr(montereybay,"extent"), heightmap = montereybay) |>
+                        heightmap = montereybay_spatial) |>
  plot_map()
-}
-if(run_documentation()) {
 #These counties include the water, so we'll plot bathymetry data over the polygon
 #data to only include parts of the polygon that fall on land.
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 
-generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-                        extent = attr(montereybay,"extent"), heightmap = montereybay) |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
+generate_polygon_overlay(monterey_counties_sf, palette = rainbow) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
  plot_map()
-}
-if(run_documentation()) {
 #Add a semi-transparent hillshade and change the palette, and remove the polygon lines
-montereybay |>
+montereybay_spatial |>
  sphere_shade(texture = "bw") |>
  add_overlay(generate_polygon_overlay(monterey_counties_sf,
-                        palette = terrain.colors, linewidth=NA,
-                        extent = attr(montereybay,"extent"), heightmap = montereybay),
-                        alphalayer=0.7) |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
- add_shadow(ray_shade(montereybay,zscale=50),0) |>
+                        palette = terrain.colors, linewidth=NA),
+                        alpha_layer=0.7) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0) |>
  plot_map()
-}
-if(run_documentation()) {
 #Map one of the variables in the sf object and use an explicitly defined color palette
 county_palette = c("087" = "red",    "053" = "blue",   "081" = "green",
                   "069" = "yellow", "085" = "orange", "099" = "purple")
-montereybay |>
+montereybay_spatial |>
  sphere_shade(texture = "bw") |>
- add_shadow(ray_shade(montereybay,zscale=50),0) |>
- add_overlay(generate_polygon_overlay(monterey_counties_sf, linecolor="white", linewidth=3,
-                        palette = county_palette, data_column_fill = "COUNTYFP",
-                        extent = attr(montereybay,"extent"), heightmap = montereybay),
-                        alphalayer=0.7) |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.5) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0) |>
+ add_overlay(generate_polygon_overlay(monterey_counties_sf, line_color="white", linewidth=3,
+                        palette = county_palette, data_column_fill = "COUNTYFP"),
+                        alpha_layer=0.7) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.5) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

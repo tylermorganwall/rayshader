@@ -4,18 +4,26 @@
 \alias{add_shadow}
 \title{Add Shadow}
 \usage{
-add_shadow(hillshade, shadowmap, max_darken = 0.7, rescale_original = FALSE)
+add_shadow(
+  hillshade,
+  shadow_map,
+  max_darken = 0.7,
+  rescale_original = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hillshade}{A three-dimensional RGB array or 2D matrix of shadow intensities.}
 
-\item{shadowmap}{A matrix that incidates the intensity of the shadow at that point. 0 is full darkness, 1 is full light.}
+\item{shadow_map}{A matrix that incidates the intensity of the shadow at that point. 0 is full darkness, 1 is full light.}
 
 \item{max_darken}{Default \code{0.7}. The lower limit for how much the image will be darkened. 0 is completely black,
 1 means the shadow map will have no effect.}
 
-\item{rescale_original}{Default \code{FALSE}. If \code{TRUE}, \code{hillshade} will be scaled to match the dimensions of \code{shadowmap} (instead of
+\item{rescale_original}{Default \code{FALSE}. If \code{TRUE}, \code{hillshade} will be scaled to match the dimensions of \code{shadow_map} (instead of
 the other way around).}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Shaded texture map.
@@ -24,35 +32,29 @@ Shaded texture map.
 Multiplies a texture array or shadow map by a shadow map.
 }
 \examples{
-#First we plot the sphere_shade() hillshade of `montereybay` with no shadows
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#First we plot the sphere_shade() hillshade of `montereybay_spatial` with no shadows
 
-if(run_documentation()) {
-montereybay |>
- sphere_shade(colorintensity=0.5) |>
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration=20) |>
  plot_map()
-}
 
-#Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
-if(run_documentation()) {
-montereybay |>
- sphere_shade(colorintensity=0.5) |>
- add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) |>
+# Raytrace the elevation map and add shadows to the sphere_shade() hillshade.
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration=20) |>
+ add_shadow(ray_shade(sun_altitude=20, vertical_exaggeration = 4),max_darken=0.3) |>
  plot_map()
-}
 
 #Increase the intensity of the shadow map with the max_darken argument.
-if(run_documentation()) {
-montereybay |>
- sphere_shade(colorintensity=0.5) |>
- add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) |>
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration=20) |>
+ add_shadow(ray_shade(sun_altitude=20, vertical_exaggeration = 4),max_darken=0.1) |>
  plot_map()
-}
 
 #Decrease the intensity of the shadow map.
-if(run_documentation()) {
-montereybay |>
- sphere_shade(colorintensity=0.5) |>
- add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) |>
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration=20) |>
+ add_shadow(ray_shade(sun_altitude=20, vertical_exaggeration = 4),max_darken=0.7) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

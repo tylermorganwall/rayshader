@@ -2,6 +2,24 @@
 #'
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`
 #'@keywords internal
+#'@noRd
+normalize_rayvertex_line_info = function(line_info) {
+  if (is.null(line_info) || !length(line_info)) {
+    return(matrix(nrow = 0, ncol = 9))
+  }
+  if (is.matrix(line_info)) {
+    return(line_info)
+  }
+  if (length(line_info) %% 9 != 0) {
+    stop("Could not normalize rayvertex line data.", call. = FALSE)
+  }
+  matrix(as.numeric(line_info), ncol = 9, byrow = TRUE)
+}
+
+#'@title Render Software Snapshot
+#'
+#'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`
+#'@keywords internal
 render_snapshot_software = function(
   filename,
   cache_scene = FALSE,
@@ -28,7 +46,7 @@ render_snapshot_software = function(
   rayvertex_shadow_map = FALSE,
   ...
 ) {
-  if (run_documentation()) {
+  if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) {
     fsaa = 2
   }
   if (rgl::cur3d() == 0) {
@@ -97,7 +115,7 @@ render_snapshot_software = function(
   shadowid = get_ids_with_labels(typeval = "shadow")
   if (nrow(shadowid) > 0) {
     shadowvertices = rgl.attrib(shadowid$id[1], "vertices")
-    shadowdepth = shadowvertices[1, 2]
+    shadow_depth = shadowvertices[1, 2]
     has_shadow = TRUE
   } else {
     has_shadow = FALSE
@@ -157,10 +175,10 @@ render_snapshot_software = function(
     lookfrom = camera_location
   }
   if (cache_scene) {
-    ray_scene = get("scene_cache", envir = ray_cache_scene_envir)
+    ray_scene = get_scene_cache(default = NULL)
     if (is.null(ray_scene)) {
       ray_scene = convert_rgl_to_raymesh()
-      assign("scene_cache", ray_scene, envir = ray_cache_scene_envir)
+      cache_scene_cache(ray_scene)
     }
   } else {
     ray_scene = convert_rgl_to_raymesh()
@@ -181,15 +199,11 @@ render_snapshot_software = function(
     temp_center = rgl.attrib(labelids[i], "centers")
     temp_color = rgl.attrib(labelids[i], "colors")
     for (j in seq_len(nrow(temp_label))) {
-      if (is.null(text_angle)) {
-        anglevec = c(rotmat[1], -theta, 0)
-      } else {
-        if (length(text_angle) == 1) {
-          anglevec = c(0, text_angle, 0)
-        } else {
-          anglevec = text_angle
-        }
-      }
+      anglevec = resolve_render_label_text_angle_rayvertex(
+        text_angle = text_angle,
+        theta = theta,
+        rotmat = rotmat
+      )
       labels = rayvertex::add_shape(
         labels,
         rayvertex::text3d_mesh(
@@ -328,15 +342,11 @@ render_snapshot_software = function(
   }
   scalelabelids = get_ids_with_labels(typeval = "text_scalebar")$id
   scalelabels = list()
-  if (is.null(text_angle)) {
-    anglevec = c(rotmat[1], -theta, 0)
-  } else {
-    if (length(text_angle) == 1) {
-      anglevec = c(0, text_angle, 0)
-    } else {
-      anglevec = text_angle
-    }
-  }
+  anglevec = resolve_render_label_text_angle_rayvertex(
+    text_angle = text_angle,
+    theta = theta,
+    rotmat = rotmat
+  )
   for (i in seq_len(length(scalelabelids))) {
     if (!has_rayimage) {
       break
@@ -375,7 +385,7 @@ render_snapshot_software = function(
     scene = rayvertex::add_shape(
       scene,
       rayvertex::xz_rect_mesh(
-        position = c(0, shadowdepth - bbox_center[2], 0),
+        position = c(0, shadow_depth - bbox_center[2], 0),
         scale = c(ranges[2, 1] - ranges[1, 1], 1, ranges[2, 3] - ranges[1, 3]) *
           2,
         material = rayvertex::material_list(diffuse = "white")
@@ -462,6 +472,9 @@ render_snapshot_software = function(
       scene$materials[[1]][[i]]$two_sided = TRUE
     }
   }
+  line_info = normalize_rayvertex_line_info(
+    rayvertex::add_lines(labelline, pathline)
+  )
   debug = rayvertex::rasterize_scene(
     scene,
     lookat = camera_lookat,
@@ -475,7 +488,7 @@ render_snapshot_software = function(
     fov = fov,
     background = background,
     light_info = lights,
-    line_info = rayvertex::add_lines(labelline, pathline),
+    line_info = line_info,
     line_offset = line_offset,
     shadow_map = rayvertex_shadow_map,
     ...

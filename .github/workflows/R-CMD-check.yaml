@@ -2,9 +2,7 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [main, master]
   pull_request:
-    branches: [main, master]
 
 name: R-CMD-check
 
@@ -39,7 +37,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install libavfilter-dev
+          sudo apt-get install -y libavfilter-dev libblosc1 xz-utils
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
@@ -49,6 +47,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
+          extra-repositories: https://tylermorganwall.r-universe.dev
           
       - name: Install GitHub package raybevel
         run: |

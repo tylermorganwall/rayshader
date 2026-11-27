@@ -5,7 +5,6 @@
 \title{Render Clouds}
 \usage{
 render_clouds(
-  heightmap,
   start_altitude = 1000,
   end_altitude = 2000,
   sun_altitude = 10,
@@ -22,15 +21,13 @@ render_clouds(
   fractal_levels = 16,
   attenuation_coef = 1,
   seed = 1,
+  clear_clouds = FALSE,
   zscale = 1,
-  baseshape = "rectangle",
-  clear_clouds = FALSE
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by \code{\link[=render_clouds]{render_clouds()}} to
-calculate the regions the clouds should be rendered in.}
-
 \item{start_altitude}{Default \code{1000}. The bottom of the cloud layer.}
 
 \item{end_altitude}{Default \code{2000}. The top of the cloud layer.}
@@ -64,12 +61,16 @@ The default is \code{layers/(start_altitude - end_altitude)}.}
 
 \item{seed}{Default \code{1}. Random seed used to generate clouds.}
 
+\item{clear_clouds}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
+
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{clear_clouds}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
+\item{heightmap}{Default \code{NULL}. Height matrix whose existing \code{NA} cells mask
+the cloud layers. If omitted, this is taken from the cached scene set by
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 }
 \value{
 Adds a 3D floating cloud layer to the map. No return value.
@@ -77,88 +78,68 @@ Adds a 3D floating cloud layer to the map. No return value.
 \description{
 Render a 3D floating cloud layer of the map.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 Note: Underlying layers with transparency can cause rendering issues in rgl.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render a cloud layer over Monterey Bay
-montereybay  |>
- sphere_shade()  |>
- plot_3d(montereybay,background="brown",zscale=50)
+montereybay_spatial  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
+ plot_3d(background="brown", vertical_exaggeration = 4)
 
 #Render some clouds
-render_clouds(montereybay, zscale=50)
+render_clouds()
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the seed for a different set of clouds and add cloud shadows on the ground
-montereybay  |>
- sphere_shade()  |>
- add_shadow(cloud_shade(montereybay,zscale=50, seed = 2), 0.0) |>
- plot_3d(montereybay,background="brown",zscale=50)
+montereybay_spatial  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
+ add_shadow(cloud_shade(vertical_exaggeration = 4, seed = 2), 0.0) |>
+ plot_3d(background="brown", vertical_exaggeration = 4)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)
+render_clouds(seed=2, clear_clouds = T)
 render_snapshot()
-}
 
-if(run_documentation()) {
-montereybay  |>
- sphere_shade()  |>
- plot_3d(montereybay,background="brown",zscale=50)
+montereybay_spatial  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
+ plot_3d(background="brown", vertical_exaggeration = 4)
 
 #Lower the frequency for larger, smoother clouds
-render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
+render_clouds(frequency = 0.001, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Increase the frequency for more broken clouds
-render_clouds(montereybay, zscale=50, frequency = 0.05, clear_clouds = T)
+render_clouds(frequency = 0.05, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Increase the fractal level for fluffier, bumpier clouds
-render_clouds(montereybay, zscale=50, fractal_levels = 32, clear_clouds = T)
+render_clouds(fractal_levels = 32, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Decrease the fractal level for more smoother, continuous clouds
-render_clouds(montereybay, zscale=50, fractal_levels = 4, clear_clouds = T)
+render_clouds(fractal_levels = 4, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Increase the cloud cover
-render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)
+render_clouds(cloud_cover=0.8, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Decrease the cloud cover
-render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)
+render_clouds(cloud_cover=0.2, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the altitude range of the clouds
-render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)
+render_clouds(start_altitude=2000,end_altitude = 4000, clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Increase the number of layers
-render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
+render_clouds(start_altitude=2000,end_altitude = 4000, layers = 20,
              clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
 #Change the sun angle and altitude, and increase the attenuation for darker clouds
-render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
+render_clouds(sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
              clear_clouds = T)
 render_snapshot()
-}
-if(run_documentation()) {
-#Render the scene with a different baseshape
-montereybay  |>
- sphere_shade()  |>
- plot_3d(montereybay,background="darkred",zscale=50, baseshape="hex")
-render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)
+#The cloud layers automatically follow the shaped heightmap's NA mask
+montereybay_spatial  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
+ plot_3d(background="darkred", vertical_exaggeration = 4, base_shape="hex")
+render_clouds(seed=3, clear_clouds = T)
 render_camera(zoom=0.65)
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

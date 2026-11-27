@@ -3,75 +3,85 @@
 #'@description Adds beveled polygon to the scene using the `raybevel` package. See
 #'the `raybevel::generate_beveled_polygon()` function for more information.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #' @param polygon `sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an
 #' edge from the last point to the first.
-#' @param extent Either an object representing the spatial extent of the 3D scene
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
-#' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
-#' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' @param bevel_width Default `5`. Width of the bevel.
-#' @param width_raw_units Default `FALSE`. Whether the bevel width should be measured in raw display units,
-#' or the actual units of the map.
-#' @param bevel Default `NULL`. A list with `x`/`y` components that specify a bevel profile. See `raybevel::generate_bevel()`
-#' @param angle Default `45`. Angle of the bevel.
 #' @param material Default `"grey80"`. If a color string, this will specify the color of the sides/base of the polygon.
 #' Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
 #' the full color/appearance/material options for the resulting `ray_mesh` mesh.
 #' @param bevel_material Default `NA`, defaults to the material specified in `material`. If a color string, this will specify the color of the polygon bevel.
 #' Alternatively (for more customization), this can be a `rayvertex::material_list()` object to specify
 #' the full color/appearance/material options for the resulting `ray_mesh` mesh.
+#' @param angle Default `45`. Angle of the bevel.
+#' @param bevel_width Default `5`. Width of the bevel.
+#' @param width_raw_units Default `FALSE`. Whether the bevel width should be measured in raw display units,
+#' or the actual units of the map.
+#' @param bevel Default `NULL`. A list with `x`/`y` components that specify a bevel profile. See `raybevel::generate_bevel()`
 #' @param bevel_height Default `1`. Height from the base of the polygon to the start of the beveled top.
 #' @param base_height Default `0`. Height of the base of the polygon.
-#' @param set_max_height Default `FALSE`. A logical flag that controls whether to set the max height of the roof based on the `max_height` argument.
-#' @param max_height Default `1`. The maximum height of the polygon.
-#' @param scale_all_max Default `FALSE`. If passing in a list of multiple skeletons with polygons, whether to scale each polygon to the overall
-#' max height, or whether to scale each max height to the maximum internal distance in the polygon.
-#' @param raw_offsets Default `FALSE`. A logical flag indicating whether the `bevel_offsets` are already
+#' @param raw_heights Default `FALSE`. A logical flag indicating whether the `bevel_heights` are already
 #' in raw format and do not need to be multiplied by the maximum time of the skeleton.
 #' See the documentation for `raybevel::generate_beveled_polygon()` for more info.
-#' @param raw_heights Default `FALSE`. A logical flag indicating whether the `bevel_heights` are already
+#' @param raw_offsets Default `FALSE`. A logical flag indicating whether the `bevel_offsets` are already
 #' in raw format and do not need to be multiplied by the maximum time of the skeleton.
 #' See the documentation for `raybevel::generate_beveled_polygon()` for more info.
 #' @param heights_relative_to_centroid Default `FALSE`. Whether the heights should be measured in absolute
 #' terms, or relative to the centroid of the polygon.
+#' @param set_max_height Default `FALSE`. A logical flag that controls whether to set the max height of the roof based on the `max_height` argument.
+#' @param max_height Default `1`. The maximum height of the polygon.
+#' @param scale_all_max Default `FALSE`. If passing in a list of multiple skeletons with polygons, whether to scale each polygon to the overall
+#' max height, or whether to scale each max height to the maximum internal distance in the polygon.
 #' @param data_column_top Default `NULL`. A string indicating the column in the `sf` object to use
-#' to specify the top of the beveled polygon.
+#' to specify the top of the beveled polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
 #' @param data_column_bottom Default `NULL`. A string indicating the column in the `sf` object to use
-#' to specify the bottom of the beveled polygon.
+#' to specify the bottom of the beveled polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
 #' @param scale_data Default `1`. If specifying `data_column_top` or `data_column_bottom`, how
-#' much to scale that value when rendering.
+#' much to scale that value when rendering. If used with `vertical_exaggeration`, both are applied.
 #' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
 #' the holes in the polygon. See the `earcut` function in the `decido` package for more information.
-#' @param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
-#' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#'  All points are assumed to be evenly spaced.
-#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #' @param alpha Default `1`. Transparency of the polygons.
 #' @param lit Default `TRUE`. Whether to light the polygons.
+#' @param flat_shading Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
+#' with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
+#' will not affect software or high quality renders.
 #' @param light_altitude Default `c(45, 30)`. Degree(s) from the horizon from which to light the polygons.
 #' @param light_direction Default `c(315, 225)`. Degree(s) from north from which to light the polygons.
 #' @param light_intensity Default `1`. Intensity of the specular highlight on the polygons.
 #' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
 #' or absolute.
-#' @param flat_shading Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
-#' with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
-#' will not affect software or high quality renders.
-#' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
+#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing beveled
+#' polygons. A clear-only call returns without rendering a replacement.
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
+#' @param filter_to_extent Default `TRUE`. If `TRUE`, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
+#' @param extent Either an object representing the spatial extent of the 3D scene
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
+#' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
+#' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#' for non-ggplot scenes.
+#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'  All points are assumed to be evenly spaced.
 #' @param ... Additional arguments to pass to `rgl::triangles3d()`.
 #' @export
 #' @examples
 #'
 #' # This function can also create fake "terrain" from polygons by visualizing the distance
 #' # to the nearest edge.
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Render the county borders as polygons in Monterey Bay as terrain
-#' montereybay |>
-#'   sphere_shade(texture = "desert") |>
-#'   add_shadow(ray_shade(montereybay,zscale = 50)) |>
-#'   plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
-#'           background = "pink")
+#' montereybay_spatial |>
+#'   sphere_shade(texture = "desert",vertical_exaggeration = 20) |>
+#'   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
+#'   plot_3d(water = TRUE, window_size = 800, water_color = "dodgerblue",
+#'           background = "pink", vertical_exaggeration = 4)
 #'
 #' #We will apply a negative buffer to create space between adjacent polygons. You may
 #' #have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
@@ -79,257 +89,428 @@
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #'
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-#'                         heightmap = montereybay, bevel_width=2000,
-#'                         material = "red",
-#'                         extent = attr(montereybay,"extent"),
-#'                         bevel_height = 5000, base_height=0,
-#'                         zscale=200)
+#'                         bevel_width=300, material = "red", clear_previous = TRUE,
+#'                         bevel_height = 800, base_height=0)
 #' render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 #' render_snapshot()
 #' render_camera(theta=194, phi= 35,   zoom = 0.5, fov= 80)
 #' render_snapshot()
-#' }
 #'
-#' # Changing the color of the beveled top:
-#' if(run_documentation()) {
-#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-#'                         heightmap = montereybay, bevel_width=2000,
-#'                         material = "tan", bevel_material = "darkgreen",
-#'                         extent = attr(montereybay,"extent"), clear_previous=TRUE,
-#'                         bevel_height = 5000, base_height=0,
-#'                         zscale=200)
-#' }
+#' # Changing the color of the beveled top and reduce the angle
+#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 15 ,
+#'                         bevel_width=300, material = "tan",
+#'                         bevel_material = "darkgreen", clear_previous=TRUE,
+#'                         bevel_height = 1000, base_height=0)
+#' render_snapshot()
 #' # We can create a nice curved surface by passing in a bevel generated with the
 #' # `raybevel::generate_bevel()` function.
-#' if(run_documentation()) {
-#' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
+#' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
 #'                         bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
-#'                         #max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,
 #'                         material = rayvertex::material_list(diffuse="red",
 #'                                                             ambient = "darkred",
 #'                                                             diffuse_intensity = 0.2,
 #'                                                             ambient_intensity = 0.1),
 #'                         light_intensity = 1, light_relative = FALSE,
-#'                         extent = attr(montereybay,"extent"), bevel_height = 5000,
-#'                         base_height=0, clear_previous = TRUE,
-#'                         zscale=200)
+#'                         bevel_height = 1000,
+#'                         base_height=0, clear_previous = TRUE)
 #' render_snapshot()
-#' }
 #'
 #' # While the bevels all start at the same point in the above example,
 #' # they rise to different levels due to being scaled by the maximum internal distance
 #' # in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the
-#' # same maximum height (in this case, 3000m above the 5000m bevel start height).
-#' if(run_documentation()) {
-#' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
+#' # same maximum height (in this case, 1500m above the 1000m bevel start height).
+#' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
 #'                  bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
-#'                  max_height = 3000, scale_all_max = TRUE, set_max_height = TRUE,
+#'                  max_height = 1500, scale_all_max = TRUE, set_max_height = TRUE,
 #'                  material = rayvertex::material_list(diffuse="red",
 #'                                                      ambient = "darkred",
 #'                                                      diffuse_intensity = 0.2,
 #'                                                      ambient_intensity = 0.1),
 #'                  light_intensity = 1, light_relative = FALSE,
-#'                  extent = attr(montereybay,"extent"), bevel_height = 5000,
-#'                  base_height=0, clear_previous = TRUE,
-#'                  zscale=200)
+#'                  bevel_height = 500,
+#'                  base_height=0, clear_previous = TRUE)
 #' render_snapshot()
-#' }
 #'
 #' # Rendering the polygons with `render_highquality()`
-#' if(run_documentation()) {
-#'   render_highquality()
-#' }
+#' poly_material = rayrender::glossy(color = "#900",gloss=0.4)
+#' render_highquality(rgl_materials =  list("obj_raymesh_beveled_polygon" = poly_material))
 #'
 #' # We can scale the size of the polygon to a column in the `sf` object as well:
 #' # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
-#' # argument. Note that this is applied as well as the `zscale` argument, and that you
+#' # argument. Note that this is applied in scene units, and that you
 #' # must think carefully about your scales and values if trying to represent a meaningful
 #' # data visualization with this object.
-#' if(run_documentation()) {
-#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
-#'                  data_column_top = "ALAND", scale_data = 1e-5, heightmap = montereybay,
-#'                  #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,
+#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=100,
+#'                  data_column_top = "ALAND", scale_data = 2e-6,
 #'                  material = rayvertex::material_list(diffuse="red"),
 #'                  light_intensity = 1, light_relative = FALSE,
-#'                  extent = attr(montereybay,"extent"), clear_previous = TRUE,
-#'                  zscale=200)
-#' render_snapshot()
-#' }
+#'                  clear_previous = TRUE)
+#' render_zaxis(data = "beveled_polygon")
+#' render_camera(theta=194, phi= 35,   zoom = 0.7, fov= 80)
+#' render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = poly_material))
 render_beveled_polygons = function(
-	polygon,
-	extent,
-	material = "grey",
-	bevel_material = NA,
-	angle = 45,
-	bevel_width = 5,
-	width_raw_units = FALSE,
-	bevel = NA,
-	zscale = 1,
-	bevel_height = 1,
-	base_height = 0,
-	raw_heights = FALSE,
-	raw_offsets = FALSE,
-	heights_relative_to_centroid = TRUE,
-	set_max_height = FALSE,
-	max_height = 10,
-	scale_all_max = TRUE,
-	data_column_top = NULL,
-	data_column_bottom = NULL,
-	heightmap = NULL,
-	scale_data = 1,
-	holes = 0,
-	alpha = 1,
-	lit = TRUE,
-	flat_shading = FALSE,
-	light_altitude = c(45, 30),
-	light_direction = c(315, 225),
-	light_intensity = 1,
-	light_relative = FALSE,
-	clear_previous = FALSE,
-	...
+  polygon,
+  material = "grey",
+  bevel_material = NA,
+  angle = 45,
+  bevel_width = 5,
+  width_raw_units = FALSE,
+  bevel = NA,
+  bevel_height = 1,
+  base_height = 0,
+  raw_heights = FALSE,
+  raw_offsets = FALSE,
+  heights_relative_to_centroid = TRUE,
+  set_max_height = FALSE,
+  max_height = 10,
+  scale_all_max = TRUE,
+  data_column_top = NULL,
+  data_column_bottom = NULL,
+  scale_data = 1,
+  holes = 0,
+  alpha = 1,
+  lit = TRUE,
+  flat_shading = FALSE,
+  light_altitude = c(45, 30),
+  light_direction = c(315, 225),
+  light_intensity = 1,
+  light_relative = FALSE,
+  clear_previous = FALSE,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  ...
 ) {
-	top = bevel_height
-	bottom = base_height
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
-		stop("raybevel required to use render_roofs()")
-	}
-	if (clear_previous) {
-		rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
-		if (missing(polygon)) {
-			return(invisible())
-		}
-	}
-	if (is.character(material)) {
-		material = rayvertex::material_list(diffuse = material)
-	}
-	if (is.character(bevel_material)) {
-		bevel_material = rayvertex::material_list(diffuse = bevel_material)
-	}
-	e = get_extent(extent)
-	if (heights_relative_to_centroid) {
-		if (is.null(heightmap)) {
-			stop("Must pass in heightmap argument if using relative heights")
-		}
-		centroids = sf::st_coordinates(sf::st_centroid(polygon))
-		xyz = transform_into_heightmap_coords(
-			e,
-			heightmap,
-			centroids[, 2],
-			centroids[, 1],
-			altitude = NULL,
-			offset = 0,
-			zscale = 1
-		)
-		bottom = xyz[, 2] + bottom
-		bottom[is.na(bottom)] = min(xyz[, 2])
-	}
-	if (length(top) != 1) {
-		stopifnot(length(top) == nrow(polygon))
-	}
-	if (!is.null(data_column_top)) {
-		stopifnot(data_column_top %in% colnames(polygon))
-	}
-	if (length(bottom) != 1) {
-		stopifnot(length(bottom) == nrow(polygon))
-	}
-	if (!is.null(data_column_bottom)) {
-		stopifnot(!data_column_bottom %in% colnames(polygon))
-	}
+  light_direction_missing = missing(light_direction)
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
+    )
+  ) {
+    return(invisible(NULL))
+  }
+  validate_filter_to_extent(
+    filter_to_extent,
+    caller = "render_beveled_polygons"
+  )
+  warn_scale_data_with_vertical_exaggeration(
+    scale_data_missing = missing(scale_data),
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_beveled_polygons"
+  )
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_beveled_polygons"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_beveled_polygons"
+  )
+  light_direction = resolve_scene_light_direction(
+    light_direction,
+    light_direction_missing,
+    light_relative
+  )
+  top = bevel_height
+  bottom = base_height
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
+    stop("raybevel required to use render_roofs()")
+  }
+  if (is.character(material)) {
+    material = rayvertex::material_list(diffuse = material)
+  }
+  if (is.character(bevel_material)) {
+    bevel_material = rayvertex::material_list(diffuse = bevel_material)
+  }
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_beveled_polygons",
+    panel = panel
+  )
+  if (inherits(polygon, "Spatial")) {
+    polygon = sf::st_as_sf(polygon)
+  }
+  if (inherits(polygon, "sfc")) {
+    polygon = sf::st_sf(geometry = polygon)
+  }
+  if (inherits(polygon, "sfg")) {
+    polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
+  }
+  polygon_scene_transformed = FALSE
+  if (inherits(polygon, "sf")) {
+    n_polygon_before_filter = nrow(polygon)
+    scene_polygon = auto_transform_scene_sf(
+      sf_object = polygon,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      crs = crs,
+      caller = "render_beveled_polygons"
+    )
+    polygon = scene_polygon$object
+    if (!is.null(scene_polygon$extent)) {
+      extent = scene_polygon$extent
+    }
+    polygon_scene_transformed = TRUE
+    filtered_polygon = filter_scene_sf_to_extent(
+      sf_object = polygon,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      filter_to_extent = filter_to_extent,
+      caller = "render_beveled_polygons"
+    )
+    polygon = filtered_polygon$object
+    if (!is.null(filtered_polygon$source_index)) {
+      top = subset_render_arg_by_index(
+        top,
+        filtered_polygon$source_index,
+        n_polygon_before_filter
+      )
+      bottom = subset_render_arg_by_index(
+        bottom,
+        filtered_polygon$source_index,
+        n_polygon_before_filter
+      )
+    }
+    if (is_empty_scene_sf(polygon)) {
+      return(invisible(NULL))
+    }
+  }
+  e = get_extent(extent)
+  if (heights_relative_to_centroid) {
+    if (is.null(heightmap)) {
+      stop("Must pass in heightmap argument if using relative heights")
+    }
+    centroid_source_crs = NULL
+    polygon_for_centroids = polygon
+    centroid_transform_scene = !isTRUE(polygon_scene_transformed)
+    if (!isTRUE(polygon_scene_transformed)) {
+      scene_target_crs = get_scene_target_crs(
+        extent = extent,
+        heightmap = heightmap,
+        panel = panel,
+        caller = "render_beveled_polygons"
+      )
+      if (!is.null(scene_target_crs)) {
+        resolved_polygon = resolve_scene_sf_source_crs(
+          sf_data = polygon,
+          crs = crs,
+          target_crs = scene_target_crs,
+          caller = "render_beveled_polygons"
+        )
+        polygon_for_centroids = resolved_polygon$sf_data
+        centroid_source_crs = resolved_polygon$source_crs
+      }
+    }
+    centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
+    xyz = transform_into_heightmap_coords(
+      e,
+      heightmap,
+      centroids[, 2],
+      centroids[, 1],
+      altitude = NULL,
+      offset = 0,
+      zscale = 1,
+      curve = FALSE,
+      crs = centroid_source_crs,
+      panel = panel,
+      transform_scene = centroid_transform_scene,
+      caller = "render_beveled_polygons"
+    )
+    bottom = xyz[, 2] + bottom
+    bottom[is.na(bottom)] = min(xyz[, 2])
+  }
+  if (length(top) != 1) {
+    if (length(top) != nrow(polygon)) {
+      stop(
+        "`top` must have length 1 or one value for each row of `polygon`.",
+        call. = FALSE
+      )
+    }
+  }
+  if (length(bottom) != 1) {
+    if (length(bottom) != nrow(polygon)) {
+      stop(
+        "`bottom` must have length 1 or one value for each row of `polygon`.",
+        call. = FALSE
+      )
+    }
+  }
+  if (!is.null(data_column_top) || !is.null(data_column_bottom)) {
+    n_polygon_before_data_drop = nrow(polygon)
+    coerced_polygon = coerce_polygon_data_columns(
+      polygon = polygon,
+      data_column_top = data_column_top,
+      data_column_bottom = data_column_bottom,
+      caller = "render_beveled_polygons"
+    )
+    polygon = coerced_polygon$polygon
+    top = subset_render_arg(
+      top,
+      coerced_polygon$keep,
+      n_polygon_before_data_drop
+    )
+    bottom = subset_render_arg(
+      bottom,
+      coerced_polygon$keep,
+      n_polygon_before_data_drop
+    )
+    if (!nrow(polygon)) {
+      return(invisible(NULL))
+    }
+  }
 
-	top_values = get_polygon_data_value(
-		polygon,
-		data_column_name = data_column_top,
-		scale_data = scale_data,
-		default_value = top
-	)
+  top_values = get_polygon_data_value(
+    polygon,
+    data_column_name = data_column_top,
+    scale_data = scale_data,
+    default_value = top,
+    data_column_arg = "data_column_top",
+    caller = "render_beveled_polygons"
+  )
 
-	bottom_values = get_polygon_data_value(
-		polygon,
-		data_column_name = data_column_bottom,
-		scale_data = scale_data,
-		default_value = bottom
-	)
+  bottom_values = get_polygon_data_value(
+    polygon,
+    data_column_name = data_column_bottom,
+    scale_data = scale_data,
+    default_value = bottom,
+    data_column_arg = "data_column_bottom",
+    caller = "render_beveled_polygons"
+  )
 
-	polygon = transform_polygon_into_raycoords(
-		polygon,
-		heightmap = heightmap,
-		e = e,
-		top = top_values,
-		bottom = bottom_values
-	)
-	top = polygon$top / zscale
-	bottom = polygon$bottom / zscale
-	skeletons = raybevel::skeletonize(polygon)
-	idx_sans_missing_geometry = unlist(lapply(skeletons, \(x) {
-		attr(x, "original_sf_row_index")
-	}))
-	top = top[idx_sans_missing_geometry]
-	bottom = bottom[idx_sans_missing_geometry]
+  cache_polygon_zaxis_data(
+    polygon = polygon,
+    top = top,
+    bottom = bottom,
+    data_column_top = data_column_top,
+    data_column_bottom = data_column_bottom,
+    scale_data = scale_data
+  )
 
-	if (!is.list(bevel)) {
-		stopifnot(angle > 0 && angle < 90)
-		angle_slope = tanpi(angle / 180)
-		# Setting width_raw_units to TRUE makes it easier to generate visually nice bevels but
-		# don't necessarily corrspond to any meaningful real world distance
-		if (!width_raw_units) {
-			bevel_width = bevel_width / zscale
-		}
-		max_height = bevel_width * angle_slope
-		bevel = list(x = c(0, bevel_width), y = c(0, max_height))
-		raw_heights = TRUE
-		raw_offsets = TRUE
-	} else {
-		max_height = max_height / zscale
-	}
+  polygon = transform_polygon_into_raycoords(
+    polygon,
+    heightmap = heightmap,
+    e = e,
+    top = top_values,
+    bottom = bottom_values,
+    panel = panel,
+    crs = crs,
+    caller = "render_beveled_polygons",
+    transform_scene = !isTRUE(polygon_scene_transformed)
+  )
+  top = polygon$top / zscale
+  bottom = polygon$bottom / zscale
+  skeletons = raybevel::skeletonize(polygon)
+  idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
+  if (!length(idx_sans_missing_geometry)) {
+    idx_sans_missing_geometry = seq_len(length(top))
+  }
+  top = top[idx_sans_missing_geometry]
+  bottom = bottom[idx_sans_missing_geometry]
 
-	if (!heights_relative_to_centroid) {
-		poly_mesh = raybevel::generate_beveled_polygon(
-			skeletons,
-			bevel_offsets = bevel,
-			vertical_offset = top,
-			raw_heights = raw_heights,
-			raw_offsets = raw_offsets,
-			base_height = 0,
-			set_max_height = set_max_height,
-			max_height = max_height,
-			material = material,
-			bevel_material = bevel_material,
-			scale_all_max = scale_all_max,
-			sides = TRUE,
-			base = TRUE
-		)
-	} else {
-		poly_mesh = raybevel::generate_beveled_polygon(
-			skeletons,
-			bevel_offsets = bevel,
-			vertical_offset = top,
-			raw_heights = raw_heights,
-			raw_offsets = raw_offsets,
-			base_height = bottom,
-			set_max_height = set_max_height,
-			max_height = max_height,
-			material = material,
-			bevel_material = bevel_material,
-			scale_all_max = scale_all_max,
-			sides = TRUE,
-			base = TRUE
-		)
-	}
+  if (!is.list(bevel)) {
+    if (
+      !is.numeric(angle) ||
+        length(angle) != 1 ||
+        !is.finite(angle) ||
+        angle <= 0 ||
+        angle >= 90
+    ) {
+      stop(
+        "`angle` must be a single finite number greater than 0 and less than 90.",
+        call. = FALSE
+      )
+    }
+    angle_slope = tanpi(angle / 180)
+    # Setting width_raw_units to TRUE makes it easier to generate visually nice bevels but
+    # don't necessarily corrspond to any meaningful real world distance
+    if (!width_raw_units) {
+      bevel_width = bevel_width / zscale
+    }
+    max_height = bevel_width * angle_slope
+    bevel = list(x = c(0, bevel_width), y = c(0, max_height))
+    raw_heights = TRUE
+    raw_offsets = TRUE
+  } else {
+    max_height = max_height / zscale
+  }
 
-	render_raymesh(
-		poly_mesh,
-		xyz = matrix(c(0, 0, 0), ncol = 3),
-		flat_shading = flat_shading,
-		change_material = FALSE,
-		lit = lit,
-		light_altitude = light_altitude,
-		light_direction = light_direction,
-		light_intensity = light_intensity,
-		light_relative = light_relative,
-		rgl_tag = "_beveled_polygon",
-		...
-	)
+  if (!heights_relative_to_centroid) {
+    poly_mesh = tryCatch(
+      raybevel::generate_beveled_polygon(
+        skeletons,
+        bevel_offsets = bevel,
+        vertical_offset = top,
+        raw_heights = raw_heights,
+        raw_offsets = raw_offsets,
+        base_height = 0,
+        set_max_height = set_max_height,
+        max_height = max_height,
+        material = material,
+        bevel_material = bevel_material,
+        scale_all_max = scale_all_max,
+        sides = TRUE,
+        base = TRUE
+      ),
+      error = function(e) {
+        stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
+      }
+    )
+  } else {
+    poly_mesh = tryCatch(
+      raybevel::generate_beveled_polygon(
+        skeletons,
+        bevel_offsets = bevel,
+        vertical_offset = top,
+        raw_heights = raw_heights,
+        raw_offsets = raw_offsets,
+        base_height = bottom,
+        set_max_height = set_max_height,
+        max_height = max_height,
+        material = material,
+        bevel_material = bevel_material,
+        scale_all_max = scale_all_max,
+        sides = TRUE,
+        base = TRUE
+      ),
+      error = function(e) {
+        stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
+      }
+    )
+  }
+
+  poly_mesh$vertices = lapply(poly_mesh$vertices, curve_scene_vertices)
+  render_raymesh(
+    poly_mesh,
+    extent = extent,
+    panel = panel,
+    xyz = matrix(c(0, 0, 0), ncol = 3),
+    zscale = zscale,
+    vertical_exaggeration = 1,
+    heightmap = heightmap,
+    flat_shading = flat_shading,
+    change_material = FALSE,
+    lit = lit,
+    light_altitude = light_altitude,
+    light_direction = light_direction,
+    light_intensity = light_intensity,
+    light_relative = light_relative,
+    rgl_tag = "_beveled_polygon",
+    crs = crs,
+    ...
+  )
 }

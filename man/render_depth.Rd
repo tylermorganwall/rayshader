@@ -6,18 +6,16 @@
 \usage{
 render_depth(
   focus = NULL,
-  focallength = 100,
-  fstop = 4,
+  focal_length = 100,
+  f_stop = 4,
   filename = NULL,
   preview_focus = FALSE,
-  bokehshape = "circle",
-  bokehintensity = 1,
-  bokehlimit = 0.8,
+  bokeh_shape = "circle",
+  bokeh_intensity = 1,
+  bokeh_limit = 0.8,
   rotation = 0,
   aberration = 0,
   transparent_water = FALSE,
-  heightmap = NULL,
-  zscale = NULL,
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -30,7 +28,7 @@ render_depth(
   vignette = FALSE,
   vignette_color = "black",
   vignette_radius = 1.3,
-  progbar = interactive(),
+  progress_bar = interactive(),
   software_render = FALSE,
   width = NULL,
   height = NULL,
@@ -42,45 +40,42 @@ render_depth(
   text_offset = c(0, 0, 0),
   point_radius = 0.5,
   line_offset = 1e-07,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   print_scene_info = FALSE,
+  verbose = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
+  heightmap = NULL,
+  zscale = NULL,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 )
 }
 \arguments{
 \item{focus}{Focal point. Defaults to the center of the bounding box. Depth in which to blur, in distance to the camera plane.}
 
-\item{focallength}{Default \code{1}. Focal length of the virtual camera.}
+\item{focal_length}{Default \code{1}. Focal length of the virtual camera.}
 
-\item{fstop}{Default \code{1}. F-stop of the virtual camera.}
+\item{f_stop}{Default \code{1}. F-stop of the virtual camera.}
 
 \item{filename}{The filename of the image to be saved. If this is not given, the image will be plotted instead.}
 
 \item{preview_focus}{Default \code{FALSE}. If \code{TRUE}, a red line will be drawn across the image
 showing where the camera will be focused.}
 
-\item{bokehshape}{Default \code{circle}. Also built-in: \code{hex}. The shape of the bokeh.}
+\item{bokeh_shape}{Default \code{circle}. Also built-in: \code{hex}. The shape of the bokeh.}
 
-\item{bokehintensity}{Default \code{3}. Intensity of the bokeh when the pixel intensity is greater than \code{bokehlimit}.}
+\item{bokeh_intensity}{Default \code{3}. Intensity of the bokeh when the pixel intensity is greater than \code{bokeh_limit}.}
 
-\item{bokehlimit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokehintensity}.}
+\item{bokeh_limit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokeh_intensity}.}
 
 \item{rotation}{Default \code{0}. Number of degrees to rotate the hexagon bokeh shape.}
 
 \item{aberration}{Default \code{0}. Adds chromatic aberration to the image. Maximum of \code{1}.}
 
 \item{transparent_water}{Default \code{FALSE}. If \code{TRUE}, depth is determined without water layer. User will have to re-render the water
-layer with \code{\link[=render_water]{render_water()}} if they want to recreate the water layer.}
-
-\item{heightmap}{Default \code{NULL}. The height matrix for the scene. Passing this will allow \code{\link[=render_depth]{render_depth()}}
-to automatically redraw the water layer if \code{transparent_water = TRUE}.}
-
-\item{zscale}{Default \code{NULL}. The zscale value for the heightmap. Passing this will allow \code{\link[=render_depth]{render_depth()}}
-to automatically redraw the water layer if \code{transparent_water = TRUE}.}
+layer from the active \code{rgl} subscene while capturing the depth map, then restores it.}
 
 \item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
@@ -112,7 +107,7 @@ control the blurriness of the vignette effect.}
 
 \item{vignette_radius}{Default \code{1.3}. Radius of the vignette, as a porportion of the image dimensions.}
 
-\item{progbar}{Default \code{TRUE} if in an interactive session. Displays a progress bar.}
+\item{progress_bar}{Default \code{TRUE} if in an interactive session. Displays a progress bar.}
 
 \item{software_render}{Default \code{FALSE}. If \code{TRUE}, rayshader will use the rayvertex package to render the snapshot, which
 is not constrained by the screen size or requires OpenGL.}
@@ -144,12 +139,9 @@ will specify the absolute angle all the labels are facing. If three angles, this
 \item{line_offset}{Default \code{1e-7}. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
-\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
-each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
-
-\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
-
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
+
+\item{verbose}{Default \code{FALSE}. If \code{TRUE}, prints additional render diagnostics such as the auto-derived focus distance.}
 
 \item{instant_capture}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, a slight delay is added
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
@@ -158,7 +150,17 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 
 \item{bring_to_front}{Default \code{FALSE}. Whether to bring the window to the front when rendering the snapshot.}
 
-\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
+\item{heightmap}{Deprecated and ignored. Retained for backward compatibility.}
+
+\item{zscale}{Deprecated and ignored. Retained for backward compatibility.}
+
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
+
+\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 4-layer RGBA array.
@@ -166,50 +168,41 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 \description{
 Adds depth of field to the current RGL scene by simulating a synthetic aperture.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 
 \code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
 }
 \examples{
-if(run_documentation()) {
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4, water=TRUE, water_line_color="white",
          zoom=0.3,theta=-135,fov=70, phi=20)
 
 #Preview where the focal plane lies
 render_depth(preview_focus=TRUE)
-}
-if(run_documentation()) {
 #Render the depth of field effect
-render_depth(focallength = 300)
-}
-if(run_documentation()) {
+render_depth(focal_length = 300)
 #Add a chromatic aberration effect
-render_depth(focallength = 300, aberration = 0.3)
-}
-if(run_documentation()) {
-#Render the depth of field effect, ignoring water and re-drawing the waterlayer
-render_depth(preview_focus=TRUE,
-            heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
-render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
+render_depth(focal_length = 300, aberration = 0.3)
+#Render the depth of field effect, ignoring water in the depth pass
+render_depth(preview_focus=TRUE, focal_length=300, transparent_water=TRUE)
+render_depth(focal_length=300, transparent_water=TRUE)
 render_camera(theta=45,zoom=0.15,phi=20)
-}
 
-if(run_documentation()) {
 #Change the bokeh shape and intensity
-render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
+render_depth(focus=900, bokeh_shape = "circle",focal_length=500,bokeh_intensity=30,
             title_text = "Circular Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
-render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
+render_depth(focus=900, bokeh_shape = "hex",focal_length=500,bokeh_intensity=30,
             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
-}
 
-if(run_documentation()) {
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)
-render_depth(focallength = 250, title_text = "Monterey Bay, CA",
+render_depth(focal_length = 250, title_text = "Monterey Bay, CA",
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-}
+\dontshow{\}) # examplesIf}
 }

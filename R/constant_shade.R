@@ -2,53 +2,85 @@
 #'
 #'@description Generates a constant color layer.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#'@param color Default `"white"`. Color for the constant layer.
+#' @param color Default `"white"`. Color for the constant layer, as an R color name,
+#' hexadecimal code, `rgb(r, g, b)` string with channels from `0` to `255`, or a
+#' numeric RGB vector with intensities between `0` and `1`.
 #'@param alpha Default `1`, the alpha transparency.
 #'@return RGB array of a single color layer.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Shade a red map
-#'montereybay |>
+#'montereybay_spatial |>
 #'  constant_shade("red") |>
-#'  add_shadow(lamb_shade(montereybay),0) |>
+#'  add_shadow(lamb_shade(),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Shade a green map
-#'montereybay |>
+#'montereybay_spatial |>
 #'  constant_shade("green") |>
-#'  add_shadow(lamb_shade(montereybay),0) |>
+#'  add_shadow(lamb_shade(),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Add a blue tint
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0) |>
+#'  add_overlay(constant_shade(color = "dodgerblue", alpha=0.25)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
 #'#Use a blank map on which to draw other data
-#'montereybay |>
+#'montereybay_spatial |>
 #'  constant_shade() |>
 #'  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=5, color="black",
-#'                                    attr(montereybay,"extent"), width = 1080, height = 1080),
-#'                                    alphalayer=0.8)  |>
-#'  add_water(detect_water(montereybay < 0), "dodgerblue") |>
+#'                                    width = 1080, height = 1080),
+#'                                    alpha_layer=0.8)  |>
+#'  add_water(detect_water(raster_to_matrix(montereybay_spatial) < 0), "dodgerblue") |>
 #'  plot_map()
-#'}
 constant_shade = function(heightmap, color = "white", alpha = 1) {
-	return_array = array(alpha, dim = c(ncol(heightmap), nrow(heightmap), 4))
-	const_col = convert_color(color)
-	return_array[,, 1] = const_col[1]
-	return_array[,, 2] = const_col[2]
-	return_array[,, 3] = const_col[3]
-	return(rayimage::ray_read_image(
-		return_array,
-		assume_colorspace = rayimage::CS_SRGB,
-		assume_white = "D65"
-	))
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "constant_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  hillshade_cache_label = if (heightmap_missing) {
+    resolved_heightmap$label
+  } else {
+    heightmap_cache_label
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  return_array = constant_shade_image(heightmap, color, alpha)
+  cache_hillshade_map(return_array, label = hillshade_cache_label)
+  return(return_array)
+}
+
+#' @param heightmap Matrix of terrain elevations.
+#' @param color Layer color.
+#' @param alpha Layer opacity.
+#' @return A constant RGBA image with the heightmap's map orientation.
+#' @keywords internal
+#' @noRd
+constant_shade_image = function(heightmap, color, alpha) {
+  return_array = array(alpha, dim = c(ncol(heightmap), nrow(heightmap), 4))
+  const_col = convert_color(color)
+  return_array[,, 1] = const_col[1]
+  return_array[,, 2] = const_col[2]
+  return_array[,, 3] = const_col[3]
+  rayimage::ray_read_image(
+    return_array,
+    assume_colorspace = rayimage::CS_SRGB,
+    assume_white = "D65",
+    source_linear = FALSE
+  )
 }

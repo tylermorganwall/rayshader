@@ -5,13 +5,10 @@
 \title{Render Path}
 \usage{
 render_path(
-  lat,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   altitude = NULL,
   groups = NULL,
-  extent = NULL,
-  zscale = 1,
-  heightmap = NULL,
   resample_evenly = FALSE,
   resample_n = 360,
   reorder = FALSE,
@@ -25,33 +22,32 @@ render_path(
   offset = 5,
   clear_previous = FALSE,
   return_coords = FALSE,
-  tag = "path3d"
+  tag = "path3d",
+  lat = NULL,
+  long = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 Can also be an \code{sf} or \code{SpatialLineDataFrame} object.}
 
-\item{long}{Default \code{NULL}. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-Ignored if lat is an \code{sf} or \code{SpatialLineDataFrame} object.}
+\item{x}{Default \code{NULL}. Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+Ignored if \code{y} is an \code{sf} or \code{SpatialLineDataFrame} object.}
 
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
 all data will be rendered at that altitude.}
 
-\item{groups}{Default \code{NULL}. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+\item{groups}{Default \code{NULL}. Integer vector specifying the grouping of each x/y path segment, if x/y are
 specified as numeric vectors (as opposed to \code{sf} or \code{SpatialLineDataFrame} objects, where this information
 is built-in to the object).}
-
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
-\item{heightmap}{Default \code{NULL}. Pass this if not including an \code{altitude} argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
 
 \item{resample_evenly}{Default \code{FALSE}. If \code{TRUE}, this will re-sample the path evenly from beginning to end, which can help vastly
 reduce the number of points used to draw it (which can improve the performance of \code{\link[=render_highquality]{render_highquality()}} and \code{\link[=render_snapshot]{render_snapshot()}} when using \code{software_render = TRUE}).
@@ -83,26 +79,54 @@ then the value of simplify_tolerance must be specified in meters.}
 
 \item{linewidth}{Default \code{3}. The line width.}
 
-\item{color}{Default \code{black}. Color of the line.}
+\item{color}{Default \code{black}. Color of the line. Use \code{"height"} to color the path by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing paths.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing paths
+for \code{tag}. A clear-only call returns without rendering a replacement.}
 
 \item{return_coords}{Default \code{FALSE}. If \code{TRUE}, this will return the internal rayshader coordinates of the path, instead of
 plotting the line.}
 
 \item{tag}{Default \code{"path3d"}. The rgl tag to use when adding the path to the scene.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, path data outside the scene extent is omitted. Spatial line inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+All points are assumed to be evenly spaced.}
 }
 \description{
-Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
+Adds a 3D path to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
 
@@ -125,69 +149,71 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 
 
 #Render the 3D map
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50,water=TRUE,
-         shadowcolor="#40310a", watercolor="#233aa1", background = "tan",
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4,water=TRUE,
+         shadow_color="#40310a", water_color="#233aa1", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
-#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#dataset) and the latitudes, longitudes, and altitudes of the track.
-render_path(extent = attr(montereybay,"extent"),
-           lat = unlist(bird_track_lat), long = unlist(bird_track_long),
-           altitude = z_out, zscale=50,color="white", antialias=TRUE)
+#Pass in the latitude/longitude coordinates and altitudes of the track.
+render_path(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+           altitude = z_out, color="white", antialias=TRUE)
 render_snapshot()
-}
-if(run_documentation()) {
 #We'll set the altitude to right above the water to give the tracks a "shadow".
-render_path(extent = attr(montereybay,"extent"),
-           lat = unlist(bird_track_lat), long = unlist(bird_track_long),
-           altitude = 10, zscale=50, color="black", antialias=TRUE)
+render_path(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+           altitude = 10, color="black", antialias=TRUE)
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
-}
 
-if(run_documentation()) {
 #Remove the path:
 render_path(clear_previous=TRUE)
 
 #Finally, we can also plot just GPS coordinates offset from the surface by leaving altitude `NULL`
-# Here we plot a spiral of values surrounding Moss Landing. This requires the original heightmap.
+# Here we plot a spiral of values surrounding Moss Landing.
 
 t = seq(0,2*pi,length.out=1000)
 circle_coords_lat = moss_landing_coord[1] + 0.5 * t/8 * sin(t*6)
 circle_coords_long = moss_landing_coord[2] + 0.5 * t/8 *  cos(t*6)
-render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
-           zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
+render_path(lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+           color="red", antialias=TRUE,offset=100, linewidth=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
-}
 
-if(run_documentation()) {
 #And all of these work with `render_highquality()`. Here, I set `use_extruded_paths = TRUE`
 #to get thick continuous paths.
 render_highquality(line_radius=1, min_variance = 0,
                   use_extruded_paths = TRUE, samples = 16)
-}
-if(run_documentation()) {
-#We can also change the material of the objects by setting the `point_material` and
-#`point_material_args` arguments in `render_highquality()`
+#We can also change the material of the objects by setting the `rgl_materials`
+#argument in `render_highquality()`
 render_highquality(line_radius=1, min_variance = 0, samples = 16,
-                  path_material = rayrender::glossy,  use_extruded_paths = TRUE,
-                  path_material_args = list(gloss = 0.5, reflectance = 0.2))
-}
+                  use_extruded_paths = TRUE,
+                  rgl_materials = list(path3d = list(
+                    material = rayrender::glossy,
+                    args = list(gloss = 0.5, reflectance = 0.2)
+                  )))
+#Render the path with a neon light material
+render_highquality(light = FALSE, samples = 16,
+                  line_radius = 0.1,
+                  ground_size = 0,
+                  use_extruded_paths = TRUE,
+                  rgl_materials = list(path3d = list(
+                    material = rayrender::light,
+                    args = list(importance_sample = FALSE,
+                                color = "purple", intensity = 2)
+                  )))
 
-if(run_documentation()) {
 #For transmissive materials (like `dielectric`), we should specify that the path
 #should be rendered with an extruded path. We'll use the `attenuation` argument in
 #the `dielectric` function to specify a realistic glass color.
-render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, clear_previous = TRUE,
+render_path(clear_previous = TRUE,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
-           zscale=50, color="white", offset=200, linewidth=5)
+           color="white", offset=200, linewidth=5)
 render_highquality(line_radius=1, min_variance = 0, samples = 16,
-                  lightsize = 2000, lightintensity = 10,
-                  path_material = rayrender::dielectric, use_extruded_paths = TRUE,
-                  path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
-}
+                  light_size = 60, light_intensity = 10,
+                  use_extruded_paths = TRUE,
+                  rgl_materials = list(path3d = list(
+                    material = rayrender::dielectric,
+                    args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2))
+                  )))
+\dontshow{\}) # examplesIf}
 }

@@ -6,29 +6,33 @@
 \usage{
 ray_shade(
   heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
-  maxsearch = NULL,
+  sun_altitude = 45,
+  sun_angle = 315,
+  max_search = NULL,
   lambert = TRUE,
   zscale = 1,
+  vertical_exaggeration = 1,
   multicore = FALSE,
   cache_mask = NULL,
   shadow_cache = NULL,
-  progbar = interactive(),
-  anglebreaks = NULL,
+  progress_bar = interactive(),
+  angle_breaks = NULL,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{sunaltitude}{Default \code{45}. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
-is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the \code{anglebreaks} argument
+\item{sun_altitude}{Default \code{45}. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
+is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the \code{angle_breaks} argument
 to create a softer (wider) light. This has a hard minimum/maximum of 0/90 degrees.}
 
-\item{sunangle}{Default \code{315} (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.}
+\item{sun_angle}{Default \code{315} (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.}
 
-\item{maxsearch}{Defaults to the longest possible shadow given the \code{sunaltitude} and \code{heightmap}.
+\item{max_search}{Defaults to the longest possible shadow given the \code{sun_altitude} and \code{heightmap}.
 Otherwise, this argument specifies the maximum distance that the system should propagate rays to check.}
 
 \item{lambert}{Default \code{TRUE}. Changes the intensity of the light at each point based proportional to the
@@ -38,6 +42,11 @@ the ray.}
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
 of meters and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
+
 \item{multicore}{Default \code{FALSE}. If \code{TRUE}, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set \code{options("cores")} in which the multicore option will only use that many cores.}
 
@@ -46,13 +55,22 @@ set \code{options("cores")} in which the multicore option will only use that man
 \item{shadow_cache}{Default \code{NULL}. The shadow matrix to be updated at the points defined by the argument \code{cache_mask}.
 If present, this will only compute the raytraced shadows for those points with value \code{1} in the mask.}
 
-\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+\item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 
-\item{anglebreaks}{Default \code{NULL}. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
-Use this instead of \code{sunaltitude} to create a softer shadow by specifying a wider light. E.g. \code{anglebreaks = seq(40,50,by=0.5)} creates a light
+\item{angle_breaks}{Default \code{NULL}. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
+Use this instead of \code{sun_altitude} to create a softer shadow by specifying a wider light. E.g. \code{angle_breaks = seq(40,50,by=0.5)} creates a light
 10 degrees wide, as opposed to the default}
 
-\item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.}
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
+
+\item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix of light intensities at each point.
@@ -60,32 +78,28 @@ Matrix of light intensities at each point.
 \description{
 Calculates shadow map for a elevation matrix by propogating rays from each matrix point to the light source(s),
 lowering the brightness at each point for each ray that intersects the surface.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #First we ray trace the Monterey Bay dataset.
 #The default angle is from 40-50 degrees azimuth, from the north east.
-if(run_documentation()) {
-montereybay |>
- ray_shade(zscale=50) |>
+montereybay_spatial |>
+ ray_shade(vertical_exaggeration = 4) |>
  plot_map()
-}
 #Change the altitude of the sun to 25 degrees
-if(run_documentation()) {
-montereybay |>
- ray_shade(zscale=50, sunaltitude=25) |>
+montereybay_spatial |>
+ ray_shade(vertical_exaggeration = 4, sun_altitude=25) |>
  plot_map()
-}
 #Remove the lambertian shading to just calculate shadow intensity.
-if(run_documentation()) {
-montereybay |>
- ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) |>
+montereybay_spatial |>
+ ray_shade(vertical_exaggeration = 4, sun_altitude=25, lambert=FALSE) |>
  plot_map()
-}
 
 #Change the direction of the sun to the South East
-if(run_documentation()) {
-montereybay |>
- ray_shade(zscale=50, sunaltitude=25, sunangle=225) |>
+montereybay_spatial |>
+ ray_shade(vertical_exaggeration = 4, sun_altitude=25, sun_angle=225) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

@@ -16,10 +16,11 @@ convert_path_to_animation_coords(
   reorder_merge_tolerance = 1,
   simplify_tolerance = 0,
   zscale = 1,
+  vertical_exaggeration = 1,
   heightmap = NULL,
   offset = 5,
   type = "bezier",
-  offset_lookat = 1,
+  offset_look_at = 1,
   constant_step = TRUE,
   curvature_adjust = "none",
   curvature_scale = 30,
@@ -29,6 +30,7 @@ convert_path_to_animation_coords(
   follow_rotations = 0,
   follow_fixed = FALSE,
   follow_fixed_offset = c(10, 10, 10),
+  distance_units = c("auto", "scene", "meters", "map"),
   damp_motion = FALSE,
   damp_magnitude = 0.1,
   resample_path_evenly = TRUE,
@@ -47,7 +49,8 @@ all data will be rendered at that altitude.}
 \item{extent}{Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
 
 \item{frames}{Default \code{360}. Total number of animation frames.}
 
@@ -73,11 +76,11 @@ the path to the tolerance specified. This happens after the data has been merged
 If the input data is specified with long-lat coordinates and \code{sf_use_s2()} returns \code{TRUE},
 then the value of simplify_tolerance must be specified in meters.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available.}
 
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
@@ -85,7 +88,7 @@ All points are assumed to be evenly spaced.}
 Other options are \code{linear}, \code{quad}, \code{bezier}, \code{exp}, and \code{manual}. \code{manual} just returns the values
 passed in, properly formatted to be passed to \code{render_animation()}.}
 
-\item{offset_lookat}{Default \code{0}. Amount to offset the lookat position, either along the path (if \code{constant_step = TRUE})
+\item{offset_look_at}{Default \code{0}. Amount to offset the lookat position, either along the path (if \code{constant_step = TRUE})
 or towards the derivative of the Bezier curve.}
 
 \item{constant_step}{Default \code{TRUE}. This will make the camera travel at a constant speed.}
@@ -94,7 +97,7 @@ or towards the derivative of the Bezier curve.}
 to prevent fast swings. Only used for curve \code{type = bezier}. This does not preserve key frame positions.
 Note: This feature will likely result in the \code{lookat} and \code{position} diverging if they do not
 have similar curvatures at each point. This feature is best used when passing the same set of points to \code{positions} and \code{lookats}
-and providing an \code{offset_lookat} value, which ensures the curvature will be the same.}
+and providing an \code{offset_look_at} value, which ensures the curvature will be the same.}
 
 \item{curvature_scale}{Default \code{30}. Constant dividing factor for curvature. Higher values will subdivide the
 path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve \code{type = bezier}.
@@ -118,6 +121,11 @@ but rather sits at a fixed relative location to the path.}
 \item{follow_fixed_offset}{Default \code{c(10,10,10)}. If \code{follow_fixed = TRUE}, the offset from the path to place
 the camera.}
 
+\item{distance_units}{Default \code{"auto"}. Units for \code{offset_look_at},
+\code{follow_distance}, and \code{follow_fixed_offset}. \code{"auto"} uses metres when
+spatial distance metadata is cached and scene units otherwise. Other options
+are \code{"scene"}, \code{"meters"}, and \code{"map"}; map units require a projected CRS.}
+
 \item{damp_motion}{Default \code{FALSE}. Whether the suppress quick, jerky movements of the camera by linearly interpolating
 between the current camera position and the goal position. Amount of linear interpolation set in \code{damp_magnitude}.}
 
@@ -127,7 +135,8 @@ between the current camera position and the goal position. Amount of linear inte
 at a constant speed along the path. This also allows paths with large numbers of points to be used with a
 smaller number of frames, and improves computation time of the animation path in those instances.}
 
-\item{...}{Other arguments to pass to \code{rayrender::generate_camera_motion()}}
+\item{...}{Other arguments to pass to \code{rayrender::generate_camera_motion()}
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Transforms latitude/longitude/altitude coordinates to the reference system used in \code{\link[=render_highquality]{render_highquality()}},
@@ -149,13 +158,12 @@ circle_coords_lat = moss_landing_coord[1] + 0.25 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 
 # Minimal 3D render -> frames
-extent_mb = attr(montereybay, "extent")
-sphere_shade(montereybay) |>
+montereybay_spatial |>
+sphere_shade() |>
 plot_3d(
-	montereybay,
-	zscale = 50,
+	vertical_exaggeration = 4,
 	water = TRUE,
-	shadowcolor = "#40310a",
+	shadow_color = "#40310a",
 	background = "tan",
 	theta = 210,
 	phi = 22,
@@ -164,11 +172,8 @@ plot_3d(
 )
 
 render_path(
-extent = extent_mb,
-heightmap = montereybay,
 lat = circle_coords_lat,
 long = circle_coords_long,
-zscale = 50,
 color = "red",
 antialias = TRUE,
 offset = 500,
@@ -176,14 +181,11 @@ linewidth = 2
 )
 
 cam = convert_path_to_animation_coords(
-extent = extent_mb,
-heightmap = montereybay,
 lat = circle_coords_lat,
 long = circle_coords_long,
 type = "bezier",
 damp_motion = TRUE,
 fovs = 80,
-zscale = 50,
 offset = 1000,
 frames = length(t)
 )
@@ -209,14 +211,11 @@ framerate = 24
 #Now we use a "follow camera" for a third person view:
 \dontrun{
 follow_cam = convert_path_to_animation_coords(
-extent = extent_mb,
-heightmap = montereybay,
 lat = circle_coords_lat,
 long = circle_coords_long,
 type = "bezier",
 damp_motion = TRUE,
 fovs = 80,
-zscale = 50,
 follow_camera = TRUE,
 offset = 1000,
 frames = length(t)

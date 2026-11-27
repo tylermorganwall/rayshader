@@ -2,14 +2,17 @@
 % Please edit documentation in R/convert_color.R
 \name{col2rgb_linear}
 \alias{col2rgb_linear}
-\title{Convert Color}
+\title{Convert Color to Linear RGB}
 \usage{
 col2rgb_linear(color)
 }
+\arguments{
+\item{color}{Color name, hexadecimal color, RGB string, or numeric RGB values.}
+}
 \value{
-Color vector
+Linear RGB color values.
 }
 \description{
-Returns a linear version of the color
+Convert Color to Linear RGB
 }
 \keyword{internal}

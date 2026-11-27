@@ -22,7 +22,11 @@ cloud_shade(
   fractal_levels = 16,
   attenuation_coef = 1,
   seed = 1,
-  zscale = 1
+  zscale = 1,
+  vertical_exaggeration = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -63,6 +67,19 @@ calculate the regions the clouds should be rendered in.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing in the cloud noise and shadow ray march.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 }
 \value{
 A 2D shadow matrix.
@@ -75,24 +92,22 @@ For realistic results, argument should match those passed to \code{\link[=render
 is \code{attenuation_coef}, which can be used to adjust the darkness of the resulting shadows.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render clouds with cloud shadows on the ground
-montereybay  |>
- sphere_shade()  |>
- add_shadow(cloud_shade(montereybay,zscale=50), 0.0) |>
- plot_3d(montereybay,background="darkred",zscale=50)
+montereybay_spatial  |>
+ sphere_shade(vertical_exaggeration = 20)  |>
+ add_shadow(cloud_shade(vertical_exaggeration = 4), 0.0) |>
+ plot_3d(background="darkred", vertical_exaggeration = 4)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50)
+render_clouds()
 render_snapshot()
-}
-if(run_documentation()) {
 #Adjust the light direction for shadows and increase the attenuation for darker clouds
-montereybay  |>
- sphere_shade()  |>
- add_shadow(cloud_shade(montereybay,zscale=50, sun_altitude=20, attenuation_coef = 3), 0.0) |>
- plot_3d(montereybay,background="darkred",zscale=50)
+montereybay_spatial  |>
+ sphere_shade(vertical_exaggeration = 20)  |>
+ add_shadow(cloud_shade(vertical_exaggeration = 4, sun_altitude=20, attenuation_coef = 3), 0.0) |>
+ plot_3d(background="darkred", vertical_exaggeration = 4)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50)
+render_clouds()
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

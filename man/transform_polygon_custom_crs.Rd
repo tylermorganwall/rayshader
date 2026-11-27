@@ -4,7 +4,16 @@
 \alias{transform_polygon_custom_crs}
 \title{Transform Polygon into Raycoords}
 \usage{
-transform_polygon_custom_crs(sf_object, orig_extent, new_extent)
+transform_polygon_custom_crs(
+  sf_object,
+  orig_extent,
+  new_extent,
+  geographic_aspect = identity_geographic_aspect()
+)
+}
+\arguments{
+\item{geographic_aspect}{Default \code{identity_geographic_aspect()}. Horizontal
+scene scaling applied after mapping into ray coordinates.}
 }
 \description{
 Transform Polygon into Raycoords

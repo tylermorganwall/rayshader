@@ -4,20 +4,40 @@
 \alias{save_multipolygonz_to_obj}
 \title{Save MULTIPOLYGON Z sf data to OBJ file}
 \usage{
-save_multipolygonz_to_obj(sfobj, filename, swap_yz = FALSE)
+save_multipolygonz_to_obj(sf_obj, filename, swap_yz = FALSE, ...)
 }
 \arguments{
-\item{sfobj}{sf object with MULTIPOLYGON Z geometry,}
+\item{sf_obj}{sf object with MULTIPOLYGON Z geometry,}
 
 \item{filename}{Filename of the OBJ to save the 3D model to.}
 
-\item{swap_yz}{Default \code{TRUE}., Whether to swap and Y and Z axes. (Y axis is vertical in
+\item{swap_yz}{Default \code{FALSE}. Whether to swap the Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
-Converts MULTIPOLYGON Z features into a 3D OBJ model
+Converts MULTIPOLYGON Z features into a triangulated 3D OBJ model,
+preserving concave boundaries and holes in each face.
+}
+\details{
+Faces with more than three vertices or holes require the \code{decido}
+package. Triangulation uses each face's dominant plane and preserves its
+original winding. Crossed or overlapping rings are repaired in the face plane;
+new intersection vertices are interpolated along the original 3D edges.
+By default, \code{options(rayshader.multipolygonz_repair = TRUE)} also repairs
+ambiguous projected intersections: existing XYZ vertices are retained and new
+vertices use the nearest projected source edge (the first edge breaks ties).
+This depth choice is a heuristic for nonplanar faces. Set
+\code{options(rayshader.multipolygonz_repair = FALSE)} to drop these ambiguous faces
+instead. Unambiguous planar repairs are performed in either mode.
+Zero-area faces and faces that still cannot be triangulated are skipped with a
+summary warning in either mode. If no faces remain, an empty OBJ is written.
+Touching-hole cases may require an sf/GEOS version supporting constrained
+triangulation. OBJ coordinates are written to four decimal places.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Convert the built-in Washington Monument MULTIPOLYGON Z data to an OBJ file
 obj_temp = tempfile(fileext=".obj")
 save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=TRUE)
@@ -25,4 +45,5 @@ save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=T
 rgl::open3d()
 render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 render_camera(theta=30,phi=40)
+\dontshow{\}) # examplesIf}
 }

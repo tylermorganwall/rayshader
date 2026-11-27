@@ -6,23 +6,14 @@
 \usage{
 render_raymesh(
   raymesh,
-  extent = NULL,
-  lat = NULL,
-  long = NULL,
-  altitude = NULL,
-  xyz = NULL,
-  zscale = 1,
-  heightmap = NULL,
+  location = NULL,
   load_normals = TRUE,
   change_material = TRUE,
   color = "grey50",
-  offset = 0,
   obj_zscale = FALSE,
   swap_yz = NULL,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
-  clear_previous = FALSE,
-  baseshape = "rectangle",
   flat_shading = FALSE,
   lit = FALSE,
   light_altitude = c(45, 30),
@@ -30,60 +21,49 @@ render_raymesh(
   light_intensity = 1,
   light_relative = FALSE,
   rgl_tag = "",
+  clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  altitude = NULL,
+  xyz = NULL,
+  offset = 0,
+  lat = NULL,
+  long = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
 \arguments{
 \item{raymesh}{\code{raymesh} object (see the rayvertex package for a description)}
 
-\item{extent}{Either an object representing the spatial extent of the scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
-
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
-
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
-
-\item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
-If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
-the OBJ will be rendered at that altitude.}
-
-\item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
-coordinates of the OBJ model(s). Overrides lat/long/altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered object(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{scale}, \code{angle}, \code{color}, and \code{altitude} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{load_normals}{Default \code{TRUE}. Whether to load normals for the 3D model.}
 
 \item{change_material}{Default \code{TRUE}. Whether to change the raymesh material (to customize the color).}
 
-\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
-
-\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
+\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}. Use \code{"height"} to color placed models by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{obj_zscale}{Default \code{FALSE}. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
-\item{swap_yz}{Default \code{NULL}, defaults to \code{FALSE} unless plotting raw coordinates (no lat or long passed).
+\item{swap_yz}{Default \code{NULL}, defaults to \code{FALSE} unless plotting raw coordinates (no x/y or lat/long passed).
 Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 
 \item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth model specified (number of rows/length of list must
-equal the length of \code{lat}/\code{long}).}
+equal the length of \code{x}/\code{y}).}
 
 \item{scale}{Default \code{c(1,1,1)}. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
-equal the length of \code{lat}/\code{long}).}
-
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
-
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
+equal the length of \code{x}/\code{y}).}
 
 \item{flat_shading}{Default \code{FALSE}. If \code{TRUE}, this will use rgl's flat shading.}
 
@@ -100,18 +80,101 @@ or absolute.}
 
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"objraymsh"}}
 
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing raymesh
+objects for \code{rgl_tag}. A clear-only call returns without rendering a
+replacement.}
+
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
+If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
+the OBJ will be rendered at that altitude.}
+
+\item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
+coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
+
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, raymesh placements outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix used to determine terrain
+elevations and existing \code{NA} cells. If omitted, this is taken from the cached
+scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
+cached value.}
+
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
-Adds 3D raymesh model to the current scene, using latitude/longitude or coordinates in the reference
+Adds 3D raymesh model to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the raymesh will be elevated a constant offset
 above the heightmap. If the raymesh goes off the edge, the raymesh will be filtered out.
 
-If no latitudes or longitudes are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
+If no x/y coordinates are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
 \code{extent} argument as-is. Use this alongside \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} to plot 3D polygons imported from geospatial sources
 in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).
 }
 \examples{
-if(run_documentation()) {
-}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+# Load the built-in R logo OBJ from rayvertex as a raymesh.
+r_logo_mesh = rayvertex::obj_mesh(rayvertex::r_obj(), center = TRUE, angle=c(0,180,0))
+
+# Render the 3D map.
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 10) |>
+ plot_3d(
+   vertical_exaggeration = 4,
+   water = TRUE,
+   shadow_color = "#40310a",
+   background = "tan",
+   theta = 210,
+   phi = 22,
+   zoom = 0.20,
+   fov = 55
+ )
+
+# Place the R logo mesh at point locations, similar to render_points().
+moss_landing_coord = c(36.806807, -121.793332)
+t = seq(0, 2 * pi, length.out = 30)
+circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
+circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
+
+#Pass in custom angles for each model
+render_raymesh(
+ raymesh = r_logo_mesh,
+ lat = circle_coords_lat,
+ long = circle_coords_long,
+ offset = 600,
+ scale = c(32, 32, 32),
+ angle = matrix(c(rep(0,30),-seq(0,360-12,by=12)-90-180,rep(0,30)),ncol=3),
+ change_material = FALSE, clear_previous=TRUE
+)
+render_camera(theta = 160, phi = 33, zoom = 0.4, fov = 55)
+render_snapshot()
+#And high quality, with a realistic atmosphere
+render_highquality(sky_sun_azimuth=10, sky_sun_elevation=10,iso=5)
+\dontshow{\}) # examplesIf}
 }

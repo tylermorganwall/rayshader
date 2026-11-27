@@ -4,47 +4,165 @@
 #'product between light direction and the surface normal vector at that point. Each point's
 #'intensity is proportional to the cosine of the normal vector.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param sunaltitude Default `45`. The azimuth angle as measured from the horizon from which the light originates.
-#'@param sunangle Default `315` (NW). The angle around the matrix from which the light originates.
+#'@param sun_altitude Default `45`. The azimuth angle as measured from the horizon from which the light originates.
+#'@param sun_angle Default `315` (NW). The angle around the matrix from which the light originates.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
 #'@param zero_negative Default `TRUE`. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Matrix of light intensities at each point.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Generate a basic hillshade
-#'montereybay |>
-#'  lamb_shade(zscale=200) |>
+#'montereybay_spatial |>
+#'  lamb_shade() |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
-#'#Increase the intensity by decreasing the zscale
-#'montereybay |>
-#'  lamb_shade(zscale=50) |>
+#'
+#'#Increase the intensity by decreasing the vertical exaggeration
+#'montereybay_spatial |>
+#'  lamb_shade(vertical_exaggeration = 4) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'
 #'#Change the sun direction
-#'montereybay |>
-#'  lamb_shade(zscale=200, sunangle=45) |>
+#'montereybay_spatial |>
+#'  lamb_shade(sun_angle=45, vertical_exaggeration = 4) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'
 #'#Change the sun altitude
-#'montereybay |>
-#'  lamb_shade(zscale=200, sunaltitude=60) |>
+#'montereybay_spatial |>
+#'  lamb_shade(sun_altitude=60, vertical_exaggeration = 4) |>
 #'  plot_map()
-#'}
+#'
+#'#Change the sun to directly overhead, the shading here represents the slope angle
+#'montereybay_spatial |>
+#'  lamb_shade(sun_altitude=90, vertical_exaggeration = 8) |>
+#'  plot_map()
 lamb_shade = function(
   heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
+  sun_altitude = 45,
+  sun_angle = 315,
   zscale = 1,
-  zero_negative = TRUE
+  vertical_exaggeration = 1,
+  zero_negative = TRUE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 ) {
-  sunang_rad = sunangle * pi / 180
-  rayang_rad = sunaltitude * pi / 180
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(sunaltitude = "sun_altitude", sunangle = "sun_angle"),
+    "lamb_shade",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  sunangle_missing = missing(sun_angle)
+  heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+    zscale
+  )))
+  heightmap_auto_zscale = NA_real_
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "lamb_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  } else {
+    allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  }
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "lamb_shade",
+    auto_zscale = heightmap_auto_zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf(
+      "%s_auto_zscale",
+      heightmap_cache_label
+    )),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  cache_hillshade_zscale(zscale, label = zscale_cache_label)
+  zscale = apply_vertical_exaggeration(
+    zscale = zscale,
+    vertical_exaggeration = vertical_exaggeration,
+    caller = "lamb_shade"
+  )
+  if (
+    isTRUE(sunangle_missing) &&
+      isTRUE(heightmap_info$geographic_aspect$active) &&
+      is.finite(heightmap_info$geographic_aspect$north_rotation)
+  ) {
+    sun_angle = sun_angle + heightmap_info$geographic_aspect$north_rotation
+  }
+  sunang_rad = sun_angle * pi / 180
+  rayang_rad = sun_altitude * pi / 180
   rayvector = c(
     cos(sunang_rad) * cos(rayang_rad),
     sin(sunang_rad) * cos(rayang_rad),
@@ -52,7 +170,13 @@ lamb_shade = function(
   )
   heightmap = add_padding(heightmap)
   heightmap = heightmap / zscale
-  shadowmatrix = lambshade_cpp(heightmap = heightmap, rayvector = rayvector)
+  aspect = heightmap_info$geographic_aspect
+  shadowmatrix = lambshade_cpp(
+    heightmap = heightmap,
+    rayvector = rayvector,
+    column_scale = aspect$scale[["z"]],
+    row_scale = aspect$scale[["x"]]
+  )
   shadowmatrix = scales::rescale_max(shadowmatrix, c(0, 1))
   if (zero_negative) {
     shadowmatrix[shadowmatrix < 0] = 0

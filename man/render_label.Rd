@@ -5,160 +5,259 @@
 \title{Render Label}
 \usage{
 render_label(
-  heightmap,
-  text,
-  lat,
-  long,
-  altitude = NULL,
-  extent = NULL,
+  location = NULL,
+  text = NULL,
+  data_column_text = NULL,
+  font = "sans",
+  family = "sans",
+  font_type = "standard",
+  text_size = 1,
+  text_color = "black",
+  text_alpha = 1,
+  freetype = TRUE,
+  adjust_vec = NULL,
+  line = TRUE,
+  line_color = "black",
+  linewidth = 3,
+  alpha = 1,
+  dashed = FALSE,
+  dash_length = "auto",
+  antialias = FALSE,
+  clear_previous = FALSE,
   x = NULL,
   y = NULL,
   z = NULL,
-  zscale = 1,
-  relativez = TRUE,
+  altitude = NULL,
+  data_column_z = NULL,
+  scale_data = 1,
+  relative_z = FALSE,
   offset = 0,
-  clear_previous = FALSE,
-  textsize = 1,
-  dashed = FALSE,
-  dashlength = "auto",
-  linewidth = 3,
-  antialias = FALSE,
-  alpha = 1,
-  textalpha = 1,
-  freetype = TRUE,
-  adjustvec = NULL,
-  family = "sans",
-  fonttype = "standard",
-  linecolor = "black",
-  textcolor = "black"
+  lat = NULL,
+  long = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  ...
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
+\item{location}{Default \code{NULL}. Spatial input used to place the rendered
+label(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT, MULTIPOINT,
+POLYGON, or MULTIPOLYGON geometries. POLYGON and MULTIPOLYGON inputs are
+converted to label points with \code{sf::st_centroid()}. MULTIPOINT inputs are
+flattened to point placements internally, and vectorized arguments such as
+\code{text}, \code{z}, \code{altitude}, \code{data_column_text}, and \code{data_column_z} values are
+applied against that flattened point count. If the input carries a CRS, it
+will be transformed automatically into the active scene CRS. If it has no
+CRS, supply \code{crs}.}
 
-\item{text}{The label text.}
+\item{text}{Default \code{NULL}. The label text. If omitted, use
+\code{data_column_text} to read label text from \code{location}.}
 
-\item{lat}{A latitude for the text. Must provide an \code{raster::extent} object to argument \code{extent} for the map.}
+\item{data_column_text}{Default \code{NULL}. Column name in \code{location} to use for
+\code{text}. Requires \code{location} to be an \code{sf}/spatial object with the named
+column. Values are applied after polygon centroid conversion and
+POINT/MULTIPOINT flattening.}
 
-\item{long}{A latitude for the text. Must provide an \code{raster::extent} object to argument \code{extent} for the map.}
+\item{font}{Default \code{"sans"}. Font family passed to \code{\link[=render_highquality]{render_highquality()}}
+for this label. This does not change the font used in the rgl preview; use
+\code{family} and \code{font_type} to control the preview font.}
 
-\item{altitude}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
+\item{family}{Default \code{"sans"}. Font family used in the rgl preview. Choices
+are \code{c("serif", "sans", "mono", "symbol")}.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+\item{font_type}{Default \code{"standard"}. Font type used in the rgl preview.
+Choices are \code{c("standard", "bold", "italic", "bolditalic")}. These require
+FreeType fonts, which may not be installed on your system. If the selected
+face is unavailable, rayshader emits a message and uses rgl's bitmap font to
+preview label placement. See \code{rgl::text3d()} for more information.}
 
-\item{x}{Default \code{NULL}. Directly specify the \code{x} index in the matrix to place the label.}
+\item{text_size}{Default \code{1}. A numeric character expansion value. If rgl
+falls back to its fixed-size bitmap font, the requested value is still used
+by \code{\link[=render_highquality]{render_highquality()}}.}
 
-\item{y}{Default \code{NULL}. Directly specify the \code{y} index in the matrix to place the label.}
+\item{text_color}{Default \code{"black"}. Color of the text. Use \code{"height"} to
+color label text by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
-\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+\item{text_alpha}{Default \code{1}. Transparency of the label text.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
+\item{freetype}{Default \code{TRUE}. Set to \code{FALSE} if FreeType is not installed.
+FreeType enables anti-aliased fonts, but can occasionally cause transparency
+issues when text is positioned in front of or behind a transparent surface.}
 
-\item{relativez}{Default \code{TRUE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
+\item{adjust_vec}{Default \code{NULL}. Horizontal and vertical offsets for the text.
+When omitted, \code{\link[=render_highquality]{render_highquality()}} uses \code{c(0.5, -0.5)}. The rgl preview
+uses \code{c(0.33, -0.5)} when \code{freetype = FALSE} on macOS or Linux to center its
+bitmap font without changing the high-quality justification.}
 
-\item{offset}{Elevation above the surface (at the label point) to start drawing the line.}
+\item{line}{Default \code{TRUE}. If \code{FALSE}, the vertical line connecting the
+label to the surface is not drawn.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing text and lines rendered with \code{\link[=render_label]{render_label()}}. If no
-other arguments are passed to \code{\link[=render_label]{render_label()}}, this will just remove all existing lines.}
-
-\item{textsize}{Default \code{1}. A numeric character expansion value.}
-
-\item{dashed}{Default \code{FALSE}. If \code{TRUE}, the label line is dashed.}
-
-\item{dashlength}{Default \code{auto}. Length, in units of the elevation matrix (scaled by \code{zscale}) of the dashes if \code{dashed = TRUE}.}
+\item{line_color}{Default \code{"black"}. Color of the line. Use \code{"height"} to
+color label lines by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{linewidth}{Default \code{3}. The line width.}
 
-\item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
-
 \item{alpha}{Default \code{1}. Transparency of the label line.}
 
-\item{textalpha}{Default \code{1}. Transparency of the label text.}
+\item{dashed}{Default \code{FALSE}. If \code{TRUE}, the label line is dashed.}
 
-\item{freetype}{Default \code{TRUE}. Set to \code{FALSE} if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.}
+\item{dash_length}{Default \code{"auto"}. Length, in units of the elevation matrix
+and scaled by \code{zscale}, of the dashes when \code{dashed = TRUE}.}
 
-\item{adjustvec}{Default \code{c(0.5,-0.5)}. The horizontal and vertical offset for the text. If \code{freetype = FALSE} and on macOS/Linux, this is adjusted to \code{c(0.33,-0.5)} to keep the type centered.}
+\item{antialias}{Default \code{FALSE}. If \code{TRUE}, anti-aliasing is applied to the
+line. Anti-aliasing can cause unpredictable behavior with transparent
+surfaces.}
 
-\item{family}{Default \code{"sans"}. Font family. Choices are \code{c("serif", "sans", "mono", "symbol")}.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing text
+and lines rendered with \code{\link[=render_label]{render_label()}}. A clear-only call returns without
+rendering a replacement.}
 
-\item{fonttype}{Default \code{"standard"}. The font type. Choices are \code{c("standard", "bold", "italic", "bolditalic")}. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.}
+\item{x}{Default \code{NULL}. X coordinate for the label in the same coordinate
+reference system as \code{extent}. If no \code{extent} is available and the scene uses
+a plain matrix heightmap, this defaults to matrix dimensions.}
 
-\item{linecolor}{Default \code{black}. Color of the line.}
+\item{y}{Default \code{NULL}. Y coordinate for the label in the same coordinate
+reference system as \code{extent}. If no \code{extent} is available and the scene uses
+a plain matrix heightmap, this defaults to matrix dimensions.}
 
-\item{textcolor}{Default \code{black}. Color of the text.}
+\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation
+matrix and scaled by \code{zscale}.}
+
+\item{altitude}{Default \code{NULL}. Elevation of the label, in units of the
+elevation matrix and scaled by \code{zscale}. If omitted, this defaults to 10
+percent above the maximum altitude in the heightmap.}
+
+\item{data_column_z}{Default \code{NULL}. Column name in \code{location} to use for \code{z}.
+Requires \code{location} to be an \code{sf}/spatial object with values coercible to
+numeric. Values are applied after polygon centroid conversion and
+POINT/MULTIPOINT flattening. Rows with missing or non-finite values after
+coercion are omitted, and retained values are multiplied by \code{scale_data}.}
+
+\item{scale_data}{Default \code{1}. If specifying \code{data_column_z}, how much to
+scale that value when rendering. If used with \code{vertical_exaggeration}, both
+are applied.}
+
+\item{relative_z}{Default \code{FALSE}. Whether \code{z} is measured relative to the
+underlying elevation at that point in the heightmap or set absolutely.}
+
+\item{offset}{Default \code{0}. Elevation above the surface at the label point at
+which to start drawing the line.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS
+to assign to CRS-less spatial data before transforming it into the active
+scene CRS. If spatial data already carries a CRS, that CRS is used
+automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, labels outside the scene
+extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the
+ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Default \code{NULL}. An object representing the spatial extent of
+the scene from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages; a length-4
+numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}; or a spatial
+object that can be converted to an extent. If omitted, rayshader uses extent
+metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. If no extent metadata is
+available for a plain matrix scene, rayshader defaults to
+\code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
+\code{\link[=plot_gg]{plot_gg()}}. Required to disambiguate faceted ggplot scenes when
+panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. Ratio between horizontal spacing and the elevation
+units in the original heightmap. If omitted, rayshader uses the cached scene
+value when available.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
+visual relief. If omitted, rayshader uses the cached scene value from
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override it for
+this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If
+omitted, rayshader uses the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.
+Pass explicitly to override the cached value.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds a marker and label to the current 3D plot
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1",
-         zoom=0.9, windowsize = 800)
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4,water=TRUE, water_color="#233aa1",
+         zoom=0.9, window_size = 800)
 render_snapshot()
-}
 
 santa_cruz = c(36.962957, -122.021033)
-#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
-if(run_documentation()) {
-render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
-            extent = attr(montereybay, "extent"), textsize = 2,
-            altitude=12000, zscale=50, text = "Santa Cruz")
+#We want to add a label to Santa Cruz, so we use latitude/longitude coordinates.
+render_label(lat = santa_cruz[1], long = santa_cruz[2],
+            text_size = 2, altitude=12000, text = "Santa Cruz")
 render_snapshot()
-}
 
 monterey = c(36.603053, -121.892933)
 #We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
 #the user to control the dash length). You can clear the existing lines by setting
 #`clear_previous = TRUE`.
-if(run_documentation()) {
-render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
-            extent = attr(montereybay, "extent"), textsize = 2,
-            zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
+render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
+            text_size = 2, text = "Monterey", text_color = "white", line_color="darkred",
             dashed = TRUE, clear_previous = TRUE)
 render_snapshot()
-}
 
 canyon = c(36.621049, -122.333912)
-#By default, z specifies the altitude above that point on the elevation matrix. We can also specify
-#an absolute height by setting `relativez=FALSE`.
-if(run_documentation()) {
-render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000,
-            extent = attr(montereybay,"extent"), textsize = 2,
-            zscale=50,text = "Monterey Canyon", relativez=FALSE)
+#By default, z specifies the absolute altitude. We can also specify
+#an relative height by setting `relative_z=FALSE`.
+render_label(lat = canyon[1], long = canyon[2], altitude = 2000,
+            text_size = 2, text = "Monterey Canyon", relative_z = TRUE)
 render_snapshot()
+
+#Query the fonts installed on this system and select a concrete family,
+#preferring commonly available fonts with broad Latin character coverage.
+installed_font_families = unique(systemfonts::system_fonts()$family)
+preferred_font_families = c("Avenir", "Arial", "Liberation Sans", "DejaVu Sans")
+label_font = intersect(preferred_font_families, installed_font_families)
+if (length(label_font)) {
+ label_font = label_font[1]
+} else {
+ label_font = systemfonts::font_info("sans")$family[1]
 }
 
-#We can also render labels in high quality with `render_highquality()`, specifying a custom
-#line radius. By default, the labels point towards the camera, but you can fix their angle with
-#argument `text_angle`.
-if(run_documentation()) {
+#The `font` argument uses that installed family in `render_highquality()`.
+#The rgl preview still uses `family` and `font_type` independently.
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
-render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
-            extent = attr(montereybay, "extent"), textsize = 2,
-            zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
-            dashed = TRUE, clear_previous = TRUE)
+#Register its bold face under a dedicated family name for high-quality text.
+systemfonts::register_variant(
+ name = "rayshader_label_bold",
+ family = label_font,
+ weight = "bold"
+)
 
-render_label(montereybay,lat=canyon[1], long = canyon[2],
-            altitude = 2000, zscale=50, textsize = 2,
-            extent = attr(montereybay,"extent"), textcolor = "white", linecolor="white",
-            text = "Monterey Canyon", relativez=FALSE)
+render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
+            text_size = 2, text = "Monterey", text_color = "black", line_color="darkred",
+            dashed = TRUE, clear_previous = TRUE, font_type = "bold",
+            family = "sans", font = "rayshader_label_bold")
 
-render_highquality(samples = 16,text_size = 64, line_radius = 3, text_offset = c(0, 20, 0),
-                  lightdirection = 180, min_variance = 0)
-}
-if(run_documentation()) {
-#Fixed text angle
-render_highquality(samples = 16,text_size = 64, line_radius = 3, text_offset = c(0, 20, 0),
-                  lightdirection = 180, text_angle = 0, min_variance = 0)
-}
+render_label(lat = canyon[1], long = canyon[2],
+            altitude = 2000, text_size = 2,
+            text_color = "white", line_color="black",font_type = "bold",
+            text = "Monterey Canyon", relative_z=FALSE,
+            family = "sans", font = "rayshader_label_bold")
+
+render_highquality(samples = 16)
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
-if(run_documentation()) {
 render_label(clear_previous = TRUE)
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

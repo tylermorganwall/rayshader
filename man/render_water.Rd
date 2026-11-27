@@ -5,64 +5,152 @@
 \title{Render Water Layer}
 \usage{
 render_water(
-  heightmap,
-  waterdepth = 0,
-  watercolor = "lightblue",
-  zscale = 1,
-  wateralpha = 0.5,
-  waterlinecolor = NULL,
-  waterlinealpha = 1,
+  water_input = 0,
+  water_color = "lightblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
   linewidth = 2,
-  remove_water = TRUE
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
+  water_edge_extension = 0.5,
+  water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove"),
+  clear_previous = TRUE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  water_elevation = NULL,
+  water_surface_tolerance = NULL,
+  parallel = TRUE,
+  ...
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
+\item{water_input}{Default \code{0}. Water level or footprint. Either a scalar,
+a matrix with the same dimensions as \code{heightmap}, a spatial raster that can
+be projected/resampled to the heightmap grid, or an \code{sf}/\code{sfc} object containing
+POLYGON or MULTIPOLYGON geometries. Non-polygon features are ignored; polygon
+parts within GEOMETRYCOLLECTION features are retained. If no nonempty polygons
+remain, no water is drawn. For spatial rasters, finite cells define
+the water footprint. Polygon inputs require known source and heightmap CRSs
+and a heightmap extent. Method \code{"polygon"} retains exact boundaries and holes.
+Methods \code{"raster"} and \code{"optimized"} convert polygons to the heightmap grid;
+features smaller than a cell use touched cells when they contain no cell centers.
+Polygon input requires \code{sf} and \code{terra}.}
 
-\item{waterdepth}{Default \code{0}.}
+\item{water_color}{Default \code{lightblue}.}
 
-\item{watercolor}{Default \code{lightblue}.}
+\item{water_alpha}{Default \code{0.5}. Water transparency.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+\item{water_line_color}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
 
-\item{wateralpha}{Default \code{0.5}. Water transparency.}
-
-\item{waterlinecolor}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
-
-\item{waterlinealpha}{Default \code{1}. Water line tranparency.}
+\item{water_line_alpha}{Default \code{1}. Water line tranparency.}
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
-\item{remove_water}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
+\item{water_render_method}{Default \code{"polygon"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; \code{"optimized"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.
+With simplified (\code{triangulate = TRUE}) terrain, raster caps retain the supplied
+footprint and the rendered terrain hides buried portions, avoiding holes from
+clipping against a different terrain triangulation.}
+
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{water_input} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
+
+\item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{water_input} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
+
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for \code{"optimized"} water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
+
+\item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing water
+layer before drawing the new one. A clear-only call returns without rendering
+a replacement.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.
+If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader uses the raster cell resolution.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+
+\item{water_elevation}{Default \code{NULL}. For polygon \code{water_input} only: a finite
+numeric elevation, one elevation per original feature, or the name of a
+numeric column in an \code{sf} object. Values use the heightmap's elevation units,
+before \code{zscale} and \code{vertical_exaggeration}. If \code{NULL}, each polygon part uses
+the median finite terrain elevation sampled along its exterior ring, falling
+back to its interior cells when no finite shoreline samples are available.
+Inferred levels receive a small positive lift to avoid coplanar water on flat
+terrain. The lift is at least \code{max(1e-4, abs(level) * 1e-6)} in elevation units
+and accounts for scene size and \code{zscale} so it survives rendering precision.
+Explicit levels are not lifted by \code{"raster"} or \code{"optimized"}. Exact polygon
+water checks the actual rendered terrain, infers the shoreline median if needed,
+and lifts even explicit levels when nearly coincident with a terrain patch.
+This default is a visualization estimate, not a measured water-surface level.
+Overlapping raster cells use the highest component level. With method
+\code{"optimized"}, the existing area-fit algorithm may replace these levels; they
+are the supplied levels for raster rendering and polygon-to-raster fallback.
+\code{water_edge_clamp = TRUE} may also lower the supplied levels. Use method
+\code{"raster"} with clamping disabled to retain explicit elevations. With polygon
+inputs, method \code{"legacy"} warns and uses \code{"raster"} instead.}
+
+\item{water_surface_tolerance}{Default \code{NULL}. For \code{"polygon"}, maximum
+difference in terrain elevation units for treating a nearly horizontal terrain
+patch as coincident with the water top. \code{NULL} uses a tolerance scaled to
+single-precision scene coordinates. Coincident tops are raised just above the
+highest matching patch by a scene-scale clearance. \code{0} tests exact coincidence.
+The extrusion bottom is the lowest rendered terrain point within each polygon.
+Polygon footprints are clipped only to valid terrain coverage; buried water is
+hidden by terrain. Grid edge expansion, clamping, and fitting-failure settings
+do not alter exact polygon water.}
+
+\item{parallel}{Default \code{TRUE}. Build large exact-polygon water batches in
+native threads. Uses \code{options(cores = ...)}, or physical core count when
+unset. Small batches run sequentially; \code{FALSE} always uses one thread.
+Threads share the terrain snapshot; each has its own geometry scratch space.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50)
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 20) |>
+ plot_3d(vertical_exaggeration = 4)
 render_snapshot()
-}
 
 #We want to add a layer of water after the initial render.
-if(run_documentation()) {
-render_water(montereybay,zscale=50)
+render_water()
 render_snapshot()
-}
 
 #Call it again to change the water depth
-if(run_documentation()) {
-render_water(montereybay,zscale=50,waterdepth=-1000)
+render_water(water_input=-1000, water_color = "dodgerblue3")
 render_snapshot()
-}
+
+#Slice the water out to the edge
+water_levels = matrix(
+ 0,
+ nrow = nrow(montereybay_spatial),
+ ncol = ncol(montereybay_spatial)
+)
+water_levels[col(water_levels) > ncol(water_levels) / 2 + 20 |
+col(water_levels) < ncol(water_levels) / 2-20] = -8000
+render_water(water_input = water_levels, water_color = "dodgerblue4")
+render_snapshot()
+
+#Use a matrix to vary the water level across the scene
+water_ramp = matrix(
+ seq(-1200, -300, length.out = length(montereybay_spatial)),
+ nrow = nrow(montereybay_spatial),
+ ncol = ncol(montereybay_spatial)
+)
+render_water(water_input = water_ramp, water_color = "dodgerblue3")
+render_highquality()
 
 #Add waterlines
-if(run_documentation()) {
 render_camera(theta=-45)
-render_water(montereybay,zscale=50,waterlinecolor="white")
+render_water(water_line_color="white", water_color = "dodgerblue4")
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

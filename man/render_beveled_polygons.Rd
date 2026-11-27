@@ -6,14 +6,12 @@
 \usage{
 render_beveled_polygons(
   polygon,
-  extent,
   material = "grey",
   bevel_material = NA,
   angle = 45,
   bevel_width = 5,
   width_raw_units = FALSE,
   bevel = NA,
-  zscale = 1,
   bevel_height = 1,
   base_height = 0,
   raw_heights = FALSE,
@@ -24,7 +22,6 @@ render_beveled_polygons(
   scale_all_max = TRUE,
   data_column_top = NULL,
   data_column_bottom = NULL,
-  heightmap = NULL,
   scale_data = 1,
   holes = 0,
   alpha = 1,
@@ -35,6 +32,13 @@ render_beveled_polygons(
   light_intensity = 1,
   light_relative = FALSE,
   clear_previous = FALSE,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
@@ -43,11 +47,6 @@ render_beveled_polygons(
 of polygon represented in a way that can be processed by \code{xy.coords()}.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
-
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{material}{Default \code{"grey80"}. If a color string, this will specify the color of the sides/base of the polygon.
 Alternatively (for more customization), this can be a r\code{ayvertex::material_list()} object to specify
@@ -65,8 +64,6 @@ the full color/appearance/material options for the resulting \code{ray_mesh} mes
 or the actual units of the map.}
 
 \item{bevel}{Default \code{NULL}. A list with \code{x}/\code{y} components that specify a bevel profile. See \code{raybevel::generate_bevel()}}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
 \item{bevel_height}{Default \code{1}. Height from the base of the polygon to the start of the beveled top.}
 
@@ -91,17 +88,13 @@ terms, or relative to the centroid of the polygon.}
 max height, or whether to scale each max height to the maximum internal distance in the polygon.}
 
 \item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the top of the beveled polygon.}
+to specify the top of the beveled polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the bottom of the beveled polygon.}
-
-\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+to specify the bottom of the beveled polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
-much to scale that value when rendering.}
+much to scale that value when rendering. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{holes}{Default \code{0}. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the \code{earcut} function in the \code{decido} package for more information.}
@@ -123,25 +116,50 @@ will not affect software or high quality renders.}
 \item{light_relative}{Default \code{FALSE}. Whether the light direction should be taken relative to the camera,
 or absolute.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing beveled
+polygons. A clear-only call returns without rendering a replacement.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+All points are assumed to be evenly spaced.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds beveled polygon to the scene using the \code{raybevel} package. See
 the \code{raybevel::generate_beveled_polygon()} function for more information.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 
 # This function can also create fake "terrain" from polygons by visualizing the distance
 # to the nearest edge.
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the county borders as polygons in Monterey Bay as terrain
-montereybay |>
-  sphere_shade(texture = "desert") |>
-  add_shadow(ray_shade(montereybay,zscale = 50)) |>
-  plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
-          background = "pink")
+montereybay_spatial |>
+  sphere_shade(texture = "desert",vertical_exaggeration = 20) |>
+  add_shadow(ray_shade(vertical_exaggeration = 4)) |>
+  plot_3d(water = TRUE, window_size = 800, water_color = "dodgerblue",
+          background = "pink", vertical_exaggeration = 4)
 
 #We will apply a negative buffer to create space between adjacent polygons. You may
 #have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
@@ -149,80 +167,64 @@ sf::sf_use_s2(FALSE)
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
 render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-                        heightmap = montereybay, bevel_width=2000,
-                        material = "red",
-                        extent = attr(montereybay,"extent"),
-                        bevel_height = 5000, base_height=0,
-                        zscale=200)
+                        bevel_width=300, material = "red", clear_previous = TRUE,
+                        bevel_height = 800, base_height=0)
 render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 render_snapshot()
 render_camera(theta=194, phi= 35,   zoom = 0.5, fov= 80)
 render_snapshot()
-}
 
-# Changing the color of the beveled top:
-if(run_documentation()) {
-render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-                        heightmap = montereybay, bevel_width=2000,
-                        material = "tan", bevel_material = "darkgreen",
-                        extent = attr(montereybay,"extent"), clear_previous=TRUE,
-                        bevel_height = 5000, base_height=0,
-                        zscale=200)
-}
+# Changing the color of the beveled top and reduce the angle
+render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 15 ,
+                        bevel_width=300, material = "tan",
+                        bevel_material = "darkgreen", clear_previous=TRUE,
+                        bevel_height = 1000, base_height=0)
+render_snapshot()
 # We can create a nice curved surface by passing in a bevel generated with the
 # `raybevel::generate_bevel()` function.
-if(run_documentation()) {
-render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
+render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
                         bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
-                        #max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,
                         material = rayvertex::material_list(diffuse="red",
                                                             ambient = "darkred",
                                                             diffuse_intensity = 0.2,
                                                             ambient_intensity = 0.1),
                         light_intensity = 1, light_relative = FALSE,
-                        extent = attr(montereybay,"extent"), bevel_height = 5000,
-                        base_height=0, clear_previous = TRUE,
-                        zscale=200)
+                        bevel_height = 1000,
+                        base_height=0, clear_previous = TRUE)
 render_snapshot()
-}
 
 # While the bevels all start at the same point in the above example,
 # they rise to different levels due to being scaled by the maximum internal distance
 # in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the
-# same maximum height (in this case, 3000m above the 5000m bevel start height).
-if(run_documentation()) {
-render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
+# same maximum height (in this case, 1500m above the 1000m bevel start height).
+render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
                  bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
-                 max_height = 3000, scale_all_max = TRUE, set_max_height = TRUE,
+                 max_height = 1500, scale_all_max = TRUE, set_max_height = TRUE,
                  material = rayvertex::material_list(diffuse="red",
                                                      ambient = "darkred",
                                                      diffuse_intensity = 0.2,
                                                      ambient_intensity = 0.1),
                  light_intensity = 1, light_relative = FALSE,
-                 extent = attr(montereybay,"extent"), bevel_height = 5000,
-                 base_height=0, clear_previous = TRUE,
-                 zscale=200)
+                 bevel_height = 500,
+                 base_height=0, clear_previous = TRUE)
 render_snapshot()
-}
 
 # Rendering the polygons with `render_highquality()`
-if(run_documentation()) {
-  render_highquality()
-}
+poly_material = rayrender::glossy(color = "#900",gloss=0.4)
+render_highquality(rgl_materials =  list("obj_raymesh_beveled_polygon" = poly_material))
 
 # We can scale the size of the polygon to a column in the `sf` object as well:
 # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
-# argument. Note that this is applied as well as the `zscale` argument, and that you
+# argument. Note that this is applied in scene units, and that you
 # must think carefully about your scales and values if trying to represent a meaningful
 # data visualization with this object.
-if(run_documentation()) {
-render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
-                 data_column_top = "ALAND", scale_data = 1e-5, heightmap = montereybay,
-                 #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,
+render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=100,
+                 data_column_top = "ALAND", scale_data = 2e-6,
                  material = rayvertex::material_list(diffuse="red"),
                  light_intensity = 1, light_relative = FALSE,
-                 extent = attr(montereybay,"extent"), clear_previous = TRUE,
-                 zscale=200)
-render_snapshot()
-}
+                 clear_previous = TRUE)
+render_zaxis(data = "beveled_polygon")
+render_camera(theta=194, phi= 35,   zoom = 0.7, fov= 80)
+render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = poly_material))
+\dontshow{\}) # examplesIf}
 }

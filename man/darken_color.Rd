@@ -7,15 +7,17 @@
 darken_color(col, darken = 0.3)
 }
 \arguments{
-\item{col}{RGB colors}
+\item{col}{Color name, hexadecimal color, or numeric sRGB vector with values
+between \code{0} and \code{1}.}
+
+\item{darken}{Default \code{0.3}. Lightness multiplier. Values between \code{0} and \code{1}
+darken the color; \code{0} returns black and \code{1} preserves the original color.}
 }
 \value{
-Euler angles in degrees. c(phi,theta,yaw)
+Numeric sRGB color vector with values between \code{0} and \code{1}.
 }
 \description{
-Convert RGB to XYZ color
-}
-\examples{
-#None
+Scale CIELuv lightness and chroma together to darken a color
+while preserving its chromaticity.
 }
 \keyword{internal}

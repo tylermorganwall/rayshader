@@ -1,0 +1,13 @@
+Small MULTIPOLYGON Z face fixtures from the District of Columbia Buildings in
+3D shapefile, EGID records selected within 5 km of the Washington Monument.
+Source file: BldgPly_3D/BldgPly_3D.shp (DC Open Data).
+
+Stored as open XYZ rings, without attributes or unrelated building geometry:
+- bowtie: face 289, a crossed vertical quadrilateral.
+- touching_hole: face 257789, an interior ring touching its exterior.
+- collapsed: face 30621, retraced edges with no remaining polygon area.
+- overlapping_edges: face 795482, overlapping roof edges that stall earcut.
+- roundoff_sliver: face 141757, near-coincident edges whose repair produces a
+  sub-precision sliver alongside the valid roof region.
+
+Face numbers refer to source-order faces in the selected 5 km dataset.

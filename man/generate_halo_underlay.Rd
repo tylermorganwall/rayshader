@@ -11,8 +11,32 @@ generate_halo_underlay(
   halo_color,
   halo_alpha,
   halo_blur,
-  halo_edge_softness
+  halo_edge_softness,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25
 )
+}
+\arguments{
+\item{overlay}{RGBA overlay image.}
+
+\item{halo_expand}{Number of pixels to expand the halo.}
+
+\item{halo_offset}{Halo offset, retained for compatibility with callers that
+draw the offset into \code{overlay} before calling this helper.}
+
+\item{halo_color}{Halo color.}
+
+\item{halo_alpha}{Halo alpha multiplier.}
+
+\item{halo_blur}{Gaussian blur standard deviation applied to the halo alpha.}
+
+\item{halo_edge_softness}{Width of the softened halo edge transition, in pixels.}
+
+\item{halo_gap_fill}{Default \code{2}. Maximum alpha gap width, in pixels, to
+bridge in the halo outline.}
+
+\item{halo_gap_fill_alpha_threshold}{Default \code{0.25}. Alpha threshold used to
+protect enclosed interior halo gaps from \code{halo_gap_fill}.}
 }
 \value{
 rayimg

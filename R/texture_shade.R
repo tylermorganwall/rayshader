@@ -3,6 +3,8 @@
 #'@description Calculates a shadow for each point on the surface using the method described by
 #'Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'@param detail Default `0.5`. Amount of detail in texture shading algorithm. `0` is the least detail,
 #'while `1` is the most.
@@ -16,143 +18,195 @@
 #'@param dy Default `1`. The distance between each column of data (compared to the height axis).
 #'@param pad Default `50`. The amount to pad the heightmap so edge effects don't appear from the
 #'fourier transform. Only increase this if you encounter boundary effects.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS. Explicit `dx` and `dy` values take
+#' precedence.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@return 2D matrix of hillshade values.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Create a direct mapping of elevation to color:
-#' if(run_documentation()) {
 #'
 #' #Plut using default values
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade() |>
 #'   plot_map()
-#' }
-#' if(run_documentation()) {
 #' #Increase the level of detail
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(detail=1) |>
 #'   plot_map()
-#' }
-#' if(run_documentation()) {
 #' #Decrease the level of detail
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(detail=0) |>
 #'   plot_map()
-#' }
-#' if(run_documentation()) {
 #' #Increase the level of contrast
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(contrast=3) |>
 #'   plot_map()
-#' }
-#' if(run_documentation()) {
 #' #Increase the brightness for this level of contrast
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(contrast=5, brightness = 2) |>
 #'   plot_map()
-#' }
 #' #Add a texture_shade() layer into a map
-#' montbay = montereybay
+#' montbay = raster_to_matrix(montereybay_spatial)
 #' montbay[montbay < 0] = 0
-#'if(run_documentation()) {
 #' montbay |>
 #'   height_shade() |>
-#'   add_water(detect_water(montbay), color="dodgerblue") |>
-#'   add_shadow(texture_shade(montbay, detail=1/6, contrast = 4,
-#'                            brightness = 3),0.1) |>
-#'   add_shadow(lamb_shade(montbay,zscale=50),0) |>
+#'   add_water(detect_water(montbay), color="dodgerblue3") |>
+#'   add_shadow(texture_shade(montereybay_spatial, detail=2/3, contrast = 5,
+#'                           brightness = 2),0) |>
+#'   add_shadow(lamb_shade(montereybay_spatial, vertical_exaggeration = 4),0) |>
 #'   plot_map()
-#'}
 texture_shade = function(
-	heightmap,
-	detail = 0.5,
-	contrast = 1,
-	brightness = 0,
-	transform = TRUE,
-	dx = 1,
-	dy = 1,
-	pad = 50
+  heightmap,
+  detail = 0.5,
+  contrast = 1,
+  brightness = 0,
+  transform = TRUE,
+  dx = 1,
+  dy = 1,
+  pad = 50,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 ) {
-	heightmap = t(heightmap)
-	heightmap[is.na(heightmap)] = mean(heightmap, na.rm = TRUE)
-	if (detail < 0 || detail > 1) {
-		stop("`detail` should be a number between 0 and 1.")
-	}
-	if (dx <= 0 || dy <= 0) {
-		stop("`dx` and `dy` should be greater than zero.")
-	}
-	if (pad < 0) {
-		stop("`pad` should be an integer greater than zero.")
-	}
-	heightmap = heightmap - min(heightmap, na.rm = TRUE)
-	heightmap = add_multi_padding(heightmap, pad)
-	odd_padded_cols = FALSE
-	odd_padded_rows = FALSE
-	if (ncol(heightmap) %% 2 != 0) {
-		odd_padded_cols = TRUE
-		heightmap = cbind(heightmap[, 1], heightmap)
-	}
-	if (nrow(heightmap) %% 2 != 0) {
-		odd_padded_rows = TRUE
-		heightmap = rbind(heightmap[1, ], heightmap)
-	}
-	sfunc = function(v, dim) {
-		v = v - dim / 2 + 0.5
-		v = v / dim
-		3 * (sinpi(v))^4 / (pi^2 * (2 + cospi(2 * v))) * 1 / v^4
-	}
-	mfunc = function(i, j, d, dx, dy, dimx, dimy) {
-		i = i - dimx / 2
-		j = j - dimy / 2
-		(2 * pi)^d * ((i / dx)^2 + (j / dy)^2)^(d / 2)
-	}
-	shift_fft = function(fft_mat) {
-		fftcorn_nw = fft_mat[1:(nrow(fft_mat) / 2), 1:(ncol(fft_mat) / 2)]
-		fftcorn_ne = fft_mat[
-			1:(nrow(fft_mat) / 2),
-			(ncol(fft_mat) / 2 + 1):ncol(fft_mat)
-		]
-		fftcorn_sw = fft_mat[
-			(nrow(fft_mat) / 2 + 1):nrow(fft_mat),
-			1:(ncol(fft_mat) / 2)
-		]
-		fftcorn_se = fft_mat[
-			(nrow(fft_mat) / 2 + 1):nrow(fft_mat),
-			(ncol(fft_mat) / 2 + 1):ncol(fft_mat)
-		]
-		rbind(cbind(fftcorn_se, fftcorn_sw), cbind(fftcorn_ne, fftcorn_nw))
-	}
-	fft_heightmap = shift_fft(stats::fft(heightmap))
+  heightmap_missing = missing(heightmap)
+  dx_missing = missing(dx)
+  dy_missing = missing(dy)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "texture_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+  }
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  if (dx_missing) {
+    dx = heightmap_info$geographic_aspect$scale[["z"]]
+  }
+  if (dy_missing) {
+    dy = heightmap_info$geographic_aspect$scale[["x"]]
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  heightmap = t(heightmap)
+  heightmap[is.na(heightmap)] = mean(heightmap, na.rm = TRUE)
+  if (detail < 0 || detail > 1) {
+    stop("`detail` should be a number between 0 and 1.")
+  }
+  if (dx <= 0 || dy <= 0) {
+    stop("`dx` and `dy` should be greater than zero.")
+  }
+  if (pad < 0) {
+    stop("`pad` should be an integer greater than zero.")
+  }
+  heightmap = heightmap - min(heightmap, na.rm = TRUE)
+  heightmap = add_multi_padding(heightmap, pad)
+  odd_padded_cols = FALSE
+  odd_padded_rows = FALSE
+  if (ncol(heightmap) %% 2 != 0) {
+    odd_padded_cols = TRUE
+    heightmap = cbind(heightmap[, 1], heightmap)
+  }
+  if (nrow(heightmap) %% 2 != 0) {
+    odd_padded_rows = TRUE
+    heightmap = rbind(heightmap[1, ], heightmap)
+  }
+  sfunc = function(v, dim) {
+    v = v - dim / 2 + 0.5
+    v = v / dim
+    3 * (sinpi(v))^4 / (pi^2 * (2 + cospi(2 * v))) * 1 / v^4
+  }
+  mfunc = function(i, j, d, dx, dy, dimx, dimy) {
+    i = i - dimx / 2
+    j = j - dimy / 2
+    (2 * pi)^d * ((i / dx)^2 + (j / dy)^2)^(d / 2)
+  }
+  shift_fft = function(fft_mat) {
+    fftcorn_nw = fft_mat[1:(nrow(fft_mat) / 2), 1:(ncol(fft_mat) / 2)]
+    fftcorn_ne = fft_mat[
+      1:(nrow(fft_mat) / 2),
+      (ncol(fft_mat) / 2 + 1):ncol(fft_mat)
+    ]
+    fftcorn_sw = fft_mat[
+      (nrow(fft_mat) / 2 + 1):nrow(fft_mat),
+      1:(ncol(fft_mat) / 2)
+    ]
+    fftcorn_se = fft_mat[
+      (nrow(fft_mat) / 2 + 1):nrow(fft_mat),
+      (ncol(fft_mat) / 2 + 1):ncol(fft_mat)
+    ]
+    rbind(cbind(fftcorn_se, fftcorn_sw), cbind(fftcorn_ne, fftcorn_nw))
+  }
+  fft_heightmap = shift_fft(stats::fft(heightmap))
 
-	conv1 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
-	conv2 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
+  conv1 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
+  conv2 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
 
-	nr = nrow(conv1)
-	nc = ncol(conv1)
+  nr = nrow(conv1)
+  nc = ncol(conv1)
 
-	for (i in seq_len(nr)) {
-		for (j in seq_len(nc)) {
-			conv1[i, j] = sfunc(i, nr) * sfunc(j, nc)
-			conv2[i, j] = mfunc(i, j, d = detail, dx, dy, nr, nc)
-		}
-	}
+  for (i in seq_len(nr)) {
+    for (j in seq_len(nc)) {
+      conv1[i, j] = sfunc(i, nr) * sfunc(j, nc)
+      conv2[i, j] = mfunc(i, j, d = detail, dx, dy, nr, nc)
+    }
+  }
 
-	heightmap_processed = abs(stats::fft(
-		shift_fft(fft_heightmap * conv1 * conv2),
-		inverse = TRUE
-	))
-	if (odd_padded_cols) {
-		heightmap_processed = heightmap_processed[, -1]
-	}
-	if (odd_padded_rows) {
-		heightmap_processed = heightmap_processed[-1, ]
-	}
-	heightmap_trimmed = trim_padding(heightmap_processed, pad)
-	if (transform) {
-		heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(-1, 1))
-		return((tanh(heightmap_trimmed * contrast + brightness) + 1) / 2)
-	} else {
-		heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(0, 1))
-		return(heightmap_trimmed)
-	}
+  heightmap_processed = abs(stats::fft(
+    shift_fft(fft_heightmap * conv1 * conv2),
+    inverse = TRUE
+  ))
+  if (odd_padded_cols) {
+    heightmap_processed = heightmap_processed[, -1]
+  }
+  if (odd_padded_rows) {
+    heightmap_processed = heightmap_processed[-1, ]
+  }
+  heightmap_trimmed = trim_padding(heightmap_processed, pad)
+  if (transform) {
+    heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(-1, 1))
+    return((tanh(heightmap_trimmed * contrast + brightness) + 1) / 2)
+  } else {
+    heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(0, 1))
+    return(heightmap_trimmed)
+  }
 }

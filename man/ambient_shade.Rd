@@ -6,64 +6,89 @@
 \usage{
 ambient_shade(
   heightmap,
-  anglebreaks = 90 * cospi(seq(5, 85, by = 5)/180),
-  sunbreaks = 24,
-  maxsearch = 30,
+  angle_breaks = 90 * cospi(seq(5, 85, by = 5)/180),
+  sun_breaks = 24,
+  max_search = 30,
   multicore = FALSE,
   zscale = 1,
+  vertical_exaggeration = 1,
   cache_mask = NULL,
   shadow_cache = NULL,
-  progbar = interactive(),
+  progress_bar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{anglebreaks}{Default \code{90*cospi(seq(5, 85,by =5)/180)}. The angle(s), in degrees, as measured from the horizon from which the light originates.}
+\item{angle_breaks}{Default \code{90*cospi(seq(5, 85,by =5)/180)}. The angle(s), in degrees, as measured from the horizon from which the light originates.}
 
-\item{sunbreaks}{Default \code{24}. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
+\item{sun_breaks}{Default \code{24}. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
 
-\item{maxsearch}{Default \code{30}. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
+\item{max_search}{Default \code{30}. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
 
 \item{multicore}{Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set \code{options("cores")} in which the multicore option will only use that many cores.}
 
 \item{zscale}{Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
+
 \item{cache_mask}{Default \code{NULL}. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.}
 
 \item{shadow_cache}{Default \code{NULL}. The shadow matrix to be updated at the points defined by the argument \code{cache_mask}.}
 
-\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+\item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 
-\item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.}
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
+
+\item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Shaded texture map.
 }
 \description{
 Calculates Ambient Occlusion Shadow Map
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-#Here we produce a ambient occlusion map of the `montereybay` elevation map.
-if(run_documentation()) {
-plot_map(ambient_shade(heightmap = montereybay))
-}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+# Here we produce a ambient occlusion map of the `montereybay_spatial` elevation map.
+# Increasing vertical exaggeration helps bring out details for landscapes
+# that are flat (due to large zscales).
+montereybay_spatial |>
+ ambient_shade(vertical_exaggeration = 20) |>
+ plot_map()
 
-#We can increase the distance to look for surface intersections `maxsearch`
-#and the density of rays sent out around the point `sunbreaks`.
-if(run_documentation()) {
-plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TRUE))
-}
+#We can increase the distance to look for surface intersections `max_search`
+#and the density of rays sent out around the point `sun_breaks`.
+montereybay_spatial |>
+ ambient_shade(sun_breaks = 24,max_search = 100, multicore = TRUE,
+               vertical_exaggeration = 20) |>
+ plot_map()
 #Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-if(run_documentation()) {
-bigmb = resize_matrix(montereybay, scale=2, method="cubic")
+bigmb = resize_spatial(montereybay_spatial, scale=2, method_up="cubic")
 bigmb |>
- sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>
- add_shadow(ambient_shade(bigmb, maxsearch = 100, multicore = TRUE,zscale=1),0) |>
- add_shadow(lamb_shade(bigmb),0.5) |>
+ sphere_shade(texture = create_texture("red","red","red","red","white"),
+              vertical_exaggeration = 20) |>
+ add_shadow(ambient_shade(max_search = 100, multicore = TRUE,
+                          vertical_exaggeration = 20),0) |>
+ add_shadow(lamb_shade(),0.5) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

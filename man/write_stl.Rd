@@ -4,7 +4,7 @@
 \alias{write_stl}
 \title{Write STL}
 \usage{
-write_stl(filename, rotate = FALSE, maxwidth = 100, unit = "mm")
+write_stl(filename, rotate = FALSE, max_width = 100, unit = "mm")
 }
 \arguments{
 \item{filename}{The filename}

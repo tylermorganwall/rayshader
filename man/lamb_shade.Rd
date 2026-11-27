@@ -6,22 +6,42 @@
 \usage{
 lamb_shade(
   heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
+  sun_altitude = 45,
+  sun_angle = 315,
   zscale = 1,
-  zero_negative = TRUE
+  vertical_exaggeration = 1,
+  zero_negative = TRUE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{sunaltitude}{Default \code{45}. The azimuth angle as measured from the horizon from which the light originates.}
+\item{sun_altitude}{Default \code{45}. The azimuth angle as measured from the horizon from which the light originates.}
 
-\item{sunangle}{Default \code{315} (NW). The angle around the matrix from which the light originates.}
+\item{sun_angle}{Default \code{315} (NW). The angle around the matrix from which the light originates.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
+
 \item{zero_negative}{Default \code{TRUE}. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix of light intensities at each point.
@@ -30,30 +50,34 @@ Matrix of light intensities at each point.
 Calculates local shadow map for a elevation matrix by calculating the dot
 product between light direction and the surface normal vector at that point. Each point's
 intensity is proportional to the cosine of the normal vector.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Generate a basic hillshade
-montereybay |>
- lamb_shade(zscale=200) |>
+montereybay_spatial |>
+ lamb_shade() |>
  plot_map()
-}
-if(run_documentation()) {
-#Increase the intensity by decreasing the zscale
-montereybay |>
- lamb_shade(zscale=50) |>
+
+#Increase the intensity by decreasing the vertical exaggeration
+montereybay_spatial |>
+ lamb_shade(vertical_exaggeration = 4) |>
  plot_map()
-}
-if(run_documentation()) {
+
 #Change the sun direction
-montereybay |>
- lamb_shade(zscale=200, sunangle=45) |>
+montereybay_spatial |>
+ lamb_shade(sun_angle=45, vertical_exaggeration = 4) |>
  plot_map()
-}
-if(run_documentation()) {
+
 #Change the sun altitude
-montereybay |>
- lamb_shade(zscale=200, sunaltitude=60) |>
+montereybay_spatial |>
+ lamb_shade(sun_altitude=60, vertical_exaggeration = 4) |>
  plot_map()
-}
+
+#Change the sun to directly overhead, the shading here represents the slope angle
+montereybay_spatial |>
+ lamb_shade(sun_altitude=90, vertical_exaggeration = 8) |>
+ plot_map()
+\dontshow{\}) # examplesIf}
 }

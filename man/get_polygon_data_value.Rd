@@ -8,11 +8,23 @@ get_polygon_data_value(
   polygon,
   data_column_name = NULL,
   default_value = 0,
-  scale_data = 1
+  scale_data = 1,
+  data_column_arg = "data_column",
+  caller = NULL
 )
 }
 \arguments{
-\item{polygon}{This is an sf object}
+\item{polygon}{This is an sf object.}
+
+\item{data_column_name}{Default \code{NULL}. Column name to use for values.}
+
+\item{default_value}{Default \code{0}. Value to use when \code{data_column_name} is \code{NULL}.}
+
+\item{scale_data}{Default \code{1}. Amount to scale values by.}
+
+\item{data_column_arg}{Default \code{"data_column"}. Argument name used for diagnostics.}
+
+\item{caller}{Default \code{NULL}. Calling function name used in error messages.}
 }
 \description{
 Get Data Value from spatial object

@@ -12,7 +12,10 @@ texture_shade(
   transform = TRUE,
   dx = 1,
   dy = 1,
-  pad = 50
+  pad = 50,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -36,6 +39,15 @@ This transforms the resulting darkness using the formula \code{tanh(input * cont
 
 \item{pad}{Default \code{50}. The amount to pad the heightmap so edge effects don't appear from the
 fourier transform. Only increase this if you encounter boundary effects.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS. Explicit \code{dx} and \code{dy} values take
+precedence.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 }
 \value{
 2D matrix of hillshade values.
@@ -43,50 +55,42 @@ fourier transform. Only increase this if you encounter boundary effects.}
 \description{
 Calculates a shadow for each point on the surface using the method described by
 Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a direct mapping of elevation to color:
-if(run_documentation()) {
 
 #Plut using default values
-montereybay |>
+montereybay_spatial |>
   texture_shade() |>
   plot_map()
-}
-if(run_documentation()) {
 #Increase the level of detail
-montereybay |>
+montereybay_spatial |>
   texture_shade(detail=1) |>
   plot_map()
-}
-if(run_documentation()) {
 #Decrease the level of detail
-montereybay |>
+montereybay_spatial |>
   texture_shade(detail=0) |>
   plot_map()
-}
-if(run_documentation()) {
 #Increase the level of contrast
-montereybay |>
+montereybay_spatial |>
   texture_shade(contrast=3) |>
   plot_map()
-}
-if(run_documentation()) {
 #Increase the brightness for this level of contrast
-montereybay |>
+montereybay_spatial |>
   texture_shade(contrast=5, brightness = 2) |>
   plot_map()
-}
 #Add a texture_shade() layer into a map
-montbay = montereybay
+montbay = raster_to_matrix(montereybay_spatial)
 montbay[montbay < 0] = 0
-if(run_documentation()) {
 montbay |>
   height_shade() |>
-  add_water(detect_water(montbay), color="dodgerblue") |>
-  add_shadow(texture_shade(montbay, detail=1/6, contrast = 4,
-                           brightness = 3),0.1) |>
-  add_shadow(lamb_shade(montbay,zscale=50),0) |>
+  add_water(detect_water(montbay), color="dodgerblue3") |>
+  add_shadow(texture_shade(montereybay_spatial, detail=2/3, contrast = 5,
+                          brightness = 2),0) |>
+  add_shadow(lamb_shade(montereybay_spatial, vertical_exaggeration = 4),0) |>
   plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

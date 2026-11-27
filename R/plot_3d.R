@@ -1,32 +1,564 @@
+is_spatial_heightmap_input = function(x) {
+  is.character(x) ||
+    inherits(x, "SpatRaster") ||
+    inherits(x, c("RasterLayer", "RasterBrick", "RasterStack"))
+}
+
+is_spatial_heightmap_longlat = function(heightmap) {
+  if (inherits(heightmap, "SpatRaster")) {
+    return(isTRUE(tryCatch(terra::is.lonlat(heightmap), error = function(e) {
+      FALSE
+    })))
+  }
+  if (inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+    return(isTRUE(tryCatch(raster::isLonLat(heightmap), error = function(e) {
+      FALSE
+    })))
+  }
+  FALSE
+}
+
+extract_longlat_heightmap_zscale = function(heightmap, resolution) {
+  if (length(resolution) < 2 || any(!is.finite(resolution[1:2]))) {
+    return(NA_real_)
+  }
+  resolution = abs(resolution[1:2])
+  if (any(resolution <= 0)) {
+    return(NA_real_)
+  }
+  extent = tryCatch(get_extent(heightmap), error = function(e) NULL)
+  if (is.null(extent)) {
+    return(NA_real_)
+  }
+  center_lon = mean(extent[c("xmin", "xmax")])
+  center_lat = mean(extent[c("ymin", "ymax")])
+  if (!is.finite(center_lon) || !is.finite(center_lat)) {
+    return(NA_real_)
+  }
+  lat_min = max(-90, center_lat - resolution[2] / 2)
+  lat_max = min(90, center_lat + resolution[2] / 2)
+  x_points = rbind(
+    c(center_lon - resolution[1] / 2, center_lat),
+    c(center_lon + resolution[1] / 2, center_lat)
+  )
+  y_points = rbind(
+    c(center_lon, lat_min),
+    c(center_lon, lat_max)
+  )
+  distances = tryCatch(
+    {
+      if (inherits(heightmap, "SpatRaster")) {
+        crs_value = terra::crs(heightmap)
+        c(
+          as.numeric(terra::distance(terra::vect(x_points, crs = crs_value))),
+          as.numeric(terra::distance(terra::vect(y_points, crs = crs_value)))
+        )
+      } else {
+        c(
+          raster::pointDistance(
+            x_points[1, , drop = FALSE],
+            x_points[2, , drop = FALSE],
+            lonlat = TRUE
+          ),
+          raster::pointDistance(
+            y_points[1, , drop = FALSE],
+            y_points[2, , drop = FALSE],
+            lonlat = TRUE
+          )
+        )
+      }
+    },
+    error = function(e) NA_real_
+  )
+  distances = distances[is.finite(distances) & distances > 0]
+  if (length(distances) == 0) {
+    return(NA_real_)
+  }
+  mean(distances)
+}
+
+extract_spatial_heightmap_zscale = function(heightmap) {
+  spatial_nrow = if (inherits(heightmap, "SpatRaster")) {
+    terra::nrow(heightmap)
+  } else if (
+    inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
+  ) {
+    raster::nrow(heightmap)
+  } else {
+    NA_integer_
+  }
+  spatial_ncol = if (inherits(heightmap, "SpatRaster")) {
+    terra::ncol(heightmap)
+  } else if (
+    inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
+  ) {
+    raster::ncol(heightmap)
+  } else {
+    NA_integer_
+  }
+  if (
+    is.finite(spatial_nrow) &&
+      is.finite(spatial_ncol) &&
+      spatial_nrow > 1L &&
+      spatial_ncol > 1L
+  ) {
+    metric_aspect = calculate_geographic_aspect(
+      heightmap = matrix(0, nrow = spatial_ncol, ncol = spatial_nrow),
+      extent = tryCatch(get_extent(heightmap), error = function(error) NULL),
+      crs = extract_spatial_heightmap_crs(heightmap),
+      geographic_aspect = TRUE,
+      extent_is_cell_bounds = TRUE
+    )
+    if (
+      is.finite(metric_aspect$mean_cell_meters) &&
+        metric_aspect$mean_cell_meters > 0
+    ) {
+      return(metric_aspect$mean_cell_meters)
+    }
+  }
+  resolution = NULL
+  if (inherits(heightmap, "SpatRaster")) {
+    resolution = terra::res(heightmap)
+  } else if (
+    inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
+  ) {
+    resolution = raster::res(heightmap)
+  }
+  resolution = suppressWarnings(as.numeric(resolution))
+  if (is_spatial_heightmap_longlat(heightmap)) {
+    longlat_zscale = extract_longlat_heightmap_zscale(heightmap, resolution)
+    if (is.finite(longlat_zscale) && longlat_zscale > 0) {
+      return(longlat_zscale)
+    }
+  }
+  positive_resolution = abs(resolution[is.finite(resolution) & resolution > 0])
+  if (length(positive_resolution) == 0) {
+    return(NA_real_)
+  }
+  mean(positive_resolution)
+}
+
+extract_spatial_heightmap_crs = function(heightmap) {
+  if (inherits(heightmap, "SpatRaster")) {
+    crs_candidates = list(
+      tryCatch(terra::crs(heightmap), error = function(e) NULL),
+      tryCatch(terra::crs(heightmap, proj = TRUE), error = function(e) NULL)
+    )
+    for (crs_candidate in crs_candidates) {
+      parsed_crs = try_parse_scene_crs(crs_candidate)
+      if (!is.null(parsed_crs)) {
+        return(parsed_crs)
+      }
+    }
+    return(NULL)
+  }
+  if (inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+    crs_val = tryCatch(raster::crs(heightmap), error = function(e) NULL)
+    if (is.null(crs_val)) {
+      return(NULL)
+    }
+    crs_candidates = list(
+      tryCatch(comment(crs_val), error = function(e) NULL),
+      crs_val,
+      tryCatch(methods::slot(crs_val, "projargs"), error = function(e) NULL),
+      tryCatch(as.character(crs_val), error = function(e) NULL),
+      tryCatch(raster::projection(heightmap), error = function(e) NULL)
+    )
+    for (crs_candidate in crs_candidates) {
+      parsed_crs = try_parse_scene_crs(crs_candidate)
+      if (!is.null(parsed_crs)) {
+        return(parsed_crs)
+      }
+    }
+    return(NULL)
+  }
+  NULL
+}
+
+coerce_plot_3d_heightmap = function(
+  heightmap,
+  extent = NULL,
+  crs = NULL,
+  geographic_aspect = TRUE
+) {
+  info = list(
+    heightmap = heightmap,
+    extent = extent,
+    crs = try_parse_scene_crs(crs),
+    zscale = NA_real_,
+    is_spatial = FALSE,
+    geographic_aspect = identity_geographic_aspect()
+  )
+  if (!is_spatial_heightmap_input(heightmap)) {
+    if (is.matrix(heightmap)) {
+      embedded_aspect = attr(
+        heightmap,
+        "rayshader_geographic_aspect",
+        exact = TRUE
+      )
+      info$heightmap = heightmap
+      attr(info$heightmap, "rayshader_geographic_aspect") = NULL
+      info$geographic_aspect = if (is.list(embedded_aspect)) {
+        set_geographic_aspect_enabled(embedded_aspect, geographic_aspect)
+      } else {
+        calculate_geographic_aspect(
+          heightmap = heightmap,
+          extent = info$extent,
+          crs = info$crs,
+          geographic_aspect = geographic_aspect
+        )
+      }
+      if (
+        isTRUE(geographic_aspect) &&
+          is.finite(info$geographic_aspect$mean_cell_meters)
+      ) {
+        info$zscale = info$geographic_aspect$mean_cell_meters
+      }
+    }
+    return(info)
+  }
+  if (is.character(heightmap)) {
+    heightmap = read_spatial_raster(heightmap, caller = "plot_3d")
+  }
+  if (inherits(heightmap, "SpatRaster") && terra::nlyr(heightmap) > 1) {
+    warning("`heightmap` has multiple layers; using the first layer.")
+    heightmap = heightmap[[1]]
+  }
+  if (inherits(heightmap, c("RasterBrick", "RasterStack"))) {
+    warning("`heightmap` has multiple layers; using the first layer.")
+    heightmap = read_spatial_raster(
+      heightmap,
+      layer = 1,
+      caller = "plot_3d"
+    )
+  }
+  if (!is.null(info$crs)) {
+    if (inherits(heightmap, "SpatRaster")) {
+      heightmap = terra::deepcopy(heightmap)
+      terra::crs(heightmap) = info$crs$wkt
+    } else {
+      heightmap = raster::raster(heightmap)
+      raster::crs(heightmap) = info$crs$wkt
+    }
+  }
+  info$is_spatial = TRUE
+  if (is.null(info$extent)) {
+    info$extent = get_extent(heightmap)
+  }
+  if (is.null(info$crs)) {
+    info$crs = extract_spatial_heightmap_crs(heightmap)
+  }
+  info$heightmap = raster_to_matrix(heightmap, verbose = FALSE)
+  info$geographic_aspect = calculate_geographic_aspect(
+    heightmap = info$heightmap,
+    extent = info$extent,
+    crs = info$crs,
+    geographic_aspect = geographic_aspect,
+    extent_is_cell_bounds = TRUE
+  )
+  info$zscale = info$geographic_aspect$mean_cell_meters
+  if (!is.finite(info$zscale) || info$zscale <= 0) {
+    info$zscale = extract_spatial_heightmap_zscale(heightmap)
+  }
+  info
+}
+
+#' Reproject a spatial heightmap to the active scene grid
+#'
+#' @param heightmap Spatial raster input.
+#' @param caller Default `NULL`. Calling function used in messages.
+#'
+#' @return Heightmap information aligned to the active scene, or `NULL` when
+#' there is no usable spatial target.
+#' @keywords internal
+coerce_heightmap_to_scene_grid = function(heightmap, caller = NULL) {
+  if (!is_spatial_heightmap_input(heightmap)) {
+    return(NULL)
+  }
+  scene_heightmap = get_scene_heightmap(default = NULL)
+  scene_extent = tryCatch(
+    get_extent(get_scene_extent(default = NULL)),
+    error = function(error) NULL
+  )
+  scene_crs = try_parse_scene_crs(get_scene_crs(default = NULL))
+  if (
+    !is.matrix(scene_heightmap) ||
+      nrow(scene_heightmap) < 1L ||
+      ncol(scene_heightmap) < 1L ||
+      is.null(scene_extent) ||
+      is.null(scene_crs) ||
+      !requireNamespace("terra", quietly = TRUE)
+  ) {
+    return(NULL)
+  }
+  source = if (is.character(heightmap)) {
+    read_spatial_raster(heightmap, caller = caller)
+  } else if (inherits(heightmap, "SpatRaster")) {
+    terra::deepcopy(heightmap)
+  } else {
+    terra::rast(heightmap)
+  }
+  if (terra::nlyr(source) > 1L) {
+    warning("`heightmap` has multiple layers; using the first layer.")
+    source = source[[1L]]
+  }
+  if (is.null(extract_spatial_heightmap_crs(source))) {
+    return(NULL)
+  }
+  target = terra::rast(
+    nrows = ncol(scene_heightmap),
+    ncols = nrow(scene_heightmap),
+    xmin = scene_extent[["xmin"]],
+    xmax = scene_extent[["xmax"]],
+    ymin = scene_extent[["ymin"]],
+    ymax = scene_extent[["ymax"]],
+    crs = scene_crs$wkt
+  )
+  aligned = tryCatch(
+    terra::project(source, target, method = "bilinear"),
+    error = function(error) NULL
+  )
+  if (is.null(aligned)) {
+    return(NULL)
+  }
+  scene_aspect = get_scene_geographic_aspect()
+  coerce_plot_3d_heightmap(
+    aligned,
+    extent = scene_extent,
+    crs = scene_crs,
+    geographic_aspect = scene_aspect$active
+  )
+}
+
+get_plot_3d_max_texture_size = function() {
+  max_texture_size = getOption("rayshader.max_texture_size", 4096)
+  if (is.null(max_texture_size) || isFALSE(max_texture_size)) {
+    return(Inf)
+  }
+  if (
+    !is.numeric(max_texture_size) ||
+      length(max_texture_size) != 1 ||
+      is.na(max_texture_size) ||
+      max_texture_size <= 0
+  ) {
+    warning(
+      "`options(rayshader.max_texture_size)` must be a single positive number, `Inf`, or `FALSE`; ignoring.",
+      call. = FALSE
+    )
+    return(Inf)
+  }
+  max_texture_size
+}
+
+resize_plot_3d_texture = function(texture) {
+  texture_dim = dim(texture)
+  if (length(texture_dim) < 2) {
+    return(texture)
+  }
+  texture_dim = texture_dim[1:2]
+  max_texture_size = get_plot_3d_max_texture_size()
+  if (!is.finite(max_texture_size)) {
+    return(texture)
+  }
+  largest_texture_dim = max(texture_dim)
+  if (largest_texture_dim <= max_texture_size) {
+    return(texture)
+  }
+  scale_factor = max_texture_size / largest_texture_dim
+  resized_dim = pmax(1, floor(texture_dim * scale_factor))
+  rayimage::render_resized(
+    texture,
+    dims = resized_dim
+  )
+}
+
+check_plot_3d_texture_size = function(texture) {
+  resized_texture = resize_plot_3d_texture(texture)
+  if (!identical(dim(resized_texture), dim(texture))) {
+    message(
+      sprintf(
+        "Resized plot_3d() texture from %s x %s to %s x %s to respect `options(rayshader.max_texture_size = %s)`.",
+        dim(texture)[1],
+        dim(texture)[2],
+        dim(resized_texture)[1],
+        dim(resized_texture)[2],
+        get_plot_3d_max_texture_size()
+      )
+    )
+  }
+  resized_texture
+}
+
+plot_3d_surface_texture_key = function(id, device = rgl::cur3d()) {
+  paste(device, id, sep = ":")
+}
+
+normalize_plot_3d_texture_path = function(path) {
+  if (is.null(path) || is.na(path)) {
+    return(path)
+  }
+  normalizePath(path, winslash = "/", mustWork = FALSE)
+}
+
+clear_plot_3d_surface_textures = function(id = NULL, device = rgl::cur3d()) {
+  if (is.null(id)) {
+    texture_keys = ls(envir = ray_surface_texture_envir, all.names = TRUE)
+    if (!isTRUE(device == 0)) {
+      device_prefix = paste0(device, ":")
+      texture_keys = texture_keys[startsWith(texture_keys, device_prefix)]
+    }
+  } else {
+    texture_keys = plot_3d_surface_texture_key(id, device = device)
+  }
+  if (length(texture_keys)) {
+    rm(list = texture_keys, envir = ray_surface_texture_envir)
+  }
+  invisible(NULL)
+}
+
+prune_plot_3d_surface_textures = function(device = rgl::cur3d()) {
+  if (isTRUE(device == 0)) {
+    clear_plot_3d_surface_textures(device = device)
+    return(invisible(NULL))
+  }
+  texture_keys = ls(envir = ray_surface_texture_envir, all.names = TRUE)
+  if (!length(texture_keys)) {
+    return(invisible(NULL))
+  }
+  active_devices = tryCatch(
+    as.character(unname(rgl::rgl.dev.list())),
+    error = function(e) character()
+  )
+  key_devices = sub(":.*$", "", texture_keys)
+  closed_device_keys = texture_keys[!(key_devices %in% active_devices)]
+  if (length(closed_device_keys)) {
+    rm(list = closed_device_keys, envir = ray_surface_texture_envir)
+    texture_keys = setdiff(texture_keys, closed_device_keys)
+  }
+  device_prefix = paste0(device, ":")
+  texture_keys = texture_keys[startsWith(texture_keys, device_prefix)]
+  if (!length(texture_keys)) {
+    return(invisible(NULL))
+  }
+
+  idvals = tryCatch(rgl::ids3d(), error = function(e) NULL)
+  current_keys = plot_3d_surface_texture_key(idvals$id, device = device)
+  stale_keys = setdiff(texture_keys, current_keys)
+  if (length(stale_keys)) {
+    rm(list = stale_keys, envir = ray_surface_texture_envir)
+  }
+  invisible(NULL)
+}
+
+register_plot_3d_surface_texture = function(
+  id,
+  texture_file,
+  rgl_texture_file
+) {
+  prune_plot_3d_surface_textures()
+  for (id_single in id) {
+    assign(
+      plot_3d_surface_texture_key(id_single),
+      list(
+        texture_file = normalize_plot_3d_texture_path(texture_file),
+        rgl_texture_file = normalize_plot_3d_texture_path(rgl_texture_file)
+      ),
+      envir = ray_surface_texture_envir
+    )
+  }
+  invisible(id)
+}
+
+get_plot_3d_surface_texture = function(id, rgl_texture_file) {
+  texture_key = plot_3d_surface_texture_key(id)
+  surface_texture = get0(
+    texture_key,
+    envir = ray_surface_texture_envir,
+    inherits = FALSE
+  )
+  if (is.null(surface_texture)) {
+    return(NULL)
+  }
+  if (
+    !is.list(surface_texture) ||
+      !identical(
+        surface_texture$rgl_texture_file,
+        normalize_plot_3d_texture_path(rgl_texture_file)
+      ) ||
+      !file.exists(surface_texture$texture_file)
+  ) {
+    rm(list = texture_key, envir = ray_surface_texture_envir)
+    return(NULL)
+  }
+  surface_texture$texture_file
+}
+
 #'@title Plot 3D
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
+#'`plot_3d()` checks the map texture dimensions against `options(rayshader.max_texture_size = 4096)`
+#'and downsamples the temporary `rgl` texture with [rayimage::render_resized()] if either dimension exceeds
+#'that value. The full-resolution source texture is preserved for [render_highquality()] and other rayrender
+#'conversion paths. This is a conservative OpenGL texture-size guard; set the option to a larger value if
+#'your system supports larger textures, or to `Inf`/`FALSE` to disable the check.
+#'
 #'Note: Calling [plot_3d()] resets the scene cache for the [render_snapshot()], [render_depth()], and [render_highquality()]
 #'
 #'@param hillshade Hillshade/image to be added to 3D surface map.
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
+#'@param heightmap Elevation input for the surface. Can be:
+#'a two-dimensional matrix (each entry is elevation),
+#'a `RasterLayer`/`RasterBrick`/`RasterStack`,
+#'a `terra::SpatRaster`, or a raster filename.
+#'Spatial raster inputs are automatically converted to matrix form with [raster_to_matrix()].
+#'For spatial raster inputs, rayshader also caches the raster extent and CRS for downstream `render_*` calls.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
+#'If `zscale` is not supplied and `heightmap` is a spatial raster, rayshader automatically
+#'uses the raster cell resolution (mean x/y resolution). Geographic longitude/latitude
+#'rasters are converted to an approximate meter-per-cell value at the raster center.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this scene. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached hillshade `zscale` metadata.
+#' @param extent Default `NULL`. Optional extent metadata to cache with the scene for later
+#' calls (e.g., [render_zaxis()] without an explicit `extent`). Accepts any input supported
+#' by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
+#' If omitted, a spatial raster uses its spatial extent and a raw matrix uses its native
+#' 1-based extent: `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing in terrain geometry and cache the transform for later render calls.
+#' @param crs Default `NULL`. CRS to assign to the terrain input. An explicit
+#' value overrides embedded CRS metadata.
+#'@param base_shape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
-#'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
-#'@param solidcolor Default `grey20`. Base color.
-#'@param solidlinecolor Default `grey30`. Base edge line color.
+#'@param solid_depth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
+#'@param solid_color Default `grey20`. Base color.
+#'@param solid_line_color Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
-#'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
-#'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
-#'the luminance of the `background` color in the CIELuv colorspace if not specified.
-#'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
-#'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
-#'@param water Default `FALSE`. If `TRUE`, a water layer is rendered.
-#'@param waterdepth Default `0`. Water level.
-#'@param watercolor Default `lightblue`. Color of the water.
-#'@param wateralpha Default `0.5`. Water transparency.
-#'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
-#'@param waterlinealpha Default `1`. Water line tranparency.
+#'@param shadow_depth Default `auto`, which sets it to `solid_depth - solid_depth/10`. Depth of the shadow layer.
+#' @param shadow_color Default `"auto"`. Color of the shadow. Automatically darkens
+#' the `background` color by scaling its CIELuv lightness and chroma together by
+#' `shadow_darkness`, preserving the background hue.
+#' @param shadow_darkness Default `0.5`. Lightness multiplier for the shadow when
+#' `shadow_color = "auto"`. Values between `0` and `1` darken the background color;
+#' `0` gives a black shadow and `1` matches the background.
+#'@param shadow_width Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
+#'@param shadow_texture_size Default `getOption("rayshader.max_shadow_texture_size", 1024)`. Maximum width or height, in pixels, of the blurred shadow texture. Set to `Inf` or `FALSE` to render the shadow texture at full heightmap resolution.
+#'@param water Default `FALSE`. If `TRUE`, a water layer is rendered. If `water`
+#'is omitted and `water_input` is explicitly supplied, a water layer is rendered.
+#'@param water_input Default `0`. Water level or footprint. A scalar, matrix matching `heightmap`, spatial raster, or `sf`/`sfc` polygon object. Finite raster cells define water coverage. Method `"polygon"` retains supplied polygon boundaries and holes.
+#'@param water_color Default `lightblue`. Color of the water.
+#'@param water_alpha Default `0.5`. Water transparency.
+#'@param water_line_color Default `NULL`. Color of the lines around the edges of the water layer.
+#'@param water_line_alpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
-#'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
+#'@param line_antialias Default `FALSE`. Whether to anti-alias the lines in the scene.
+#'@param water_render_method Default `"polygon"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; `"optimized"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
+#'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
+#'@param water_polygon_failure Default `"raster"`. Behavior for `"optimized"` water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
 #'@param soil_levels Default `16`. Fractal level of the soil.
@@ -39,16 +571,16 @@
 #'@param phi Default `45`. Azimuth angle.
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
-#'@param background Default `grey10`. Color of the background.
-#'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot.
+#' @param background Default `"white"`. Color of the background.
+#'@param window_size Default `600`. Position, width, and height of the `rgl` device displaying the plot.
 #'If a single number, viewport will be a square and located in upper left corner.
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately.
 #'If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates
 #'specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 #'and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 #'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
-#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save
-#' computing normals internally.
+#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normal()` to save
+#' computing normals internally. Ignored when `normals = FALSE` or `earth_curvature = TRUE`.
 #'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 #'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 #'of 3D models saved to disk.
@@ -68,53 +600,74 @@
 #'@param close_previous Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`,
 #'old windows will be kept open.
 #'@param clear_previous Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.
-#'
+#'@param water_elevation Default `NULL`. Polygon water elevations; see [render_water()].
+#'@param water_surface_tolerance Default `NULL`. Polygon water coincidence tolerance in terrain elevation units; see [render_water()].
+#' @param normals Default `TRUE`. Whether to use smooth vertex normals for the DEM.
+#' Set to `FALSE` to skip rayshader's terrain normal calculation and ignore
+#' `precomputed_normals`.
+#' The DEM uses flat shading in rgl, and high-quality renders and OBJ exports use
+#' triangle face normals. Normals on other scene objects are unaffected.
+#' @param earth_curvature Default `FALSE`. Bend the terrain away from the tangent
+#' plane at the bounding-box center. Supply a georeferenced DEM or a matrix
+#' with an extent and CRS so ground distances can be measured.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@import rgl
 #'@export
-#'@examples
-#'#Plotting a spherical texture map of the built-in `montereybay` dataset.
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(texture="desert") |>
-#'  plot_3d(montereybay,zscale=50)
+#' @details With `earth_curvature = TRUE`, the terrain follows a sphere of mean
+#' radius 6,371,008.8 meters. Ground distances use the east-west and north-south
+#' cell spacing at the bounding-box center, a local approximation for regional
+#' maps. The center retains its elevation. Earth's curvature is always drawn
+#' at its true scale, regardless of `vertical_exaggeration`. At a ground
+#' distance of 100 km from the center, sea level lies about 785 m below the
+#' tangent plane with either `vertical_exaggeration = 1` or
+#' `vertical_exaggeration = 4`. The latter draws terrain relief four times
+#' taller above local sea level.
+#'
+#' Spatial layers added by
+#' the render functions inherit the scene's curvature. Supply water levels and
+#' object altitudes in the original elevation datum. Terrain-relative offsets
+#' are measured above the local surface. Explicit raw scene coordinates already
+#' refer to the rendered coordinate system.
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Plotting a spherical texture map of the built-in `montereybay_spatial` dataset.
+#'montereybay_spatial |>
+#'  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4)
 #'render_snapshot()
-#'}
+#'
+#'montereybay_spatial |>
+#'  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4)
+#'render_zaxis(location = "bottomleft")
+#'render_snapshot()
 #'
 #'#With a water layer
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(texture="imhof2") |>
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2",
-#'          waterlinecolor="white", waterlinealpha=0.5)
+#'montereybay_spatial |>
+#'  sphere_shade(texture="imhof2", vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof2",
+#'          water_line_color="white", water_line_alpha=0.5)
 #'render_snapshot()
-#'}
 #'
 #'#With a soil texture to the base
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(texture="imhof3") |>
-#'  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4",
-#'          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
+#'montereybay_spatial |>
+#'  sphere_shade(texture="imhof3", vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE,  water_color="imhof4",
+#'          water_line_color="white", water_line_alpha=0.5, soil=TRUE)
 #'render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 #'render_snapshot()
-#'}
 #'
-#'#We can also change the base by setting "baseshape" to "hex" or "circle"
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(texture="imhof1") |>
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-#'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+#'#We can also change the base by setting "base_shape" to "hex" or "circle"
+#'montereybay_spatial |>
+#'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+#'          water_line_color="white", water_line_alpha=0.5,base_shape="circle")
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(texture="imhof1") |>
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-#'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+#'montereybay_spatial |>
+#'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+#'          water_line_color="white", water_line_alpha=0.5,base_shape="hex")
 #'render_snapshot()
-#'}
 #'
 #'
 #'
@@ -124,376 +677,765 @@
 #'#Here, we only include the deep bathymetry data by setting all points greater than -10
 #'#in the copied elevation matrix to NA.
 #'
-#'mb_water = montereybay
+#'mb_water = montereybay_spatial
 #'mb_water[mb_water > -10] = NA
 #'
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(texture="imhof1") |>
-#'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
-#'          waterlinecolor="white", waterlinealpha=0.5)
+#'montereybay_spatial |>
+#'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
+#'  plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45,
+#'          water_line_color="white", water_line_alpha=0.5)
 #'render_snapshot()
-#'}
 plot_3d = function(
-	hillshade,
-	heightmap,
-	zscale = 1,
-	baseshape = "rectangle",
-	solid = TRUE,
-	soliddepth = "auto",
-	solidcolor = "grey20",
-	solidlinecolor = "grey30",
-	shadow = TRUE,
-	shadowdepth = "auto",
-	shadowcolor = "auto",
-	shadow_darkness = 0.5,
-	shadowwidth = "auto",
-	water = FALSE,
-	waterdepth = 0,
-	watercolor = "dodgerblue",
-	wateralpha = 0.5,
-	waterlinecolor = NULL,
-	waterlinealpha = 1,
-	linewidth = 2,
-	lineantialias = FALSE,
-	soil = FALSE,
-	soil_freq = 0.1,
-	soil_levels = 16,
-	soil_color_light = "#b39474",
-	soil_color_dark = "#8a623b",
-	soil_gradient = 2,
-	soil_gradient_darken = 4,
-	theta = 45,
-	phi = 45,
-	fov = 0,
-	zoom = 1,
-	background = "white",
-	windowsize = 600,
-	precomputed_normals = NULL,
-	triangulate = FALSE,
-	max_error = 0,
-	max_tri = 0,
-	verbose = FALSE,
-	plot_new = TRUE,
-	close_previous = TRUE,
-	clear_previous = TRUE
+  hillshade,
+  heightmap,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  base_shape = "rectangle",
+  solid = TRUE,
+  solid_depth = "auto",
+  solid_color = "grey20",
+  solid_line_color = "grey30",
+  shadow = TRUE,
+  shadow_depth = "auto",
+  shadow_color = "auto",
+  shadow_darkness = 0.5,
+  shadow_width = "auto",
+  shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
+  water = FALSE,
+  water_input = 0,
+  water_color = "dodgerblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
+  linewidth = 2,
+  line_antialias = FALSE,
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
+  water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove"),
+  soil = FALSE,
+  soil_freq = 0.1,
+  soil_levels = 16,
+  soil_color_light = "#b39474",
+  soil_color_dark = "#8a623b",
+  soil_gradient = 2,
+  soil_gradient_darken = 4,
+  theta = 45,
+  phi = 45,
+  fov = 0,
+  zoom = 1,
+  background = "white",
+  window_size = 600,
+  precomputed_normals = NULL,
+  triangulate = FALSE,
+  max_error = 0,
+  max_tri = 0,
+  verbose = FALSE,
+  plot_new = TRUE,
+  close_previous = TRUE,
+  clear_previous = TRUE,
+  extent = NULL,
+  geographic_aspect = TRUE,
+  crs = NULL,
+  water_elevation = NULL,
+  water_surface_tolerance = NULL,
+  normals = TRUE,
+  earth_curvature = FALSE,
+  ...
 ) {
-	if (!plot_new && clear_previous) {
-		rgl::clear3d()
-	}
-	if (!is.null(get("scene_cache", envir = ray_cache_scene_envir))) {
-		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
-	}
-	#setting default zscale if montereybay is used and tell user about zscale
-	argnames = as.list(sys.call())
-	if (!is.null(attr(heightmap, "rayshader_data"))) {
-		if (!("zscale" %in% as.character(names(argnames)))) {
-			if (length(argnames) <= 3) {
-				zscale = 50
-				message(
-					"`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, raise `zscale` to 200."
-				)
-			} else {
-				if (!is.numeric(argnames[[4]]) || !is.null(names(argnames))) {
-					if (names(argnames)[4] != "") {
-						zscale = 50
-						message(
-							"`montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200."
-						)
-					}
-				}
-			}
-		}
-	}
-	if (shadowcolor == "auto") {
-		shadowcolor = convert_color(
-			darken_color(background, darken = shadow_darkness),
-			as_hex = TRUE
-		)
-	}
-	#Set window size and position
-	if (length(windowsize) == 1) {
-		windowsize = c(0, 0, windowsize, windowsize)
-	} else if (length(windowsize) == 2) {
-		windowsize = c(0, 0, windowsize)
-	} else if (length(windowsize) == 3) {
-		windowsize = c(
-			windowsize[1],
-			windowsize[2],
-			windowsize[1] + windowsize[3],
-			windowsize[2] + windowsize[3]
-		)
-	} else if (length(windowsize) == 4) {
-		windowsize = c(
-			windowsize[1],
-			windowsize[2],
-			windowsize[1] + windowsize[3],
-			windowsize[2] + windowsize[4]
-		)
-	} else {
-		stop(paste0(
-			"Don't know what to do with `windowsize` argument of length ",
-			length(windowsize)
-		))
-	}
-	heightmap = generate_base_shape(heightmap, baseshape)
-	hillshade = rayimage::render_clamp(hillshade)
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      baseshape = "base_shape",
+      soliddepth = "solid_depth",
+      solidcolor = "solid_color",
+      solidlinecolor = "solid_line_color",
+      shadowdepth = "shadow_depth",
+      shadowcolor = "shadow_color",
+      shadowwidth = "shadow_width",
+      watercolor = "water_color",
+      wateralpha = "water_alpha",
+      waterlinecolor = "water_line_color",
+      waterlinealpha = "water_line_alpha",
+      lineantialias = "line_antialias",
+      windowsize = "window_size",
+      waterdepth = "water_input"
+    ),
+    "plot_3d",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  if (!is.logical(normals) || length(normals) != 1L || is.na(normals)) {
+    stop("`normals` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
+  if (
+    !is.logical(earth_curvature) ||
+      length(earth_curvature) != 1L ||
+      is.na(earth_curvature)
+  ) {
+    stop("`earth_curvature` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
+  solid_color = normalize_rgb_color(solid_color)
+  solid_line_color = normalize_rgb_color(solid_line_color)
+  shadow_color = normalize_rgb_color(shadow_color)
+  water_color = normalize_rgb_color(water_color)
+  water_line_color = normalize_rgb_color(water_line_color)
+  soil_color_light = normalize_rgb_color(soil_color_light)
+  soil_color_dark = normalize_rgb_color(soil_color_dark)
+  background = normalize_rgb_color(background)
+  water_was_missing = missing(water)
+  water_input_was_missing = missing(water_input)
+  water_render_method = match.arg(water_render_method)
+  water_polygon_failure = match.arg(water_polygon_failure)
+  if (water_was_missing && !water_input_was_missing) {
+    water = TRUE
+  }
+  if (!plot_new && clear_previous) {
+    clear_plot_3d_surface_textures()
+    rgl::clear3d()
+  }
+  force(hillshade)
+  heightmap_was_missing = missing(heightmap)
+  zscale_was_missing = missing(zscale)
+  vertical_exaggeration_was_missing = missing(vertical_exaggeration)
+  extent_was_missing = missing(extent)
+  crs_was_missing = missing(crs)
+  heightmap_cache_label = NULL
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+    zscale
+  )))
+  vertical_exaggeration_cache_label = if (vertical_exaggeration_was_missing) {
+    "plot_3d_default_vertical_exaggeration"
+  } else {
+    format_scene_cache_label(deparse(substitute(vertical_exaggeration)))
+  }
+  resolved_heightmap = NULL
+  if (heightmap_was_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "plot_3d"
+    )
+    heightmap = resolved_heightmap$heightmap
+    heightmap_cache_label = resolved_heightmap$label
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (allow_scene_zscale_cache) {
+      heightmap = get_scene_context_value(
+        "scene_source_heightmap",
+        default = heightmap
+      )
+    }
+  } else {
+    heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+      heightmap
+    )))
+    allow_scene_zscale_cache = FALSE
+  }
+  if (heightmap_was_missing && crs_was_missing) {
+    crs = if (
+      !is.null(resolved_heightmap) &&
+        identical(resolved_heightmap$source, "scene")
+    ) {
+      get_scene_crs(default = NULL)
+    } else {
+      get_hillshade_crs(default = NULL)
+    }
+  }
+  if (heightmap_was_missing && extent_was_missing) {
+    extent = if (
+      !is.null(resolved_heightmap) &&
+        identical(resolved_heightmap$source, "scene")
+    ) {
+      get_scene_extent(default = NULL)
+    } else {
+      get_hillshade_extent(default = NULL)
+    }
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  auto_extent = heightmap_info$extent
+  auto_crs = heightmap_info$crs
+  auto_zscale = heightmap_info$zscale
+  explicit_heightmap_uses_default_zscale = !heightmap_was_missing &&
+    !(is.finite(auto_zscale) && auto_zscale > 0)
+  extent_cache_value = NULL
+  extent_cache_label = NULL
+  if (!extent_was_missing && !is.null(extent)) {
+    extent_cache_value = extent
+    extent_cache_label = format_scene_cache_label(deparse(substitute(extent)))
+  } else if (!is.null(auto_extent)) {
+    extent_cache_value = auto_extent
+    extent_cache_label = format_scene_cache_label(sprintf(
+      "%s_auto_extent",
+      heightmap_cache_label
+    ))
+  } else if (
+    heightmap_was_missing &&
+      !is.null(resolved_heightmap) &&
+      identical(resolved_heightmap$source, "hillshade")
+  ) {
+    extent_cache_value = get_hillshade_extent(default = NULL)
+    extent_cache_label = get_hillshade_extent_label(default = NULL)
+  } else if (
+    heightmap_was_missing &&
+      !is.null(resolved_heightmap) &&
+      identical(resolved_heightmap$source, "scene")
+  ) {
+    extent_cache_value = get_scene_extent(default = NULL)
+    extent_cache_label = get_scene_extent_label(default = NULL)
+  }
+  if (is.null(extent_cache_value) && is.matrix(heightmap)) {
+    extent_cache_value = c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
+    )
+    extent_cache_label = format_scene_cache_label(sprintf(
+      "%s_matrix_extent",
+      heightmap_cache_label
+    ))
+  }
+  geographic_aspect_info = heightmap_info$geographic_aspect
+  if (
+    heightmap_was_missing &&
+      extent_was_missing &&
+      crs_was_missing &&
+      !is.null(resolved_heightmap)
+  ) {
+    cached_aspect = if (identical(resolved_heightmap$source, "scene")) {
+      get_scene_geographic_aspect()
+    } else {
+      get_hillshade_geographic_aspect()
+    }
+    if (is.finite(cached_aspect$mean_cell_meters)) {
+      geographic_aspect_info = set_geographic_aspect_enabled(
+        cached_aspect,
+        geographic_aspect
+      )
+    }
+  }
+  if (
+    zscale_was_missing &&
+      is.finite(geographic_aspect_info$mean_cell_meters) &&
+      geographic_aspect_info$mean_cell_meters > 0
+  ) {
+    auto_zscale = geographic_aspect_info$mean_cell_meters
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = zscale_was_missing,
+    caller = "plot_3d",
+    auto_zscale = auto_zscale,
+    allow_hillshade_cache = !explicit_heightmap_uses_default_zscale,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  base_zscale = zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf(
+      "%s_auto_zscale",
+      heightmap_cache_label
+    )),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  resolved_vertical_exaggeration = resolve_vertical_exaggeration(
+    vertical_exaggeration = vertical_exaggeration,
+    caller = "plot_3d"
+  )
+  cached_scene_vertical_exaggeration = resolved_vertical_exaggeration
+  if (
+    vertical_exaggeration_was_missing &&
+      identical(resolved_zscale$source, "scene")
+  ) {
+    prior_scene_vertical_exaggeration =
+      get_scene_vertical_exaggeration(default = NA_real_)
+    if (
+      is.finite(prior_scene_vertical_exaggeration) &&
+        prior_scene_vertical_exaggeration > 0
+    ) {
+      resolved_vertical_exaggeration = prior_scene_vertical_exaggeration
+      cached_scene_vertical_exaggeration = prior_scene_vertical_exaggeration
+      vertical_exaggeration_cache_label =
+        get_scene_vertical_exaggeration_label(default = NULL)
+    }
+  }
+  zscale = apply_vertical_exaggeration(
+    zscale = zscale,
+    vertical_exaggeration = resolved_vertical_exaggeration,
+    caller = "plot_3d"
+  )
+  crs_cache_value = NULL
+  crs_cache_label = NULL
+  if (!is.null(auto_crs)) {
+    crs_cache_value = auto_crs
+    crs_cache_label = format_scene_cache_label(sprintf(
+      "%s_auto_crs",
+      heightmap_cache_label
+    ))
+  } else if (
+    heightmap_was_missing &&
+      !is.null(resolved_heightmap) &&
+      identical(resolved_heightmap$source, "hillshade")
+  ) {
+    crs_cache_value = get_hillshade_crs(default = NULL)
+    crs_cache_label = get_hillshade_crs_label(default = NULL)
+  } else if (
+    heightmap_was_missing &&
+      !is.null(resolved_heightmap) &&
+      identical(resolved_heightmap$source, "scene")
+  ) {
+    crs_cache_value = get_scene_crs(default = NULL)
+    crs_cache_label = get_scene_crs_label(default = NULL)
+  }
+  if (earth_curvature) {
+    hillshade_source = heightmap
+  }
+  heightmap = generate_base_shape(heightmap, base_shape)
+  source_heightmap = NULL
+  if (earth_curvature) {
+    source_heightmap = heightmap
+    heightmap = apply_earth_curvature(heightmap, geographic_aspect_info, zscale)
+  }
+  reset_scene_context(
+    clear_scene_metadata = TRUE,
+    clear_scene_cache = TRUE
+  )
+  cache_scene_geographic_aspect(geographic_aspect_info)
+  if (shadow_color == "auto") {
+    shadow_color = convert_color(
+      darken_color(background, darken = shadow_darkness),
+      as_hex = TRUE
+    )
+  }
+  #Set window size and position
+  if (length(window_size) == 1) {
+    window_size = c(0, 0, window_size, window_size)
+  } else if (length(window_size) == 2) {
+    window_size = c(0, 0, window_size)
+  } else if (length(window_size) == 3) {
+    window_size = c(
+      window_size[1],
+      window_size[2],
+      window_size[1] + window_size[3],
+      window_size[2] + window_size[3]
+    )
+  } else if (length(window_size) == 4) {
+    window_size = c(
+      window_size[1],
+      window_size[2],
+      window_size[1] + window_size[3],
+      window_size[2] + window_size[4]
+    )
+  } else {
+    stop(paste0(
+      "Don't know what to do with `window_size` argument of length ",
+      length(window_size)
+    ))
+  }
+  hillshade = rayimage::render_clamp(hillshade)
+  rgl_hillshade = check_plot_3d_texture_size(hillshade)
 
-	if (is.null(heightmap)) {
-		stop(
-			"heightmap argument missing--need to input both hillshade and original elevation matrix"
-		)
-	}
-	min_height = min(heightmap, na.rm = TRUE)
-	max_height = max(heightmap, na.rm = TRUE)
-	if (soliddepth == "auto") {
-		if (min_height != max_height) {
-			soliddepth = min_height /
-				zscale -
-				(max_height / zscale - min_height / zscale) / 5
-		} else {
-			max_dim = max(dim(heightmap))
-			soliddepth = min_height / zscale - max_dim / 25
-		}
-	} else {
-		if (soliddepth > min_height) {
-			message(sprintf(
-				"`soliddepth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
-				soliddepth,
-				min_height
-			))
-			soliddepth = min_height / zscale
-		} else {
-			soliddepth = soliddepth / zscale
-		}
-	}
-	if (solid) {
-		min_height_shadow = min(c(min_height, soliddepth * zscale))
-	} else {
-		min_height_shadow = min_height
-	}
-	if (shadowdepth == "auto") {
-		if (min_height_shadow != max_height) {
-			if (solid) {
-				shadowdepth = soliddepth -
-					(max_height / zscale - min_height_shadow / zscale) / 5
-			} else {
-				shadowdepth = min_height_shadow /
-					zscale -
-					(max_height / zscale - min_height_shadow / zscale) / 5
-			}
-		} else {
-			if (solid) {
-				max_dim = max(dim(heightmap))
-				shadowdepth = soliddepth - max_dim / 25
-			} else {
-				max_dim = max(dim(heightmap))
-				shadowdepth = min_height - max_dim / 25
-			}
-		}
-	} else {
-		if (shadowdepth > min_height) {
-			message(sprintf(
-				"`shadowdepth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
-				shadowdepth,
-				min_height
-			))
-		} else {
-			shadowdepth = shadowdepth / zscale
-		}
-	}
-	if (shadowwidth == "auto") {
-		shadowwidth = max(floor(min(dim(heightmap)) / 10), 5)
-	}
-	if (water) {
-		if (watercolor == "imhof1") {
-			watercolor = "#defcf5"
-		} else if (watercolor == "imhof2") {
-			watercolor = "#337c73"
-		} else if (watercolor == "imhof3") {
-			watercolor = "#4e7982"
-		} else if (watercolor == "imhof4") {
-			watercolor = "#638d99"
-		} else if (watercolor == "desert") {
-			watercolor = "#caf0f7"
-		} else if (watercolor == "bw") {
-			watercolor = "#dddddd"
-		} else if (watercolor == "unicorn") {
-			watercolor = "#ff00ff"
-		}
-		if (is.null(waterlinecolor)) {} else if (waterlinecolor == "imhof1") {
-			waterlinecolor = "#f9fffb"
-		} else if (waterlinecolor == "imhof2") {
-			waterlinecolor = "#8accc4"
-		} else if (waterlinecolor == "imhof3") {
-			waterlinecolor = "#8cd4e2"
-		} else if (waterlinecolor == "imhof4") {
-			waterlinecolor = "#c7dfe5"
-		} else if (waterlinecolor == "desert") {
-			waterlinecolor = "#cde3f2"
-		} else if (waterlinecolor == "bw") {
-			waterlinecolor = "#ffffff"
-		} else if (waterlinecolor == "unicorn") {
-			waterlinecolor = "#ffd1fb"
-		}
-	}
-	tempmap = tempfile(fileext = ".png")
-	rayimage::ray_write_image(hillshade, tempmap)
-	precomputed = FALSE
-	if (is.list(precomputed_normals)) {
-		normals = precomputed_normals
-		precomputed = TRUE
-	}
-	if (triangulate && any(is.na(heightmap))) {
-		if (interactive()) {
-			message(
-				"`triangulate = TRUE` cannot be currently set if any NA values present--settings `triangulate = FALSE`"
-			)
-		}
-		triangulate = FALSE
-	}
+  if (is.null(heightmap)) {
+    stop(
+      "heightmap argument missing--need to input both hillshade and original elevation matrix"
+    )
+  }
+  min_height = min(heightmap, na.rm = TRUE)
+  max_height = max(heightmap, na.rm = TRUE)
+  if (solid_depth == "auto") {
+    if (min_height != max_height) {
+      solid_depth = min_height /
+        zscale -
+        (max_height / zscale - min_height / zscale) / 5
+    } else {
+      max_dim = max(dim(heightmap))
+      solid_depth = min_height / zscale - max_dim / 25
+    }
+  } else {
+    if (solid_depth > min_height) {
+      message(sprintf(
+        "`solid_depth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
+        solid_depth,
+        min_height
+      ))
+      solid_depth = min_height / zscale
+    } else {
+      solid_depth = solid_depth / zscale
+    }
+  }
+  if (solid) {
+    min_height_shadow = min(c(min_height, solid_depth * zscale))
+  } else {
+    min_height_shadow = min_height
+  }
+  if (shadow_depth == "auto") {
+    if (min_height_shadow != max_height) {
+      if (solid) {
+        shadow_depth = solid_depth -
+          (max_height / zscale - min_height_shadow / zscale) / 5
+      } else {
+        shadow_depth = min_height_shadow /
+          zscale -
+          (max_height / zscale - min_height_shadow / zscale) / 5
+      }
+    } else {
+      if (solid) {
+        max_dim = max(dim(heightmap))
+        shadow_depth = solid_depth - max_dim / 25
+      } else {
+        max_dim = max(dim(heightmap))
+        shadow_depth = min_height - max_dim / 25
+      }
+    }
+  } else {
+    if (shadow_depth > min_height) {
+      message(sprintf(
+        "`shadow_depth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
+        shadow_depth,
+        min_height
+      ))
+    } else {
+      shadow_depth = shadow_depth / zscale
+    }
+  }
+  if (shadow_width == "auto") {
+    shadow_width = max(floor(min(dim(heightmap)) / 10), 5)
+  }
+  if (water) {
+    if (water_color == "imhof1") {
+      water_color = "#defcf5"
+    } else if (water_color == "imhof2") {
+      water_color = "#337c73"
+    } else if (water_color == "imhof3") {
+      water_color = "#4e7982"
+    } else if (water_color == "imhof4") {
+      water_color = "#638d99"
+    } else if (water_color == "desert") {
+      water_color = "#caf0f7"
+    } else if (water_color == "bw") {
+      water_color = "#dddddd"
+    } else if (water_color == "unicorn") {
+      water_color = "#ff00ff"
+    }
+    if (is.null(water_line_color)) {} else if (water_line_color == "imhof1") {
+      water_line_color = "#f9fffb"
+    } else if (water_line_color == "imhof2") {
+      water_line_color = "#8accc4"
+    } else if (water_line_color == "imhof3") {
+      water_line_color = "#8cd4e2"
+    } else if (water_line_color == "imhof4") {
+      water_line_color = "#c7dfe5"
+    } else if (water_line_color == "desert") {
+      water_line_color = "#cde3f2"
+    } else if (water_line_color == "bw") {
+      water_line_color = "#ffffff"
+    } else if (water_line_color == "unicorn") {
+      water_line_color = "#ffd1fb"
+    }
+  }
+  full_texture_map = tempfile(fileext = ".png")
+  rayimage::ray_write_image(hillshade, full_texture_map)
+  if (identical(dim(rgl_hillshade), dim(hillshade))) {
+    tempmap = full_texture_map
+  } else {
+    tempmap = tempfile(fileext = ".png")
+    rayimage::ray_write_image(rgl_hillshade, tempmap)
+  }
+  precomputed = FALSE
+  if (normals && !earth_curvature && is.list(precomputed_normals)) {
+    normal_data = precomputed_normals
+    precomputed = TRUE
+  }
+  if (triangulate && any(is.na(heightmap))) {
+    if (interactive()) {
+      message(
+        "`triangulate = TRUE` cannot be currently set if any NA values present--settings `triangulate = FALSE`"
+      )
+    }
+    triangulate = FALSE
+  }
 
-	if (close_previous && rgl::cur3d() != 0) {
-		rgl::close3d()
-	}
-	if (plot_new || rgl::cur3d() == 0) {
-		rgl::open3d(
-			windowRect = windowsize,
-			mouseMode = c("none", "polar", "fov", "zoom", "pull")
-		)
-	}
-	rgl::view3d(zoom = zoom, phi = phi, theta = theta, fov = fov)
-	attributes(heightmap) = attributes(heightmap)["dim"]
-	tag_surface = sprintf(
-		"surface_tris-dim_%i_%i",
-		nrow(heightmap),
-		ncol(heightmap)
-	)
-	if (!triangulate) {
-		if (!precomputed) {
-			normals = calculate_normal(heightmap, zscale = zscale)
-		}
-		dim(heightmap) = unname(dim(heightmap))
-		normalsx = (t(normals$x[c(-1, -nrow(normals$x)), c(-1, -ncol(normals$x))]))
-		normalsy = (t(normals$z[c(-1, -nrow(normals$z)), c(-1, -ncol(normals$z))]))
-		normalsz = (t(normals$y[c(-1, -nrow(normals$y)), c(-1, -ncol(normals$y))]))
-		replace_na_vals = is.na(normalsx) | is.na(normalsy) | is.na(normalsz)
-		normalsx[replace_na_vals] = 0
-		normalsy[replace_na_vals] = 1
-		normalsz[replace_na_vals] = 0
+  if (close_previous && rgl::cur3d() != 0) {
+    clear_plot_3d_surface_textures()
+    rgl::close3d()
+  }
+  if (plot_new || rgl::cur3d() == 0) {
+    rgl::open3d(
+      windowRect = window_size,
+      mouseMode = c("none", "polar", "fov", "zoom", "pull")
+    )
+  }
+  cache_scene_context_token()
+  assign(
+    "scene_earth_curvature",
+    earth_curvature,
+    envir = ray_cache_scene_envir
+  )
+  rgl::view3d(zoom = zoom, phi = phi, theta = theta, fov = fov)
+  attributes(heightmap) = attributes(heightmap)["dim"]
+  tag_surface = sprintf(
+    "surface_tris-dim_%i_%i",
+    nrow(heightmap),
+    ncol(heightmap)
+  )
+  if (!triangulate) {
+    dim(heightmap) = unname(dim(heightmap))
+    surface_normals = NULL
+    if (normals) {
+      if (!precomputed) {
+        normal_heightmap = heightmap
+        attr(normal_heightmap, "rayshader_geographic_aspect") =
+          geographic_aspect_info
+        normal_data = calculate_normal(
+          normal_heightmap,
+          zscale = zscale,
+          geographic_aspect = geographic_aspect
+        )
+      } else {
+        normal_data = correct_normal_geographic_aspect(
+          normal_data,
+          geographic_aspect_info
+        )
+      }
+      normalsx = (t(normal_data$x[
+        c(-1, -nrow(normal_data$x)),
+        c(-1, -ncol(normal_data$x))
+      ]))
+      normalsy = (t(normal_data$z[
+        c(-1, -nrow(normal_data$z)),
+        c(-1, -ncol(normal_data$z))
+      ]))
+      normalsz = (t(normal_data$y[
+        c(-1, -nrow(normal_data$y)),
+        c(-1, -ncol(normal_data$y))
+      ]))
+      replace_na_vals = is.na(normalsx) | is.na(normalsy) | is.na(normalsz)
+      normalsx[replace_na_vals] = 0
+      normalsy[replace_na_vals] = 1
+      normalsz[replace_na_vals] = 0
+      surface_normals = matrix(c(normalsz, normalsy, -normalsx), ncol = 3L)
+    }
 
-		ray_surface = generate_surface(heightmap, zscale = zscale)
-		rgl::triangles3d(
-			x = ray_surface$verts,
-			indices = ray_surface$inds,
-			texcoords = ray_surface$texcoords,
-			normals = matrix(c(normalsz, normalsy, -normalsx), ncol = 3L),
-			texture = tempmap,
-			color = "white",
-			lit = FALSE,
-			tag = tag_surface,
-			back = "culled"
-		)
-	} else {
-		tris = terrainmeshr::triangulate_matrix(
-			heightmap,
-			maxError = max_error,
-			maxTriangles = max_tri,
-			start_index = 0L,
-			verbose = verbose
-		)
-		index_vals = seq_len(nrow(tris))
-		# if(!precomputed) {
-		#   normals = calculate_normal(heightmap,zscale=zscale)
-		# }
-		# normalsx = as.vector(t(flipud(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))])))
-		# normalsy = as.vector(t(flipud(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))])))
-		# normalsz = as.vector(t(flipud(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))])))
-		tris[, 2] = tris[, 2] / zscale
-		nr = nrow(heightmap)
-		nc = ncol(heightmap)
-		# rn = tris[,1]+1
-		# cn = tris[,3]+1
+    ray_surface = generate_surface(
+      heightmap,
+      zscale = zscale,
+      geographic_aspect = geographic_aspect_info
+    )
+    surface_id = rgl::triangles3d(
+      x = ray_surface$verts,
+      indices = ray_surface$inds,
+      texcoords = ray_surface$texcoords,
+      normals = surface_normals,
+      smooth = normals,
+      texture = tempmap,
+      color = "white",
+      lit = FALSE,
+      tag = tag_surface,
+      back = "culled"
+    )
+  } else {
+    tris = terrainmeshr::triangulate_matrix(
+      heightmap,
+      maxError = max_error,
+      maxTriangles = max_tri,
+      start_index = 0L,
+      verbose = verbose
+    )
+    index_vals = seq_len(nrow(tris))
+    # if(!precomputed) {
+    #   normals = calculate_normal(heightmap,zscale=zscale)
+    # }
+    # normalsx = as.vector(t(flipud(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))])))
+    # normalsy = as.vector(t(flipud(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))])))
+    # normalsz = as.vector(t(flipud(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))])))
+    tris[, 2] = tris[, 2] / zscale
+    nr = nrow(heightmap)
+    nc = ncol(heightmap)
+    # rn = tris[,1]+1
+    # cn = tris[,3]+1
 
-		# normal_comp = matrix(c(normalsz[rn + nr*(cn-1)],normalsy[rn + nr*(cn-1)],-normalsx[rn + nr*(cn-1)]),ncol=3)
-		texcoords = tris[, c(1, 3)]
-		texcoords[, 1] = texcoords[, 1] / (nr - 1)
-		texcoords[, 2] = texcoords[, 2] / (nc - 1)
-		tris[, 1] = tris[, 1] - (nr - 1) / 2 # +1
-		tris[, 3] = tris[, 3] - (nc - 1) / 2
-		tris[, 3] = -tris[, 3]
+    # normal_comp = matrix(c(normalsz[rn + nr*(cn-1)],normalsy[rn + nr*(cn-1)],-normalsx[rn + nr*(cn-1)]),ncol=3)
+    texcoords = tris[, c(1, 3)]
+    texcoords[, 1] = texcoords[, 1] / (nr - 1)
+    texcoords[, 2] = texcoords[, 2] / (nc - 1)
+    tris[, 1] = tris[, 1] - (nr - 1) / 2 # +1
+    tris[, 3] = tris[, 3] - (nc - 1) / 2
+    tris[, 3] = -tris[, 3]
+    tris[, 1] = tris[, 1] * geographic_aspect_info$scale[["x"]]
+    tris[, 3] = tris[, 3] * geographic_aspect_info$scale[["z"]]
 
-		rgl::triangles3d(
-			tris,
-			texcoords = texcoords,
-			indices = index_vals,
-			back = "cull",
-			#normals = normal_comp,
-			texture = tempmap,
-			lit = FALSE,
-			color = "white",
-			tag = tag_surface
-		)
-	}
-	rgl::bg3d(color = background, texture = NULL)
-	if (solid && !triangulate) {
-		make_base(
-			heightmap,
-			basedepth = soliddepth,
-			basecolor = solidcolor,
-			zscale = zscale,
-			soil = soil,
-			soil_freq = soil_freq,
-			soil_levels = soil_levels,
-			soil_color1 = soil_color_light,
-			soil_color2 = soil_color_dark,
-			soil_gradient = soil_gradient,
-			gradient_darken = soil_gradient_darken
-		)
-	} else if (solid && triangulate) {
-		make_base_triangulated(tris, basedepth = soliddepth, basecolor = solidcolor)
-	}
-	if (!is.null(solidlinecolor) && solid) {
-		make_lines(
-			heightmap,
-			basedepth = soliddepth,
-			linecolor = solidlinecolor,
-			zscale = zscale,
-			linewidth = linewidth
-		)
-	}
-	if (shadow) {
-		make_shadow(heightmap, shadowdepth, shadowwidth, background, shadowcolor)
-	}
-	if (water) {
-		make_water(
-			heightmap,
-			waterheight = waterdepth,
-			wateralpha = wateralpha,
-			watercolor = watercolor,
-			zscale = zscale
-		)
-	}
-	if (!is.null(waterlinecolor) && water) {
-		if (all(!is.na(heightmap))) {
-			make_lines(
-				fliplr(heightmap),
-				basedepth = waterdepth,
-				linecolor = waterlinecolor,
-				zscale = zscale,
-				linewidth = linewidth,
-				alpha = waterlinealpha,
-				solid = FALSE
-			)
-		}
-		make_waterlines(
-			heightmap,
-			waterdepth = waterdepth,
-			linecolor = waterlinecolor,
-			zscale = zscale,
-			alpha = waterlinealpha,
-			linewidth = linewidth,
-			antialias = lineantialias
-		)
-	}
+    surface_id = rgl::triangles3d(
+      tris,
+      texcoords = texcoords,
+      indices = index_vals,
+      back = "cull",
+      smooth = normals,
+      texture = tempmap,
+      lit = FALSE,
+      color = "white",
+      tag = tag_surface
+    )
+  }
+  # Cache the actual terrain representation before constructing water.
+  cache_scene_triangulate(triangulate)
+  register_plot_3d_surface_texture(surface_id, full_texture_map, tempmap)
+  rgl::bg3d(color = background, texture = NULL)
+  if (solid && !triangulate) {
+    make_base(
+      heightmap,
+      basedepth = solid_depth,
+      basecolor = solid_color,
+      zscale = zscale,
+      soil = soil,
+      soil_freq = soil_freq,
+      soil_levels = soil_levels,
+      soil_color1 = soil_color_light,
+      soil_color2 = soil_color_dark,
+      soil_gradient = soil_gradient,
+      gradient_darken = soil_gradient_darken
+    )
+  } else if (solid && triangulate) {
+    make_base_triangulated(
+      tris,
+      basedepth = solid_depth,
+      basecolor = solid_color
+    )
+  }
+  if (!is.null(solid_line_color) && solid) {
+    make_lines(
+      heightmap,
+      basedepth = solid_depth,
+      line_color = solid_line_color,
+      zscale = zscale,
+      linewidth = linewidth
+    )
+  }
+  if (shadow) {
+    make_shadow(
+      heightmap,
+      shadow_depth,
+      shadow_width,
+      background,
+      shadow_color,
+      shadow_texture_size = shadow_texture_size
+    )
+  }
+  water_heightmap = if (earth_curvature) source_heightmap else heightmap
+  water_mesh = NULL
+  water_render_method_current = water_render_method
+  if (water) {
+    water_render_method_current = resolve_optimized_water_render_method_for_terrain(
+      water_render_method = water_render_method,
+      triangulate = triangulate,
+      caller = "plot_3d"
+    )
+    water_mesh = make_water(
+      water_heightmap,
+      waterheight = water_input,
+      water_alpha = water_alpha,
+      water_color = water_color,
+      zscale = zscale,
+      water_render_method = water_render_method_current,
+      water_edge_extension = water_edge_extension,
+      water_polygon_failure = water_polygon_failure,
+      heightmap_extent = extent_cache_value,
+      heightmap_crs = crs_cache_value,
+      water_elevation = water_elevation,
+      water_surface_tolerance = water_surface_tolerance
+    )
+  }
+  if (!is.null(water_line_color) && water) {
+    if (!identical(water_render_method_current, "legacy")) {
+      make_waterlines_from_mesh(
+        water_mesh,
+        line_color = water_line_color,
+        alpha = water_line_alpha,
+        linewidth = linewidth,
+        antialias = line_antialias
+      )
+    } else {
+      if (all(!is.na(water_heightmap))) {
+        make_lines(
+          fliplr(water_heightmap),
+          basedepth = water_input,
+          line_color = water_line_color,
+          zscale = zscale,
+          linewidth = linewidth,
+          alpha = water_line_alpha,
+          solid = FALSE
+        )
+      }
+      make_waterlines(
+        water_heightmap,
+        water_input = water_input,
+        line_color = water_line_color,
+        zscale = zscale,
+        alpha = water_line_alpha,
+        linewidth = linewidth,
+        antialias = line_antialias
+      )
+    }
+  }
+  if (earth_curvature) {
+    cache_hillshade_heightmap(hillshade_source, label = heightmap_cache_label)
+    cache_hillshade_extent(extent_cache_value, label = extent_cache_label)
+    cache_hillshade_crs(crs_cache_value, label = crs_cache_label)
+    cache_hillshade_geographic_aspect(geographic_aspect_info)
+  } else {
+    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+  }
+  cache_hillshade_zscale(base_zscale, label = zscale_cache_label)
+  cache_scene_heightmap(
+    heightmap,
+    label = heightmap_cache_label,
+    source_heightmap = source_heightmap
+  )
+  cache_scene_zscale(base_zscale, label = zscale_cache_label)
+  cache_scene_vertical_exaggeration(
+    cached_scene_vertical_exaggeration,
+    label = vertical_exaggeration_cache_label
+  )
+  cache_scene_extent(extent_cache_value, label = extent_cache_label)
+  cache_scene_crs(crs_cache_value, label = crs_cache_label)
+  cache_scene_geographic_aspect(geographic_aspect_info)
+  invisible(NULL)
+}
+
+#' Apply the spherical drop below the center tangent plane
+#'
+#' @param heightmap Terrain elevation matrix.
+#' @param aspect Geographic aspect metadata with metric cell spacing.
+#' @param zscale Effective elevation units per scene unit.
+#' @return Elevations adjusted for Earth curvature in the input height units.
+#' @keywords internal
+#' @noRd
+apply_earth_curvature = function(heightmap, aspect, zscale) {
+  if (!is.finite(aspect$mean_cell_meters)) {
+    stop(
+      "`earth_curvature = TRUE` requires a spatial heightmap with a valid extent and CRS, or a matrix with extent and CRS.",
+      call. = FALSE
+    )
+  }
+  x_m = (seq_len(nrow(heightmap)) - (nrow(heightmap) + 1) / 2) *
+    aspect$cell_meters[["x"]]
+  y_m = (seq_len(ncol(heightmap)) - (ncol(heightmap) + 1) / 2) *
+    aspect$cell_meters[["z"]]
+  # Process one column at a time to bound temporary memory on large DEMs.
+  x_squared = x_m^2
+  height_units_per_meter = zscale / aspect$mean_cell_meters
+  for (j in seq_along(y_m)) {
+    drop_m = earth_curvature_drop_meters(x_squared + y_m[j]^2)
+    heightmap[, j] = heightmap[, j] - drop_m * height_units_per_meter
+  }
+  heightmap
 }

@@ -1,0 +1,228 @@
+test_that("render_movie_hq generates motion from saved keyframes", {
+  keyframes = data.frame(
+    x = c(0, 1),
+    y = c(2, 3),
+    z = c(4, 5)
+  )
+  camera_motion = as.data.frame(matrix(0, nrow = 12, ncol = 14))
+  scene_args = NULL
+  motion_args = NULL
+  animation_args = NULL
+
+  testthat::local_mocked_bindings(
+    render_highquality = function(...) {
+      scene_args <<- list(...)
+      scene = list(label = "rendered-scene")
+      attr(scene, "ray_render_settings") = list(
+        environment_light = "sky.exr",
+        environment_light_bake_white = TRUE,
+        rotate_env = 2.5
+      )
+      scene
+    },
+    .package = "rayshader"
+  )
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() keyframes,
+    generate_camera_motion = function(
+      positions,
+      frames,
+      type,
+      closed,
+      damp_motion
+    ) {
+      motion_args <<- list(
+        positions = positions,
+        frames = frames,
+        type = type,
+        closed = closed,
+        damp_motion = damp_motion
+      )
+      camera_motion
+    },
+    render_animation = function(
+      scene,
+      camera_motion,
+      environment_light_bake_white = NULL,
+      ...
+    ) {
+      animation_args <<- c(
+        list(
+          scene = scene,
+          camera_motion = camera_motion,
+          environment_light_bake_white = environment_light_bake_white
+        ),
+        list(...)
+      )
+      "animation-result"
+    },
+    .package = "rayrender"
+  )
+
+  value = withVisible(render_movie_hq(
+    frames = 12,
+    filename = "movie.mp4",
+    samples = 4,
+    progress = FALSE,
+    render_highquality_args = list(light = FALSE, return_scene = FALSE)
+  ))
+
+  expect_false(value$visible)
+  expect_identical(value$value, "animation-result")
+  expect_identical(scene_args, list(light = FALSE, return_scene = TRUE))
+  expect_identical(motion_args$positions, keyframes)
+  expect_identical(motion_args$frames, 12)
+  expect_identical(motion_args$type, "linear")
+  expect_true(motion_args$closed)
+  expect_true(motion_args$damp_motion)
+  expect_identical(animation_args$scene$label, "rendered-scene")
+  expect_identical(animation_args$camera_motion, camera_motion)
+  expect_identical(animation_args$environment_light, "sky.exr")
+  expect_true(animation_args$environment_light_bake_white)
+  expect_equal(animation_args$rotate_env, 2.5)
+  expect_identical(animation_args$filename, "movie.mp4")
+  expect_identical(animation_args$samples, 4)
+  expect_false(animation_args$progress)
+})
+
+test_that("render_movie_hq routes dots only to render_animation", {
+  keyframes = data.frame(
+    x = c(0, 1),
+    y = c(2, 3),
+    z = c(4, 5)
+  )
+  camera_motion = as.data.frame(matrix(0, nrow = 6, ncol = 14))
+  scene_args = NULL
+  animation_args = NULL
+  rgl_materials = list("obj_raymesh_path_1" = "path-material")
+
+  testthat::local_mocked_bindings(
+    render_highquality = function(...) {
+      scene_args <<- list(...)
+      list(label = "rendered-scene")
+    },
+    .package = "rayshader"
+  )
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() keyframes,
+    generate_camera_motion = function(...) camera_motion,
+    render_animation = function(scene, camera_motion, ...) {
+      animation_args <<- c(
+        list(
+          scene = scene,
+          camera_motion = camera_motion
+        ),
+        list(...)
+      )
+      "animation-result"
+    },
+    .package = "rayrender"
+  )
+
+  render_movie_hq(
+    frames = 6,
+    filename = "movie.mp4",
+    samples = 4,
+    progress = FALSE,
+    light = TRUE,
+    render_highquality_args = list(
+      light = FALSE,
+      line_radius = 2,
+      joined_stream_mesh = TRUE,
+      rgl_materials = rgl_materials,
+      return_scene = FALSE
+    )
+  )
+
+  expect_identical(scene_args$light, FALSE)
+  expect_identical(scene_args$line_radius, 2)
+  expect_true(scene_args$joined_stream_mesh)
+  expect_identical(scene_args$rgl_materials, rgl_materials)
+  expect_true(scene_args$return_scene)
+  expect_true(animation_args$light)
+  expect_false("line_radius" %in% names(animation_args))
+  expect_false("joined_stream_mesh" %in% names(animation_args))
+  expect_false("rgl_materials" %in% names(animation_args))
+  expect_identical(animation_args$filename, "movie.mp4")
+  expect_identical(animation_args$samples, 4)
+  expect_false(animation_args$progress)
+})
+
+test_that("render_movie_hq uses explicitly supplied keyframes", {
+  keyframes = data.frame(
+    x = c(0, 1),
+    y = c(2, 3),
+    z = c(4, 5)
+  )
+  motion_positions = NULL
+
+  testthat::local_mocked_bindings(
+    render_highquality = function(...) list(label = "rendered-scene"),
+    .package = "rayshader"
+  )
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() {
+      stop("get_saved_keyframes() should not be called")
+    },
+    generate_camera_motion = function(positions, ...) {
+      motion_positions <<- positions
+      data.frame(frame = seq_len(4))
+    },
+    render_animation = function(...) "animation-result",
+    .package = "rayrender"
+  )
+
+  result = render_movie_hq(
+    keyframes = keyframes,
+    frames = 4
+  )
+
+  expect_identical(result, "animation-result")
+  expect_identical(motion_positions, keyframes)
+})
+
+test_that("render_movie_hq validates scene extraction arguments", {
+  expect_error(
+    render_movie_hq(render_highquality_args = "light = FALSE"),
+    "`render_highquality_args` must be a list.",
+    fixed = TRUE
+  )
+})
+
+test_that("render_movie_hq stops before scene extraction when no keyframes exist", {
+  scene_extracted = FALSE
+
+  testthat::local_mocked_bindings(
+    render_highquality = function(...) {
+      scene_extracted <<- TRUE
+      "rendered-scene"
+    },
+    .package = "rayshader"
+  )
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() data.frame(),
+    .package = "rayrender"
+  )
+
+  expect_error(
+    render_movie_hq(),
+    "No keyframes saved",
+    fixed = TRUE
+  )
+  expect_false(scene_extracted)
+})
+
+test_that("render_movie_hq rejects explicitly supplied empty keyframes", {
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() {
+      stop("get_saved_keyframes() should not be called")
+    },
+    .package = "rayrender"
+  )
+
+  expect_error(
+    render_movie_hq(keyframes = data.frame()),
+    "`keyframes` must contain at least one keyframe.",
+    fixed = TRUE
+  )
+})

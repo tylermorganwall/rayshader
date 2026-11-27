@@ -33,9 +33,6 @@
 #'height when `software_render = TRUE`.
 #'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 #'is not constrained by the screen size or requires OpenGL.
-#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
-#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
-#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param background Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
@@ -64,22 +61,20 @@
 #'@param rayvertex_shadow_map Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
 #'be applied to the rendered scene.
 #'@param plot Default `TRUE`. Whether to plot the snapshot.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
 #'@return Displays snapshot of current rgl plot (or saves to disk), as well as invisibly returns an RGBA `rayimg` array.
 #'@export
-#'@examples
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade() |>
-#'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
-#'}
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'montereybay_spatial |>
+#'  sphere_shade(vertical_exaggeration = 20) |>
+#'  plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 #'
-#'if(run_documentation()) {
 #'render_snapshot()
-#'}
 #'
 #'#Create a title
-#'if(run_documentation()) {
 #'render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
 #'                title_color = "white", title_bar_color = "black",
 #'                title_font = "Helvetica", title_position = "north")
@@ -90,22 +85,17 @@
 #'                title_color = "white", title_bar_color = "darkgreen",
 #'                vignette = TRUE, title_offset=c(0,20),
 #'                title_font = "Helvetica", title_position = "north")
-#'}
 #'#Use software rendering to render a scene with shadow mapping
-#'if(run_documentation()) {
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
+#'  plot_3d(shadow=FALSE, solid_line_color = NULL, vertical_exaggeration = 4)
 #'#No shadows
 #'render_snapshot(software_render = TRUE)
-#'}
-#'if(run_documentation()) {
 #'#Now with shadow mapped shadows, calculated in rayvertex
 #'render_snapshot(rayvertex_lighting = TRUE,
 #'                rayvertex_lights = rayvertex::directional_light(intensity = 1.2,
 #'                                                                direction = c(-1, 1, -1)),
 #'                rayvertex_shadow_map = TRUE, software_render = TRUE)
-#'}
 render_snapshot = function(
   filename,
   clear = FALSE,
@@ -137,8 +127,6 @@ render_snapshot = function(
   line_offset = 1e-7,
   thick_lines = TRUE,
   line_radius = 0.25,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
@@ -146,16 +134,35 @@ render_snapshot = function(
   rayvertex_lights = NULL,
   rayvertex_shadow_map = FALSE,
   plot = TRUE,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 ) {
+  title_color = normalize_rgb_color(title_color)
+  title_bar_color = normalize_rgb_color(title_bar_color)
+  vignette_color = normalize_rgb_color(vignette_color)
+  background = normalize_rgb_color(background)
   if (rgl::rgl.useNULL()) {
     software_render = TRUE
   }
   if (reset_scene_cache) {
-    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
+    reset_scene_context(
+      clear_scene_metadata = FALSE,
+      clear_scene_cache = TRUE
+    )
+  }
+  if (
+    !is.numeric(fsaa) ||
+      length(fsaa) != 1 ||
+      !is.finite(fsaa) ||
+      fsaa < 1
+  ) {
+    stop(
+      "`fsaa` must be a single finite number greater than or equal to 1.",
+      call. = FALSE
+    )
   }
   fsaa = as.integer(fsaa)
-  stopifnot(fsaa >= 1)
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -211,7 +218,9 @@ render_snapshot = function(
       bgid = rgl::ids3d("background")$id
       background = rgl::rgl.attrib(bgid, "colors")
     }
-    stopifnot(length(text_offset) == 3)
+    if (length(text_offset) != 3) {
+      stop("`text_offset` must contain exactly three values.", call. = FALSE)
+    }
     debug = render_snapshot_software(
       filename = temp,
       cache_scene = cache_scene,
@@ -276,6 +285,7 @@ render_snapshot = function(
     rayimage::ray_write_image(tempmap, filename)
   }
   if (clear) {
+    clear_plot_3d_surface_textures()
     rgl::clear3d()
   }
   return(invisible(tempmap))

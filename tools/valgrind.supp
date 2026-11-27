@@ -1,0 +1,51 @@
+# libudunits2 builds process-wide lookup tables when units loads its database.
+# Limit each rule to possibly lost blocks on the named registration stacks.
+{
+   udunits-name-or-symbol-registration
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   obj:*/libudunits2.so*
+   ...
+   fun:ut_map_*_to_unit
+}
+{
+   udunits-reverse-unit-registration
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   obj:*/libudunits2.so*
+   ...
+   fun:ut_map_unit_to_*
+}
+{
+   udunits-prefix-registration
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   obj:*/libudunits2.so*
+   ...
+   fun:ut_add_*_prefix
+}
+
+# glibc dynamically allocates thread-local storage on first access.
+{
+   s2-first-thread-local-access
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   fun:allocate_dtv_entry
+   ...
+   obj:*/s2.so
+}
+{
+   gdal-spatial-reference-first-thread-local-access
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   ...
+   fun:allocate_dtv_entry
+   ...
+   fun:*OGRSpatialReference*importFromWkt*
+}

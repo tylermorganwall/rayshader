@@ -2,41 +2,37 @@
 #'
 #'@description Calculates a color for each point on the surface using a direct elevation-to-color mapping.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'@param texture Default `terrain.colors(256)`. A color palette for the plot.
 #'@param range Default `NULL`, the full range of the heightmap. A length-2 vector specifying the maximum
 #'and minimum values to map the color palette to.
 #'@return RGB array of hillshaded texture mappings.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Create a direct mapping of elevation to color:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
 #'  plot_map()
 #'
-#'#Add a shadow:
-#'if(run_documentation()) {
-#'montereybay |>
+#'# Add lambertian shadows:
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
 #'  plot_map()
-#'}
 #'
-#'#Change the palette:
-#'if(run_documentation()) {
-#'montereybay |>
+#'# Change the palette:
+#'montereybay_spatial |>
 #'  height_shade(texture = topo.colors(256)) |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
 #'  plot_map()
-#'}
 #'
-#'#Really change the palette (warning: gratuitous use of rainbow palette):
-#'if(run_documentation()) {
-#'montereybay |>
-#'  height_shade(texture = rainbow(256)) |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+#'#Really change the palette (shield your eyes: gratuitous use of `rainbow()`):
+#'montereybay_spatial |>
+#'  height_shade(texture = rev(rainbow(256))) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
 #'  plot_map()
-#'}
 height_shade = function(
   heightmap,
   texture = grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF"))(
@@ -44,6 +40,30 @@ height_shade = function(
   ),
   range = NULL
 ) {
+  texture = normalize_rgb_color(texture)
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "height_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  hillshade_cache_label = if (heightmap_missing) {
+    resolved_heightmap$label
+  } else {
+    heightmap_cache_label
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
   if (!is.null(range)) {
     range = base::sort(range[1:2])
   } else {
@@ -94,9 +114,11 @@ height_shade = function(
     }
   }
   return_array[,, 4] = 1
-  return(rayimage::ray_read_image(
+  return_array = rayimage::ray_read_image(
     return_array,
     assume_colorspace = rayimage::CS_SRGB,
     assume_white = "D65"
-  ))
+  )
+  cache_hillshade_map(return_array, label = hillshade_cache_label)
+  return(return_array)
 }

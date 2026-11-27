@@ -8,24 +8,29 @@ plot_3d(
   hillshade,
   heightmap,
   zscale = 1,
-  baseshape = "rectangle",
+  vertical_exaggeration = 1,
+  base_shape = "rectangle",
   solid = TRUE,
-  soliddepth = "auto",
-  solidcolor = "grey20",
-  solidlinecolor = "grey30",
+  solid_depth = "auto",
+  solid_color = "grey20",
+  solid_line_color = "grey30",
   shadow = TRUE,
-  shadowdepth = "auto",
-  shadowcolor = "auto",
+  shadow_depth = "auto",
+  shadow_color = "auto",
   shadow_darkness = 0.5,
-  shadowwidth = "auto",
+  shadow_width = "auto",
+  shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
-  waterdepth = 0,
-  watercolor = "dodgerblue",
-  wateralpha = 0.5,
-  waterlinecolor = NULL,
-  waterlinealpha = 1,
+  water_input = 0,
+  water_color = "dodgerblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
   linewidth = 2,
-  lineantialias = FALSE,
+  line_antialias = FALSE,
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
+  water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove"),
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -38,7 +43,7 @@ plot_3d(
   fov = 0,
   zoom = 1,
   background = "white",
-  windowsize = 600,
+  window_size = 600,
   precomputed_normals = NULL,
   triangulate = FALSE,
   max_error = 0,
@@ -46,53 +51,86 @@ plot_3d(
   verbose = FALSE,
   plot_new = TRUE,
   close_previous = TRUE,
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  extent = NULL,
+  geographic_aspect = TRUE,
+  crs = NULL,
+  water_elevation = NULL,
+  water_surface_tolerance = NULL,
+  normals = TRUE,
+  earth_curvature = FALSE,
+  ...
 )
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
 
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
+\item{heightmap}{Elevation input for the surface. Can be:
+a two-dimensional matrix (each entry is elevation),
+a \code{RasterLayer}/\code{RasterBrick}/\code{RasterStack},
+a \code{terra::SpatRaster}, or a raster filename.
+Spatial raster inputs are automatically converted to matrix form with \code{\link[=raster_to_matrix]{raster_to_matrix()}}.
+For spatial raster inputs, rayshader also caches the raster extent and CRS for downstream \verb{render_*} calls.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.
+If \code{zscale} is not supplied and \code{heightmap} is a spatial raster, rayshader automatically
+uses the raster cell resolution (mean x/y resolution). Geographic longitude/latitude
+rasters are converted to an approximate meter-per-cell value at the raster center.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this scene. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached hillshade \code{zscale} metadata.}
+
+\item{base_shape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
 \item{solid}{Default \code{TRUE}. If \code{FALSE}, just the surface is rendered.}
 
-\item{soliddepth}{Default \code{auto}, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on \code{auto}, this is automatically set to a slightly lower level than the uniform elevation.}
+\item{solid_depth}{Default \code{auto}, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on \code{auto}, this is automatically set to a slightly lower level than the uniform elevation.}
 
-\item{solidcolor}{Default \code{grey20}. Base color.}
+\item{solid_color}{Default \code{grey20}. Base color.}
 
-\item{solidlinecolor}{Default \code{grey30}. Base edge line color.}
+\item{solid_line_color}{Default \code{grey30}. Base edge line color.}
 
 \item{shadow}{Default \code{TRUE}. If \code{FALSE}, no shadow is rendered.}
 
-\item{shadowdepth}{Default \code{auto}, which sets it to \code{soliddepth - soliddepth/10}. Depth of the shadow layer.}
+\item{shadow_depth}{Default \code{auto}, which sets it to \code{solid_depth - solid_depth/10}. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default \code{auto}. Color of the shadow, automatically computed as \code{shadow_darkness}
-the luminance of the \code{background} color in the CIELuv colorspace if not specified.}
+\item{shadow_color}{Default \code{"auto"}. Color of the shadow. Automatically darkens
+the \code{background} color by scaling its CIELuv lightness and chroma together by
+\code{shadow_darkness}, preserving the background hue.}
 
-\item{shadow_darkness}{Default \code{0.5}. Darkness of the shadow, if \code{shadowcolor = "auto"}.}
+\item{shadow_darkness}{Default \code{0.5}. Lightness multiplier for the shadow when
+\code{shadow_color = "auto"}. Values between \code{0} and \code{1} darken the background color;
+\code{0} gives a black shadow and \code{1} matches the background.}
 
-\item{shadowwidth}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
+\item{shadow_width}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
 
-\item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered.}
+\item{shadow_texture_size}{Default \code{getOption("rayshader.max_shadow_texture_size", 1024)}. Maximum width or height, in pixels, of the blurred shadow texture. Set to \code{Inf} or \code{FALSE} to render the shadow texture at full heightmap resolution.}
 
-\item{waterdepth}{Default \code{0}. Water level.}
+\item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered. If \code{water}
+is omitted and \code{water_input} is explicitly supplied, a water layer is rendered.}
 
-\item{watercolor}{Default \code{lightblue}. Color of the water.}
+\item{water_input}{Default \code{0}. Water level or footprint. A scalar, matrix matching \code{heightmap}, spatial raster, or \code{sf}/\code{sfc} polygon object. Finite raster cells define water coverage. Method \code{"polygon"} retains supplied polygon boundaries and holes.}
 
-\item{wateralpha}{Default \code{0.5}. Water transparency.}
+\item{water_color}{Default \code{lightblue}. Color of the water.}
 
-\item{waterlinecolor}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
+\item{water_alpha}{Default \code{0.5}. Water transparency.}
 
-\item{waterlinealpha}{Default \code{1}. Water line tranparency.}
+\item{water_line_color}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
+
+\item{water_line_alpha}{Default \code{1}. Water line tranparency.}
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
-\item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
+\item{line_antialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
+
+\item{water_render_method}{Default \code{"polygon"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; \code{"optimized"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
+
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{water_input} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
+
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for \code{"optimized"} water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 
@@ -117,9 +155,9 @@ numbers increase the darkening effect.}
 
 \item{zoom}{Default \code{1}. Zoom factor.}
 
-\item{background}{Default \code{grey10}. Color of the background.}
+\item{background}{Default \code{"white"}. Color of the background.}
 
-\item{windowsize}{Default \code{600}. Position, width, and height of the \code{rgl} device displaying the plot.
+\item{window_size}{Default \code{600}. Position, width, and height of the \code{rgl} device displaying the plot.
 If a single number, viewport will be a square and located in upper left corner.
 If two numbers, (e.g. \code{c(600,800)}), user will specify width and height separately.
 If four numbers (e.g. \code{c(200,0,600,800)}), the first two coordinates
@@ -127,8 +165,8 @@ specify the location of the x-y coordinates of the bottom-left corner of the vie
 and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 window does not currently work on macOS (tested on Mojave), but the size can still be specified.}
 
-\item{precomputed_normals}{Default \code{NULL}. Takes the output of \code{calculate_normals()} to save
-computing normals internally.}
+\item{precomputed_normals}{Default \code{NULL}. Takes the output of \code{calculate_normal()} to save
+computing normals internally. Ignored when \code{normals = FALSE} or \code{earth_curvature = TRUE}.}
 
 \item{triangulate}{Default \code{FALSE}. Reduce the size of the 3D model by triangulating the height map.
 Set this to \code{TRUE} if generating the model is slow, or moving it is choppy. Will also reduce the size
@@ -155,56 +193,106 @@ the data will be plotted in the same window.}
 old windows will be kept open.}
 
 \item{clear_previous}{Default \code{TRUE}. Clears the previously open \code{rgl} window if \code{plot_new = FALSE}.}
+
+\item{extent}{Default \code{NULL}. Optional extent metadata to cache with the scene for later
+calls (e.g., \code{\link[=render_zaxis]{render_zaxis()}} without an explicit \code{extent}). Accepts any input supported
+by \code{\link[=get_extent]{get_extent()}} (numeric xmin/xmax/ymin/ymax vector, \code{raster}, \code{terra}, \code{sf}, or \code{sp} objects).
+If omitted, a spatial raster uses its spatial extent and a raw matrix uses its native
+1-based extent: \code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing in terrain geometry and cache the transform for later render calls.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the terrain input. An explicit
+value overrides embedded CRS metadata.}
+
+\item{water_elevation}{Default \code{NULL}. Polygon water elevations; see \code{\link[=render_water]{render_water()}}.}
+
+\item{water_surface_tolerance}{Default \code{NULL}. Polygon water coincidence tolerance in terrain elevation units; see \code{\link[=render_water]{render_water()}}.}
+
+\item{normals}{Default \code{TRUE}. Whether to use smooth vertex normals for the DEM.
+Set to \code{FALSE} to skip rayshader's terrain normal calculation and ignore
+\code{precomputed_normals}.
+The DEM uses flat shading in rgl, and high-quality renders and OBJ exports use
+triangle face normals. Normals on other scene objects are unaffected.}
+
+\item{earth_curvature}{Default \code{FALSE}. Bend the terrain away from the tangent
+plane at the bounding-box center. Supply a georeferenced DEM or a matrix
+with an extent and CRS so ground distances can be measured.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
+\code{plot_3d()} checks the map texture dimensions against \code{options(rayshader.max_texture_size = 4096)}
+and downsamples the temporary \code{rgl} texture with \code{\link[rayimage:render_resized]{rayimage::render_resized()}} if either dimension exceeds
+that value. The full-resolution source texture is preserved for \code{\link[=render_highquality]{render_highquality()}} and other rayrender
+conversion paths. This is a conservative OpenGL texture-size guard; set the option to a larger value if
+your system supports larger textures, or to \code{Inf}/\code{FALSE} to disable the check.
+
 Note: Calling \code{\link[=plot_3d]{plot_3d()}} resets the scene cache for the \code{\link[=render_snapshot]{render_snapshot()}}, \code{\link[=render_depth]{render_depth()}}, and \code{\link[=render_highquality]{render_highquality()}}
 }
-\examples{
-#Plotting a spherical texture map of the built-in `montereybay` dataset.
-if(run_documentation()) {
-montereybay |>
- sphere_shade(texture="desert") |>
- plot_3d(montereybay,zscale=50)
-render_snapshot()
+\details{
+With \code{earth_curvature = TRUE}, the terrain follows a sphere of mean
+radius 6,371,008.8 meters. Ground distances use the east-west and north-south
+cell spacing at the bounding-box center, a local approximation for regional
+maps. The center retains its elevation. Earth's curvature is always drawn
+at its true scale, regardless of \code{vertical_exaggeration}. At a ground
+distance of 100 km from the center, sea level lies about 785 m below the
+tangent plane with either \code{vertical_exaggeration = 1} or
+\code{vertical_exaggeration = 4}. The latter draws terrain relief four times
+taller above local sea level.
+
+Spatial layers added by
+the render functions inherit the scene's curvature. Supply water levels and
+object altitudes in the original elevation datum. Terrain-relative offsets
+are measured above the local surface. Explicit raw scene coordinates already
+refer to the rendered coordinate system.
 }
+\examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Plotting a spherical texture map of the built-in `montereybay_spatial` dataset.
+montereybay_spatial |>
+ sphere_shade(texture="desert", vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4)
+render_snapshot()
+
+montereybay_spatial |>
+ sphere_shade(texture="desert", vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4)
+render_zaxis(location = "bottomleft")
+render_snapshot()
 
 #With a water layer
-if(run_documentation()) {
-montereybay |>
- sphere_shade(texture="imhof2") |>
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2",
-         waterlinecolor="white", waterlinealpha=0.5)
+montereybay_spatial |>
+ sphere_shade(texture="imhof2", vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof2",
+         water_line_color="white", water_line_alpha=0.5)
 render_snapshot()
-}
 
 #With a soil texture to the base
-if(run_documentation()) {
-montereybay |>
- sphere_shade(texture="imhof3") |>
- plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4",
-         waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
+montereybay_spatial |>
+ sphere_shade(texture="imhof3", vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4, water = TRUE,  water_color="imhof4",
+         water_line_color="white", water_line_alpha=0.5, soil=TRUE)
 render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 render_snapshot()
-}
 
-#We can also change the base by setting "baseshape" to "hex" or "circle"
-if(run_documentation()) {
-montereybay |>
- sphere_shade(texture="imhof1") |>
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-         waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+#We can also change the base by setting "base_shape" to "hex" or "circle"
+montereybay_spatial |>
+ sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+         water_line_color="white", water_line_alpha=0.5,base_shape="circle")
 render_snapshot()
-}
 
-if(run_documentation()) {
-montereybay |>
- sphere_shade(texture="imhof1") |>
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-         waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+montereybay_spatial |>
+ sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+         water_line_color="white", water_line_alpha=0.5,base_shape="hex")
 render_snapshot()
-}
 
 
 
@@ -214,14 +302,13 @@ render_snapshot()
 #Here, we only include the deep bathymetry data by setting all points greater than -10
 #in the copied elevation matrix to NA.
 
-mb_water = montereybay
+mb_water = montereybay_spatial
 mb_water[mb_water > -10] = NA
 
-if(run_documentation()) {
-montereybay |>
- sphere_shade(texture="imhof1") |>
- plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
-         waterlinecolor="white", waterlinealpha=0.5)
+montereybay_spatial |>
+ sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
+ plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45,
+         water_line_color="white", water_line_alpha=0.5)
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

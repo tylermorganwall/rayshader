@@ -18,21 +18,17 @@ None
 Resize the rgl Window
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Resize the rgl window to various sizes
-if(run_documentation()) {
-montereybay |>
- sphere_shade() |>
- plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
+montereybay_spatial |>
+ sphere_shade(vertical_exaggeration = 10) |>
+ plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 render_resize_window(width = 800, height = 800)
 render_snapshot()
-}
 
-if(run_documentation()) {
 render_resize_window(width = 200, height = 200)
 render_snapshot()
-}
-if(run_documentation()) {
 render_resize_window(width = 800, height = 400)
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

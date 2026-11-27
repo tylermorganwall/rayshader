@@ -38,7 +38,7 @@ libpng-dev libjpeg-dev libfreetype6-dev libglu1-mesa-dev libgl1-mesa-dev pandoc 
 
 <img  src="man/figures/smallfeature.png">
 
-Rayshader has seven functions related to mapping:
+Rayshader has several functions related to mapping:
 
 - `ray_shade()` uses user specified light directions to calculate a
   global shadow map for an elevation matrix. By default, this also
@@ -59,9 +59,17 @@ Rayshader has seven functions related to mapping:
   Technique for Depicting Terrain Relief.”
 - `height_shade()` calculates a color for each point on the surface
   using a direct elevation-to-color mapping.
+- `calculate_normal()` calculates the normal unit vector for every point
+  on the grid.
 - `lamb_shade()` uses a single user specified light direction to
   calculate a local shadow map based on the dot product between the
   surface normal and the light direction for an elevation matrix.
+- `constant_shade()` generates a constant color layer.
+- `cloud_shade()` renders shadows from the 3D floating cloud layer on
+  the ground, which can be added to the map with `add_shadow()`.
+- `radiance_shade()` renders a top-down radiance pass of the current 3D
+  scene or a supplied elevation matrix, returning an overlay that can be
+  added with `add_overlay()`.
 - `add_shadow()` takes two of the shadow maps above and combines them,
   scaling the second one (or, if the second is an RGB array, the matrix)
   as specified by the user.
@@ -109,7 +117,7 @@ Rayshader also has functions to add water and generate overlays:
   overlay to layer onto an existing map using a height map or a boolean
   matrix.
 
-Also included are functions to add additional effects and information to
+Also included are functions to add geometry, effects, and information to
 your 3D visualizations:
 
 - `render_highquality()` renders in the scene with a built-in
@@ -124,39 +132,54 @@ your 3D visualizations:
   the map at a specified altitude `z` (in units of the matrix). The
   altitude can either be specified relative to the elevation at that
   point (the default), or absolutely.
+- `render_contours()` adds 3D contours to the current scene, using the
+  heightmap of the 3D surface.
+- `render_floating_overlay()` renders a 2D floating overlay over the
+  map.
+- `render_clouds()` renders a 3D floating cloud layer over the map.
 - `render_water()` adds a 3D tranparent water layer to 3D maps, after
   the rgl device has already been created. This can either add to a map
   that does not already have a water layer, or replace an existing water
   layer on the map.
 - `render_compass()` places a compass on the map in 3D.
 - `render_path()` adds a 3D path to the current scene, using
-  latitude/longitude or coordinates in the reference system defined by
-  the extent object. If no altitude is provided, the path will be
+  latitude/longitude or coordinates in the cached scene CRS/extent. If
+  no altitude is provided, the path will be
   elevated a constant offset above the heightmap.
 - `render_points()` Adds 3D points to the current scene, using
-  latitude/longitude or coordinates in the reference system defined by
-  the extent object. If no altitude is provided, the points will be
+  latitude/longitude or coordinates in the cached scene CRS/extent. If
+  no altitude is provided, the points will be
   elevated a constant offset above the heightmap.
 - `render_polygons()` Adds 3D polygons to the current scene, using
-  latitude/longitude or coordinates in the reference system defined by
-  the extent object.
+  latitude/longitude or coordinates in the cached scene CRS/extent.
+- `render_beveled_polygons()` adds beveled polygons to the current scene
+  using the **raybevel** package.
+- `render_buildings()` adds 3D polygons with roofs to the current scene.
+- `render_multipolygonz()` adds `MULTIPOLYGON Z` geometry directly to
+  the current scene.
+- `render_obj()` adds a 3D OBJ model to the current scene, using x/y
+  coordinates in the cached scene CRS/extent.
+- `render_raymesh()` adds a 3D `ray_mesh` model to the current scene,
+  using x/y coordinates in the cached scene CRS/extent.
+- `render_tree()` adds 3D representations of trees to the current scene.
 - `render_scalebar()` places a scalebar on the map in 3D.
+- `render_zaxis()` adds a standalone z-axis to the current scene.
+- `render_resize_window()` resizes the rgl window.
 
-And several helper functions for converting rasters to matrices:
+And several helper functions for working with terrain matrices:
 
 - `raster_to_matrix()` converts a `raster` objects into a matrix.
 - `resize_matrix()` resizes a matrix (preserving contents) by specifying
   the desired output dimensions or a scaling factor.
 
-And four functions to display and save your visualizations:
+And several functions to display, save, and export your visualizations:
 
 - `plot_map()` Plots the current map. Accepts either a matrix or an
   array.
-- `write_png()` Writes the current map to disk with a user-specified
-  filename.
-- `plot_3d()` Creates a 3D map, given a texture and an elevation matrix.
-  You can customize the appearance of the map, as well as add a
-  user-defined water level.
+- `save_png()` writes an image to disk with a user-specified filename.
+- `plot_3d()` Creates a 3D map, given a texture and elevation matrix,
+  or a cached heightmap from a rayshader pipe. You can customize the
+  appearance of the map, as well as add a user-defined water level.
 - `render_camera()` Changes the camera orientation.
 - `render_snapshot()` Saves an image of the current 3D view to disk (if
   given a filename), or plots the 3D view to the current device (useful
@@ -164,6 +187,27 @@ And four functions to display and save your visualizations:
 - `render_movie()` Creates and saves a mp4/gif file of the camera
   rotating around the 3D scene by either using a built-in orbit or by
   using one provided by the user.
+- `convert_path_to_animation_coords()` transforms path coordinates into
+  the reference system used by `render_highquality()`, so they can be
+  passed to `animation_camera_coords`.
+- `convert_rgl_to_raymesh()` converts the current rayshader RGL scene to
+  a `ray_mesh` object.
+- `save_obj()` writes the textured 3D rayshader visualization to an OBJ
+  file.
+- `save_3dprint()` writes a stereolithography (STL) file that can be
+  used in 3D printing.
+- `save_multipolygonz_to_obj()` converts `MULTIPOLYGON Z` `sf` features
+  into a 3D OBJ file.
+
+Also included are helper objects and utilities for custom scene
+elements:
+
+- `flag_full_obj()` returns a 3D flag OBJ model for use with
+  `render_obj()`.
+- `flag_banner_obj()` returns the banner portion of the built-in flag
+  OBJ, so it can be styled separately from the pole.
+- `flag_pole_obj()` returns the pole portion of the built-in flag OBJ,
+  so it can be styled separately from the banner.
 
 Finally, rayshader has a single function to generate 3D plots using
 ggplot2 objects:
@@ -205,7 +249,7 @@ elmat |>
 ``` r
 #sphere_shade can shift the sun direction:
 elmat |>
-    sphere_shade(sunangle = 45, texture = "desert") |>
+    sphere_shade(sun_angle = 45, texture = "desert") |>
     plot_map()
 ```
 
@@ -215,7 +259,7 @@ elmat |>
 #detect_water and add_water adds a water layer to the map:
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
+    add_water(detect_water(), color = "desert") |>
     plot_map()
 ```
 
@@ -225,8 +269,8 @@ elmat |>
 #And we can add a raytraced layer from that sun direction as well:
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat), 0.5) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(), 0.5) |>
     plot_map()
 ```
 
@@ -238,13 +282,37 @@ elmat |>
 
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat), 0.5) |>
-    add_shadow(ambient_shade(elmat, maxsearch = 30), 0) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(), 0.5) |>
+    add_shadow(ambient_shade(max_search = 30), 0) |>
     plot_map()
 ```
 
 ![](man/figures/README_basicmapping-5.png)<!-- -->
+
+For a more physically-based top-down lighting pass, `radiance_shade()`
+renders an orthographic radiance overlay using the same pathtracing
+backend as `render_highquality()`. This returns an RGBA array, so you
+can blend it directly into an existing 2D map with `add_overlay()`, or
+use it on it’s own.
+
+``` r
+desert_water = elmat |>
+    sphere_shade(texture = "desert") |>
+    add_water(detect_water(), color = "desert")
+
+radiance_shade(
+        texture = desert_water,
+        zscale = 3,
+        samples = 16, 
+        light_direction = 315,
+        light_intensity = 800,
+        light_altitude = 50
+    ) |> 
+    plot_map()
+```
+
+![](man/figures/README_radiance-1.png)<!-- -->
 
 Rayshader also supports 3D mapping by passing a texture map (either
 external or one produced by rayshader) into the `plot_3d` function.
@@ -252,17 +320,16 @@ external or one produced by rayshader) into the `plot_3d` function.
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat, zscale = 3), 0.3) |>
-    add_shadow(ambient_shade(elmat), 0) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(zscale = 3), 0.3) |>
+    add_shadow(ambient_shade(), 0) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 135,
         zoom = 0.75,
         phi = 45,
-        windowsize = c(1000, 800)
+        window_size = c(1000, 800)
     )
 Sys.sleep(0.2)
 render_snapshot()
@@ -294,7 +361,7 @@ layer (and optionally, shadows):
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "lightblue") |>
+    add_water(detect_water(), color = "lightblue") |>
     add_shadow(
         cloud_shade(
             elmat,
@@ -305,20 +372,17 @@ elmat |>
         0
     ) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 135,
         zoom = 0.75,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         background = "darkred"
     )
 render_camera(theta = 20, phi = 40, zoom = 0.64, fov = 56)
 
 render_clouds(
-    elmat,
-    zscale = 10,
     start_altitude = 800,
     end_altitude = 1000,
     attenuation_coef = 5,
@@ -334,16 +398,12 @@ render_snapshot(clear = TRUE)
 rgl::rgl.clear()
 ```
 
-    ## Warning in rgl::rgl.clear(): 'rgl::rgl.clear' is deprecated.
-    ## Use 'clear3d' instead.
-    ## See help("Deprecated")
-
 These clouds can be customized:
 
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "lightblue") |>
+    add_water(detect_water(), color = "lightblue") |>
     add_shadow(
         cloud_shade(
             elmat,
@@ -361,20 +421,17 @@ elmat |>
         0
     ) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 135,
         zoom = 0.75,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         background = "darkred"
     )
 render_camera(theta = 125, phi = 22, zoom = 0.47, fov = 60)
 
 render_clouds(
-    elmat,
-    zscale = 10,
     start_altitude = 500,
     end_altitude = 700,
     sun_altitude = 45,
@@ -400,17 +457,16 @@ shadows with any of the `_shade()` functions, so we remove those:
 ``` r
 elmat |> 
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
+    add_water(detect_water(), color = "desert") |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 72,
         zoom = 0.68,
         phi = 40,
-        shadowdepth = -100,
-        soliddepth = -100,
-        windowsize = c(1000, 800)
+        shadow_depth = -100,
+        solid_depth = -100,
+        window_size = c(1000, 800)
     )
 
 render_scalebar(
@@ -466,7 +522,7 @@ render_highquality(
 ![](man/figures/skymnodelr2-1.png)<!-- -->
 
 You can also easily add a water layer by setting `water = TRUE` in
-`plot_3d()` (and setting `waterdepth` if the water level is not 0), or
+`plot_3d()` (and setting `water_input` if the water level is not 0), or
 by using the function `render_water()` after the 3D map has been
 rendered. You can customize the appearance and transparancy of the water
 layer via function arguments. Here’s an example using
@@ -474,26 +530,23 @@ bathymetric/topographic data of Monterey Bay, CA (included with
 rayshader):
 
 ``` r
-montshadow = ray_shade(montereybay, zscale = 50, lambert = FALSE)
-montamb = ambient_shade(montereybay, zscale = 50)
-montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+montereybay_spatial |>
+    sphere_shade(texture = "imhof1") |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -45,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.75,
         water = TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5
+        water_input = 0,
+        water_alpha = 0.5,
+        water_color = "lightblue",
+        water_line_color = "white",
+        water_line_alpha = 0.5
     )
 Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
@@ -508,41 +561,27 @@ down slightly to center the map.
 
 ``` r
 library(rayrender)
-```
 
-    ## 
-    ## Attaching package: 'rayrender'
-
-    ## The following object is masked from 'package:rayshader':
-    ## 
-    ##     run_documentation
-
-    ## The following object is masked from 'package:rgl':
-    ## 
-    ##     text3d
-
-``` r
-montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
+montereybay_spatial |>
+    sphere_shade(texture = "imhof1") |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 70,
         theta = 270,
         phi = 30,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "#233aa1",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5
+        water_input = 0,
+        water_alpha = 0.5,
+        water_color = "#233aa1",
+        water_line_color = "white",
+        water_line_alpha = 0.5
     )
 Sys.sleep(0.2)
 render_highquality(
-    lightdirection = c(-45, 45),
-    lightaltitude = 30,
+    light_direction = c(-45, 45),
+    light_altitude = 30,
     samples = 16,
     camera_lookat = c(0, -50, 0),
     ground_material = diffuse(
@@ -556,31 +595,189 @@ render_highquality(
 
 ![](man/figures/hq-1.png)<!-- -->
 
+For a real hydrology scene, we can combine polygon water bodies, stream
+linework, and a DEM from public data sources. Here, `tigris` downloads
+TIGER/Line water features for Mono County, California, and `elevatr`
+downloads an AWS terrain raster for the Mammoth Lakes, June Lake, and
+Crowley Lake region. We transform everything to UTM zone 11N
+(`EPSG:32611`) so that areas, lengths, and stream widths are in
+meter-like projected units before cropping to the scene.
+
+The polygon water features are filtered to lakes and reservoirs, then
+each water body is assigned a representative elevation from the DEM.
+Rasterizing those elevations gives `render_water()` a spatially varying
+water surface, while `render_streams()` draws the TIGER/Line stream
+network on the terrain. For the final path trace,
+`joined_stream_mesh = TRUE` renders connected stream branches as joined
+water meshes instead of separate capped line segments.
+
+``` r
+library(sf)
+library(terra)
+library(dplyr)
+library(tigris)
+library(elevatr)
+library(rayshader)
+
+options(tigris_use_cache = TRUE)
+
+target_crs = "EPSG:32611"
+dem_z = 12
+min_water_area_m2 = 5000
+min_stream_length_m = 1
+
+scene_ll = sf::st_as_sfc(
+    sf::st_bbox(
+        c(
+            xmin = -119.12,
+            ymin = 37.52,
+            xmax = -118.68,
+            ymax = 37.86
+        ),
+        crs = sf::st_crs(4326)
+    )
+) |>
+    sf::st_as_sf()
+
+scene = sf::st_transform(scene_ll, target_crs)
+
+water_raw = tigris::area_water(
+    state = "CA",
+    county = "Mono",
+    year = 2024,
+    class = "sf"
+)
+
+water = water_raw |>
+    sf::st_make_valid() |>
+    sf::st_transform(target_crs) |>
+    sf::st_crop(scene) |>
+    dplyr::filter(MTFCC %in% c("H2030", "H2040")) |>
+    dplyr::mutate(area_m2 = as.numeric(sf::st_area(geometry))) |>
+    dplyr::filter(area_m2 >= min_water_area_m2)
+
+water = water[!sf::st_is_empty(water), ]
+
+dem_raw = elevatr::get_elev_raster(
+    locations = scene,
+    z = dem_z,
+    src = "aws",
+    clip = "bbox",
+    tmp_dir = tempdir()
+)
+
+dem = terra::rast(dem_raw) |>
+    terra::aggregate(4)
+names(dem) = "elevation_m"
+
+water = sf::st_transform(water, terra::crs(dem))
+
+water_level = terra::extract(
+    dem,
+    terra::vect(water),
+    fun = median,
+    na.rm = TRUE,
+    touches = TRUE
+)
+
+water$water_level_m = round(water_level$elevation_m, 1)
+water = water[is.finite(water$water_level_m), ]
+
+streams_raw = tigris::linear_water(
+    state = "CA",
+    county = "Mono",
+    year = 2024,
+    class = "sf"
+)
+
+streams = streams_raw |>
+    sf::st_make_valid() |>
+    sf::st_transform(target_crs) |>
+    sf::st_crop(scene) |>
+    sf::st_collection_extract("LINESTRING", warn = FALSE)
+
+streams = streams[!sf::st_is_empty(streams), ]
+
+streams = streams |>
+    dplyr::mutate(length_m = as.numeric(sf::st_length(geometry))) |>
+    dplyr::filter(length_m >= min_stream_length_m)
+
+streams = sf::st_transform(streams, terra::crs(dem))
+
+water_level_rast = terra::rasterize(
+    terra::vect(water),
+    dem,
+    field = "water_level_m",
+    touches = TRUE
+)
+
+new_dem = dem |>
+    shift_terrain(water, amount = -10)
+
+new_dem |>
+    height_shade() |>
+    plot_3d(
+        phi = 10,
+        zoom = 0.15,
+        fov = 120
+    )
+
+render_water(
+    water_input = water_level_rast,
+    water_edge_extension = 0.25,
+    water_color = "dodgerblue"
+)
+
+render_streams(
+    streams = streams,
+    water_polygons = water,
+    water_color = "dodgerblue",
+    width = 0.35,
+    clear_previous = TRUE
+)
+
+render_highquality(
+    joined_stream_mesh = TRUE,
+    use_extruded_paths = TRUE,
+    sky_sun_elevation = 30,
+    width = 800,
+    height = 800,
+    sky_sun_azimuth = -113,
+    sky_args = list(hosek = FALSE),
+    camera_lookat = c(-183.38, -1.20, -232.91),
+    camera_location = c(-279.37, 49.51, -177.42),
+    water_ior = 1.2,
+    water_material = "microfacet",
+    iso = 100 / 2^5
+)
+```
+
+<img src="man/figures/README_streams-mammoth-1.png" width="800" />
+
 Rayshader also has map shapes other than rectangular included
 `c("hex", "circle")`, and you can customize the map into any shape you
 want by setting the areas you do not want to display to `NA`.
 
 ``` r
 par(mfrow = c(1, 2))
-montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+montereybay_spatial |>
+    sphere_shade(texture = "imhof1") |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -45,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        baseshape = "circle"
+        water_input = 0,
+        water_alpha = 0.5,
+        water_color = "lightblue",
+        water_line_color = "white",
+        water_line_alpha = 0.5,
+        base_shape = "circle"
     )
 
 render_snapshot(clear = TRUE)
@@ -589,25 +786,24 @@ render_snapshot(clear = TRUE)
 ![](man/figures/README_three-d-shapes-1.png)<!-- -->
 
 ``` r
-montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+montereybay_spatial |>
+    sphere_shade(texture = "imhof1") |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -45,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        baseshape = "hex"
+        water_input = 0,
+        water_alpha = 0.5,
+        water_color = "lightblue",
+        water_line_color = "white",
+        water_line_alpha = 0.5,
+        base_shape = "hex"
     )
 
 render_snapshot(clear = TRUE)
@@ -620,69 +816,64 @@ also allows you to customize the line type, color, and size along with
 the font:
 
 ``` r
-montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+montereybay_spatial |>
+    sphere_shade(texture = "imhof1") |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -100,
         phi = 30,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        wateralpha = 0.5,
-        watercolor = "lightblue"
+        water_input = 0,
+        water_line_color = "white",
+        water_line_alpha = 0.5,
+        water_alpha = 0.5,
+        water_color = "lightblue"
     )
+moss_landing_coord = c(36.806807, -121.793332)
+santa_cruz = c(36.962957, -122.021033)
+monterey = c(36.603053, -121.892933)
+canyon = c(36.621049, -122.333912)
 render_label(
-    montereybay,
-    x = 350,
-    y = 160,
-    z = 1000,
-    zscale = 50,
+    lat = moss_landing_coord[1],
+    long = moss_landing_coord[2],
+    altitude = 1000,
     text = "Moss Landing",
-    textsize = 2,
+    text_size = 2,
     linewidth = 5
 )
 render_label(
-    montereybay,
-    x = 220,
-    y = 70,
-    z = 7000,
-    zscale = 50,
+    lat = santa_cruz[1],
+    long = santa_cruz[2],
+    altitude = 7000,
     text = "Santa Cruz",
-    textcolor = "darkred",
-    linecolor = "darkred",
-    textsize = 2,
+    text_color = "darkred",
+    line_color = "darkred",
+    text_size = 2,
     linewidth = 5
 )
 render_label(
-    montereybay,
-    x = 300,
-    y = 270,
-    z = 4000,
-    zscale = 50,
+    lat = monterey[1],
+    long = monterey[2],
+    altitude = 4000,
     text = "Monterey",
     dashed = TRUE,
-    textsize = 2,
+    text_size = 2,
     linewidth = 5
 )
 render_label(
-    montereybay,
-    x = 50,
-    y = 270,
-    z = 1000,
-    zscale = 50,
-    textcolor = "white",
-    linecolor = "white",
+    lat = canyon[1],
+    long = canyon[2],
+    altitude = 1000,
+    text_color = "white",
+    line_color = "white",
     text = "Monterey Canyon",
-    relativez = FALSE,
-    textsize = 2,
+    relative_z = FALSE,
+    text_size = 2,
     linewidth = 5
 )
 Sys.sleep(0.2)
@@ -699,7 +890,7 @@ render_highquality(
     line_radius = 1,
     text_size = 36,
     text_offset = c(0, 12, 0),
-    clear = TRUE
+    clear = TRUE 
 )
 ```
 
@@ -711,14 +902,14 @@ objects from the `sf` library:
 Polygons:
 
 ``` r
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "desert") |>
-    add_shadow(ray_shade(montereybay, zscale = 50)) |>
+    add_shadow(ray_shade(vertical_exaggeration = 4)) |>
     plot_3d(
-        montereybay,
+        vertical_exaggeration = 4,
         water = TRUE,
-        windowsize = c(1000, 800),
-        watercolor = "dodgerblue"
+        window_size = c(1000, 800),
+        water_color = "dodgerblue"
     )
 render_camera(theta = -60, phi = 60, zoom = 0.85, fov = 30)
 
@@ -731,7 +922,6 @@ mont_county_buff = sf::st_simplify(
 
 render_polygons(
     mont_county_buff,
-    extent = attr(montereybay, "extent"),
     data_column_top = "ALAND",
     scale_data = 300 / (2.6E9),
     color = "chartreuse4",
@@ -771,11 +961,9 @@ for (i in 2:300) {
 }
 
 render_points(
-    extent = attr(montereybay, "extent"),
     lat = unlist(bird_track_lat),
     long = unlist(bird_track_long),
     altitude = z_out,
-    zscale = 50,
     size = 3,
     color = "red",
     clear_previous = TRUE
@@ -793,11 +981,9 @@ Paths:
 
 ``` r
 render_path(
-    extent = attr(montereybay, "extent"),
     lat = unlist(bird_track_lat),
     long = unlist(bird_track_long),
     altitude = z_out,
-    zscale = 50,
     linewidth = 3,
     color = "white",
     antialias = TRUE
@@ -810,10 +996,6 @@ render_highquality(
 )
 ```
 
-    ## Warning in mesh3d_model(mesh, x = x, y = y, z = z, override_material = TRUE, :
-    ## material set as vertex color but no texture or bump map passed--ignoring mesh3d
-    ## material.
-
 ![](man/figures/README_paths-1.png)<!-- -->
 
 You can also apply a post-processing effect to the 3D maps to render
@@ -822,23 +1004,20 @@ maps with depth of field with the `render_depth()` function:
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat, zscale = 3), 0.5) |>
-    add_shadow(ambient_shade(elmat), 0) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(zscale = 3), 0.5) |>
+    add_shadow(ambient_shade(), 0) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 30,
         theta = -225,
         phi = 25,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.3
     )
 Sys.sleep(0.2)
-render_depth(focallength = 800, clear = TRUE) #THIS NEEDS FIXING
+render_depth(focal_length = 800, clear = TRUE)
 ```
-
-    ## Focus distance: 1733.9
 
 ![](man/figures/README_three-d-depth-1.png)<!-- -->
 
@@ -895,7 +1074,7 @@ plot_gg(
     zoom = 0.7,
     theta = 10,
     phi = 30,
-    windowsize = c(800, 800)
+    window_size = c(800, 800)
 )
 Sys.sleep(0.2)
 gg2 = render_snapshot(clear = TRUE, plot = FALSE)
@@ -934,9 +1113,6 @@ gg3 = plot_gg(
 )
 ```
 
-    ## Warning: Removed 1861 rows containing missing values or values outside the scale range
-    ## (`geom_contour()`).
-
 ``` r
 # Plot in 3D
 plot_gg(
@@ -946,17 +1122,11 @@ plot_gg(
     width = 7,
     height = 4,
     scale = 300,
-    windowsize = c(1400, 866),
+    window_size = c(1400, 866),
     zoom = 0.6,
     phi = 30,
     theta = 30
 )
-```
-
-    ## Warning: Removed 1861 rows containing missing values or values outside the scale range
-    ## (`geom_contour()`).
-
-``` r
 Sys.sleep(0.2)
 
 gg4 = render_snapshot(clear = TRUE, plot = FALSE)
@@ -987,11 +1157,11 @@ plot_gg(
     mtplot,
     width = 3.5,
     multicore = TRUE, 
-    windowsize = c(800, 800),
+    window_size = c(800, 800),
     zoom = 0.85,
     phi = 35, 
     theta = 30,
-    sunangle = 225
+    sun_angle = 225
 )
 Sys.sleep(0.2)
 gg6 = render_snapshot(clear = TRUE, plot = FALSE)
@@ -1013,7 +1183,7 @@ b = data.frame(x = rnorm(20000, 14.5, 1.9), y = rnorm(20000, 14.5, 1.9))
 c = data.frame(x = rnorm(20000, 9.5, 1.9), y = rnorm(20000, 15.5, 1.9))
 data = rbind(a, b, c)
 
-#Lines
+#Lines 
 pp = ggplot(data, aes(x = x, y = y, fill = after_stat(count))) +
     geom_hex(bins = 20, linewidth = 0.5, color = "black") +
     scale_fill_viridis_c(option = "C") +  
@@ -1031,12 +1201,12 @@ gg7 = plot_gg(
 
 ``` r
 plot_gg(
-    pp,  
+    pp,   
     width = 5, 
     height = 4, 
     scale = 300, 
     multicore = TRUE,
-    windowsize = c(1000, 800)
+    window_size = c(1000, 800)
 )
 render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
 Sys.sleep(0.2)
@@ -1055,18 +1225,18 @@ focus to a important areas in the figure.
 ``` r
 plot_gg(
     pp, 
-    width = 5,
+    width = 5, 
     height = 4,
     scale = 300,
     multicore = TRUE, offset_edges = 0,
-    windowsize = c(1200, 960), 
+    window_size = c(1200, 960),
     fov = 70, 
     zoom = 0.4, 
     theta = 330,
     phi = 40
 )
 Sys.sleep(0.2)
-render_depth(focallength = 600, focus = 1700, clear = TRUE)
+render_depth(focal_length = 600, focus = 1700, clear = TRUE)
 ```
 
 ![](man/figures/README_ggplots_5-1.png)<!-- -->
@@ -1092,7 +1262,7 @@ plot_gg(
     height = 4, 
     scale = 300,
     raytrace = FALSE,
-    windowsize = c(1200, 960),
+    window_size = c(1200, 960),
     fov = 129,
     zoom = 0.21,
     theta = -25,

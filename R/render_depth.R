@@ -2,32 +2,30 @@
 #'
 #'@description Adds depth of field to the current RGL scene by simulating a synthetic aperture.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 #'
 #'\code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
 #'
 #'@param focus Focal point. Defaults to the center of the bounding box. Depth in which to blur, in distance to the camera plane.
-#'@param focallength Default `1`. Focal length of the virtual camera.
-#'@param fstop Default `1`. F-stop of the virtual camera.
+#'@param focal_length Default `1`. Focal length of the virtual camera.
+#'@param f_stop Default `1`. F-stop of the virtual camera.
 #'@param filename The filename of the image to be saved. If this is not given, the image will be plotted instead.
 #'@param preview_focus Default `FALSE`. If `TRUE`, a red line will be drawn across the image
 #'showing where the camera will be focused.
-#'@param bokehshape Default `circle`. Also built-in: `hex`. The shape of the bokeh.
-#'@param bokehintensity Default `3`. Intensity of the bokeh when the pixel intensity is greater than `bokehlimit`.
-#'@param bokehlimit Default `0.8`. Limit after which the bokeh intensity is increased by `bokehintensity`.
+#'@param bokeh_shape Default `circle`. Also built-in: `hex`. The shape of the bokeh.
+#'@param bokeh_intensity Default `3`. Intensity of the bokeh when the pixel intensity is greater than `bokeh_limit`.
+#'@param bokeh_limit Default `0.8`. Limit after which the bokeh intensity is increased by `bokeh_intensity`.
 #'@param rotation Default `0`. Number of degrees to rotate the hexagon bokeh shape.
 #'@param aberration Default `0`. Adds chromatic aberration to the image. Maximum of `1`.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
-#'layer with [render_water()] if they want to recreate the water layer.
-#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow [render_depth()]
-#'to automatically redraw the water layer if `transparent_water = TRUE`.
-#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow [render_depth()]
-#'to automatically redraw the water layer if `transparent_water = TRUE`.
+#'layer from the active `rgl` subscene while capturing the depth map, then restores it.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
 #'image_annotate) corner to offset the title.
-#'@param title_size Default `30`. Font size in pixels.
 #'@param title_color Default `black`. Font color.
+#'@param title_size Default `30`. Font size in pixels.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
@@ -41,93 +39,82 @@
 #'control the blurriness of the vignette effect.
 #'@param vignette_color Default `"black"`. Color of the vignette.
 #'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
+#'@param progress_bar Default `TRUE` if in an interactive session. Displays a progress bar.
+#'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+#'is not constrained by the screen size or requires OpenGL.
 #'@param width Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 #'width when `software_render = TRUE`..
 #'@param height Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 #'height when `software_render = TRUE`.
-#'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar.
-#'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added
-#'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
-#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
-#'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
-#'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
-#'is not constrained by the screen size or requires OpenGL.
-#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
-#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
-#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
+#'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+#'be derived from the rgl window.
+#'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+#'be derived from the rgl window.
 #'@param background Default `"white"`. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `10`. Height of the text.
+#'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param point_radius Default `0.5`. Radius of 3D points (rendered with [render_points()].
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
-#'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
-#'be derived from the rgl window.
-#'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
-#'be derived from the rgl window.
-#'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
+#'@param verbose Default `FALSE`. If `TRUE`, prints additional render diagnostics such as the auto-derived focus distance.
+#'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added
+#'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
+#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
+#'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
+#'@param heightmap Deprecated and ignored. Retained for backward compatibility.
+#'@param zscale Deprecated and ignored. Retained for backward compatibility.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return 4-layer RGBA array.
 #'@export
-#'@examples
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade() |>
-#'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'montereybay_spatial |>
+#'  sphere_shade(vertical_exaggeration = 10) |>
+#'  plot_3d(vertical_exaggeration = 4, water=TRUE, water_line_color="white",
 #'          zoom=0.3,theta=-135,fov=70, phi=20)
 #'
 #'#Preview where the focal plane lies
 #'render_depth(preview_focus=TRUE)
-#'}
-#'if(run_documentation()) {
 #'#Render the depth of field effect
-#'render_depth(focallength = 300)
-#'}
-#'if(run_documentation()) {
+#'render_depth(focal_length = 300)
 #'#Add a chromatic aberration effect
-#'render_depth(focallength = 300, aberration = 0.3)
-#'}
-#'if(run_documentation()) {
-#'#Render the depth of field effect, ignoring water and re-drawing the waterlayer
-#'render_depth(preview_focus=TRUE,
-#'             heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
-#'render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
+#'render_depth(focal_length = 300, aberration = 0.3)
+#'#Render the depth of field effect, ignoring water in the depth pass
+#'render_depth(preview_focus=TRUE, focal_length=300, transparent_water=TRUE)
+#'render_depth(focal_length=300, transparent_water=TRUE)
 #'render_camera(theta=45,zoom=0.15,phi=20)
-#'}
 #'
-#'if(run_documentation()) {
 #'#Change the bokeh shape and intensity
-#'render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
+#'render_depth(focus=900, bokeh_shape = "circle",focal_length=500,bokeh_intensity=30,
 #'             title_text = "Circular Bokeh", title_size = 30, title_color = "white",
 #'             title_bar_color = "black")
-#'render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
+#'render_depth(focus=900, bokeh_shape = "hex",focal_length=500,bokeh_intensity=30,
 #'             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
 #'             title_bar_color = "black")
-#'}
 #'
-#'if(run_documentation()) {
 #'#Add a title and vignette effect.
 #'render_camera(theta=0,zoom=0.7,phi=30)
-#'render_depth(focallength = 250, title_text = "Monterey Bay, CA",
+#'render_depth(focal_length = 250, title_text = "Monterey Bay, CA",
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-#'}
 render_depth = function(
   focus = NULL,
-  focallength = 100,
-  fstop = 4,
+  focal_length = 100,
+  f_stop = 4,
   filename = NULL,
   preview_focus = FALSE,
-  bokehshape = "circle",
-  bokehintensity = 1,
-  bokehlimit = 0.8,
+  bokeh_shape = "circle",
+  bokeh_intensity = 1,
+  bokeh_limit = 0.8,
   rotation = 0,
   aberration = 0,
   transparent_water = FALSE,
-  heightmap = NULL,
-  zscale = NULL,
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -140,7 +127,7 @@ render_depth = function(
   vignette = FALSE,
   vignette_color = "black",
   vignette_radius = 1.3,
-  progbar = interactive(),
+  progress_bar = interactive(),
   software_render = FALSE,
   width = NULL,
   height = NULL,
@@ -151,26 +138,94 @@ render_depth = function(
   text_size = 10,
   text_offset = c(0, 0, 0),
   point_radius = 0.5,
-  line_offset = 1e-7,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
+  line_offset = 1e-07,
   print_scene_info = FALSE,
+  verbose = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
+  heightmap = NULL,
+  zscale = NULL,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      focallength = "focal_length",
+      fstop = "f_stop",
+      bokehshape = "bokeh_shape",
+      bokehintensity = "bokeh_intensity",
+      bokehlimit = "bokeh_limit",
+      progbar = "progress_bar"
+    ),
+    "render_depth"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  title_color = normalize_rgb_color(title_color)
+  title_bar_color = normalize_rgb_color(title_bar_color)
+  vignette_color = normalize_rgb_color(vignette_color)
+  background = normalize_rgb_color(background)
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
+  detached_water_ids = integer()
+  detached_water_subscene = NULL
+  restore_transparent_water = function() {
+    if (
+      !length(detached_water_ids) ||
+        is.null(detached_water_subscene) ||
+        rgl::cur3d() == 0
+    ) {
+      return(invisible(NULL))
+    }
+    current_ids = tryCatch(
+      rgl::ids3d(subscene = detached_water_subscene)$id,
+      error = function(...) integer()
+    )
+    restore_ids = setdiff(detached_water_ids, current_ids)
+    if (length(restore_ids)) {
+      rgl::addToSubscene3d(
+        ids = restore_ids,
+        subscene = detached_water_subscene
+      )
+    }
+    detached_water_ids <<- integer()
+    detached_water_subscene <<- NULL
+    invisible(NULL)
+  }
+  detach_transparent_water = function() {
+    if (!isTRUE(transparent_water)) {
+      return(invisible(NULL))
+    }
+    idlist = get_ids_with_labels(typeval = c("water", "waterlines"))
+    water_ids = unique(idlist$id[!is.na(idlist$id)])
+    if (!length(water_ids)) {
+      return(invisible(NULL))
+    }
+    detached_water_subscene <<- rgl::currentSubscene3d()
+    detached_water_ids <<- water_ids
+    rgl::delFromSubscene3d(
+      ids = detached_water_ids,
+      subscene = detached_water_subscene
+    )
+    invisible(NULL)
+  }
+  on.exit(restore_transparent_water(), add = TRUE)
   if (!instant_capture) {
     Sys.sleep(0.5)
   }
-  if (focallength < 1) {
+  if (focal_length < 1) {
     stop("focal length must be greater than 1")
   }
   if (reset_scene_cache) {
-    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
+    reset_scene_context(
+      clear_scene_metadata = FALSE,
+      clear_scene_cache = TRUE
+    )
   }
   if (is.null(focus)) {
     fov = rgl::par3d()$FOV
@@ -198,7 +253,9 @@ render_depth = function(
     observerz = cospi(phi / 180) * cospi(theta / 180) * observer_radius
 
     focus = sqrt(observerx^2 + observery^2 + observerz^2)
-    message(sprintf("Focus distance: %g", focus))
+    if (isTRUE(verbose)) {
+      message(sprintf("Focus distance: %g", focus))
+    }
   }
   if (rgl::rgl.useNULL()) {
     software_render = TRUE
@@ -227,47 +284,34 @@ render_depth = function(
     )
   }
 
-  if (transparent_water) {
-    idlist = get_ids_with_labels(typeval = c("water", "waterlines"))
-    waterid = idlist$id[idlist$tag == "water"][1]
-    waterdepthval = max(
-      rgl::rgl.attrib(waterid, "vertices")[1:3, 2],
-      na.rm = TRUE
+  if (transparent_water && software_render) {
+    detach_transparent_water()
+    new_depth = render_snapshot_software(
+      filename = temp,
+      cache_scene = cache_scene,
+      camera_location = camera_location,
+      camera_lookat = camera_lookat,
+      background = background,
+      debug = "raw_depth",
+      width = width,
+      height = height,
+      light_direction = c(0, 1, 0),
+      fake_shadow = TRUE,
+      text_angle = text_angle,
+      text_size = text_size,
+      text_offset = text_offset,
+      print_scene_info = print_scene_info,
+      point_radius = point_radius,
+      line_offset = -line_offset,
+      ...
     )
-    has_waterlines = FALSE
-    water_color = idlist$water_color[idlist$tag == "water"][1]
-    water_alpha = idlist$water_alpha[idlist$tag == "water"][1]
-    if ("waterlines" %in% idlist$tag) {
-      has_waterlines = TRUE
-      water_line_color = idlist$waterline_color[idlist$tag == "waterlines"][1]
-      water_line_alpha = idlist$waterline_alpha[idlist$tag == "waterlines"][1]
-    }
-    rgl::pop3d(id = idlist$id)
-    if (software_render) {
-      new_depth = render_snapshot_software(
-        filename = temp,
-        cache_scene = cache_scene,
-        camera_location = camera_location,
-        camera_lookat = camera_lookat,
-        background = background,
-        debug = "linear_depth",
-        width = width,
-        height = height,
-        light_direction = c(0, 1, 0),
-        fake_shadow = TRUE,
-        text_angle = text_angle,
-        text_size = text_size,
-        text_offset = text_offset,
-        print_scene_info = print_scene_info,
-        point_radius = point_radius,
-        line_offset = -line_offset,
-        ...
-      )
-      all_image$linear_depth = new_depth
-    }
+    all_image$linear_depth = new_depth
+    restore_transparent_water()
   }
   if (!software_render) {
-    image_to_convolve = png::readPNG(temp)
+    if (transparent_water) {
+      detach_transparent_water()
+    }
     depthmap = (rgl::rgl.pixels(component = "depth"))
     depthmap = 2 * depthmap - 1
     projmat = rgl::par3d()$projMatrix
@@ -279,14 +323,15 @@ render_depth = function(
       near_clip *
       far_clip /
       (far_clip + near_clip - depthmap * (far_clip - near_clip))
+    restore_transparent_water()
   } else {
-    image_to_convolve = array(0, dim = c(dim(all_image$r)[2:1], 3))
-    image_to_convolve[,, 1] = flipud(t(all_image$r))
-    image_to_convolve[,, 2] = flipud(t(all_image$g))
-    image_to_convolve[,, 3] = flipud(t(all_image$b))
     depthmap = (all_image$linear_depth)
   }
-  depthmap = rayimage::render_reorient(depthmap, flipx = TRUE, transpose = TRUE)
+  depthmap = rayimage::render_reorient(
+    depthmap,
+    flipx = TRUE,
+    transpose = TRUE
+  )
   if (preview_focus) {
     depthmap = (depthmap)
     temp_depth = paste0(tempfile(), ".png")
@@ -297,70 +342,19 @@ render_depth = function(
     maxval = max(depthmap[depthmap != 1])
     depthmap[depthmap == 1] = maxval
     rayimage::render_bokeh(
-      image_to_convolve,
+      temp,
       depthmap,
       focus = focus,
       preview_focus = TRUE,
       preview = TRUE
     )
-    if (transparent_water && !is.null(heightmap)) {
-      if (is.null(zscale)) {
-        zscale = 1
-      }
-      if (has_waterlines) {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          waterlinealpha = water_line_alpha,
-          waterlinecolor = water_line_color,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      } else {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      }
-    }
   } else {
     temp_depth = paste0(tempfile(), ".png")
     if (nrow(depthmap) < 1) {
       message("Can't fetch depth component, stopping")
       return(NULL)
     }
-    if (transparent_water) {
-      rgl::pop3d(tag = "waterlines")
-    }
     tempmap = rayimage::ray_read_image(temp)
-    if (transparent_water && !is.null(heightmap)) {
-      if (is.null(zscale)) {
-        zscale = 1
-      }
-      if (has_waterlines) {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          waterlinealpha = water_line_alpha,
-          waterlinecolor = water_line_color,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      } else {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      }
-    }
     if (all(dim(tempmap)[1:2] != dim(depthmap)[1:2])) {
       depthmap = rayimage::render_resized(depthmap, dims = dim(tempmap)[1:2])
     }
@@ -368,14 +362,14 @@ render_depth = function(
       tempmap,
       depthmap = depthmap,
       focus = focus,
-      focallength = focallength,
-      fstop = fstop,
-      bokehshape = bokehshape,
-      bokehintensity = bokehintensity,
-      bokehlimit = bokehlimit,
+      focallength = focal_length,
+      fstop = f_stop,
+      bokehshape = bokeh_shape,
+      bokehintensity = bokeh_intensity,
+      bokehlimit = bokeh_limit,
       rotation = rotation,
       aberration = aberration,
-      progress = progbar,
+      progress = progress_bar,
       preview = FALSE
     )
     if (!is.null(title_text)) {
@@ -432,6 +426,7 @@ render_depth = function(
       rayimage::ray_write_image(tempmap2, filename)
     }
     if (clear) {
+      clear_plot_3d_surface_textures()
       rgl::clear3d()
     }
   }

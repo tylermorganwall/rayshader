@@ -4,14 +4,33 @@
 \alias{calculate_normal}
 \title{Calculate Normal}
 \usage{
-calculate_normal(heightmap, zscale = 1, progbar = FALSE)
+calculate_normal(
+  heightmap,
+  zscale = 1,
+  progress_bar = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
+  ...
+)
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
+\item{heightmap}{A two-dimensional matrix or spatial raster containing
+elevation values.}
 
-\item{zscale}{Default 1.}
+\item{zscale}{Default \code{1}. Ratio of horizontal spacing to elevation units.}
 
-\item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+\item{progress_bar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix of light intensities at each point.
@@ -20,16 +39,14 @@ Matrix of light intensities at each point.
 Calculates the normal unit vector for every point on the grid.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Here we produce a light intensity map of the `volcano` elevation map.
 
 #Cache the normal vectors of the volcano dataset
-if(run_documentation()) {
 volcanocache = calculate_normal(volcano)
-}
 
 #Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
-if(run_documentation()) {
-sphere_shade(volcano,normalvectors = volcanocache) |>
+sphere_shade(volcano,normal_vectors = volcanocache) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

@@ -16,6 +16,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #'@param frames Default `360`. Total number of animation frames.
 #'@param reorder Default `TRUE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
 #'multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate
@@ -34,10 +35,9 @@
 #'the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`.
 #'If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`,
 #'then the value of simplify_tolerance must be specified in meters.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#' All points are assumed to be evenly spaced.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param type Default `cubic`. Type of transition between keyframes.
 #'Other options are `linear`, `quad`, `bezier`, `exp`, and `manual`. `manual` just returns the values
 #'passed in, properly formatted to be passed to `render_animation()`.
@@ -46,11 +46,11 @@
 #'to prevent fast swings. Only used for curve `type = bezier`. This does not preserve key frame positions.
 #'Note: This feature will likely result in the `lookat` and `position` diverging if they do not
 #'have similar curvatures at each point. This feature is best used when passing the same set of points to `positions` and `lookats`
-#'and providing an `offset_lookat` value, which ensures the curvature will be the same.
+#'and providing an `offset_look_at` value, which ensures the curvature will be the same.
 #'@param curvature_scale Default `30`. Constant dividing factor for curvature. Higher values will subdivide the
 #'path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve `type = bezier`.
 #'Increasing this value after a certain point will not increase the quality of the path, but it is scene-dependent.
-#'@param offset_lookat Default `0`. Amount to offset the lookat position, either along the path (if `constant_step = TRUE`)
+#'@param offset_look_at Default `0`. Amount to offset the lookat position, either along the path (if `constant_step = TRUE`)
 #'or towards the derivative of the Bezier curve.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param follow_camera Default `FALSE`. If `TRUE`, this generates a 3rd person view that follows the path specified in `lat`, `long`, and `altitude`.
@@ -65,6 +65,10 @@
 #'but rather sits at a fixed relative location to the path.
 #'@param follow_fixed_offset Default `c(10,10,10)`. If `follow_fixed = TRUE`, the offset from the path to place
 #'the camera.
+#'@param distance_units Default `"auto"`. Units for `offset_look_at`,
+#'`follow_distance`, and `follow_fixed_offset`. `"auto"` uses metres when
+#'spatial distance metadata is cached and scene units otherwise. Other options
+#'are `"scene"`, `"meters"`, and `"map"`; map units require a projected CRS.
 #'@param damp_motion Default `FALSE`. Whether the suppress quick, jerky movements of the camera by linearly interpolating
 #'between the current camera position and the goal position. Amount of linear interpolation set in `damp_magnitude`.
 #'@param damp_magnitude Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.
@@ -72,6 +76,7 @@
 #'at a constant speed along the path. This also allows paths with large numbers of points to be used with a
 #'smaller number of frames, and improves computation time of the animation path in those instances.
 #'@param ... Other arguments to pass to `rayrender::generate_camera_motion()`
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examples
 #'#Generate a circle in Monterey Bay and fly around on top of it
@@ -85,13 +90,12 @@
 #'circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 #'
 #'# Minimal 3D render -> frames
-#'extent_mb = attr(montereybay, "extent")
-#'sphere_shade(montereybay) |>
+#'montereybay_spatial |>
+#'	sphere_shade() |>
 #'	plot_3d(
-#'		montereybay,
-#'		zscale = 50,
+#'		vertical_exaggeration = 4,
 #'		water = TRUE,
-#'		shadowcolor = "#40310a",
+#'		shadow_color = "#40310a",
 #'		background = "tan",
 #'		theta = 210,
 #'		phi = 22,
@@ -100,11 +104,8 @@
 #'	)
 #'
 #'render_path(
-#'	extent = extent_mb,
-#'	heightmap = montereybay,
 #'	lat = circle_coords_lat,
 #'	long = circle_coords_long,
-#'	zscale = 50,
 #'	color = "red",
 #'	antialias = TRUE,
 #'	offset = 500,
@@ -112,14 +113,11 @@
 #')
 #'
 #'cam = convert_path_to_animation_coords(
-#'	extent = extent_mb,
-#'	heightmap = montereybay,
 #'	lat = circle_coords_lat,
 #'	long = circle_coords_long,
 #'	type = "bezier",
 #'	damp_motion = TRUE,
 #'	fovs = 80,
-#'	zscale = 50,
 #'	offset = 1000,
 #'	frames = length(t)
 #')
@@ -145,14 +143,11 @@
 #' #Now we use a "follow camera" for a third person view:
 #' \dontrun{
 #' follow_cam = convert_path_to_animation_coords(
-#'	extent = extent_mb,
-#'	heightmap = montereybay,
 #'	lat = circle_coords_lat,
 #'	long = circle_coords_long,
 #'	type = "bezier",
 #'	damp_motion = TRUE,
 #'	fovs = 80,
-#'	zscale = 50,
 #'	follow_camera = TRUE,
 #'	offset = 1000,
 #'	frames = length(t)
@@ -176,136 +171,165 @@
 #')
 #'}
 convert_path_to_animation_coords = function(
-	lat,
-	long = NULL,
-	altitude = NULL,
-	extent = NULL,
-	frames = 360,
-	reorder = FALSE,
-	reorder_first_index = 1,
-	reorder_duplicate_tolerance = 0.1,
-	reorder_merge_tolerance = 1,
-	simplify_tolerance = 0,
-	zscale = 1,
-	heightmap = NULL,
-	offset = 5,
-	type = "bezier",
-	offset_lookat = 1,
-	constant_step = TRUE,
-	curvature_adjust = "none",
-	curvature_scale = 30,
-	follow_camera = FALSE,
-	follow_distance = 100,
-	follow_angle = 45,
-	follow_rotations = 0,
-	follow_fixed = FALSE,
-	follow_fixed_offset = c(10, 10, 10),
-	damp_motion = FALSE,
-	damp_magnitude = 0.1,
-	resample_path_evenly = TRUE,
-	...
+  lat,
+  long = NULL,
+  altitude = NULL,
+  extent = NULL,
+  frames = 360,
+  reorder = FALSE,
+  reorder_first_index = 1,
+  reorder_duplicate_tolerance = 0.1,
+  reorder_merge_tolerance = 1,
+  simplify_tolerance = 0,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  offset = 5,
+  type = "bezier",
+  offset_look_at = 1,
+  constant_step = TRUE,
+  curvature_adjust = "none",
+  curvature_scale = 30,
+  follow_camera = FALSE,
+  follow_distance = 100,
+  follow_angle = 45,
+  follow_rotations = 0,
+  follow_fixed = FALSE,
+  follow_fixed_offset = c(10, 10, 10),
+  distance_units = c("auto", "scene", "meters", "map"),
+  damp_motion = FALSE,
+  damp_magnitude = 0.1,
+  resample_path_evenly = TRUE,
+  ...
 ) {
-	xyz = render_path(
-		extent = extent,
-		lat = lat,
-		long = long,
-		altitude = altitude,
-		zscale = zscale,
-		heightmap = heightmap,
-		offset = offset,
-		reorder = reorder,
-		reorder_first_index = reorder_first_index,
-		reorder_duplicate_tolerance = reorder_duplicate_tolerance,
-		reorder_merge_tolerance = reorder_merge_tolerance,
-		simplify_tolerance = simplify_tolerance,
-		clear_previous = FALSE,
-		return_coords = TRUE
-	)
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(offset_lookat = "offset_look_at"),
+    "convert_path_to_animation_coords"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
+  render_path_args = list(
+    extent = extent,
+    lat = lat,
+    long = long,
+    altitude = altitude,
+    heightmap = heightmap,
+    offset = offset,
+    reorder = reorder,
+    reorder_first_index = reorder_first_index,
+    reorder_duplicate_tolerance = reorder_duplicate_tolerance,
+    reorder_merge_tolerance = reorder_merge_tolerance,
+    simplify_tolerance = simplify_tolerance,
+    clear_previous = FALSE,
+    return_coords = TRUE
+  )
+  if (!missing(zscale)) {
+    render_path_args$zscale = zscale
+  }
+  if (!missing(vertical_exaggeration)) {
+    render_path_args$vertical_exaggeration = vertical_exaggeration
+  }
+  xyz = do.call(render_path, render_path_args)
 
-	xyz = do.call(rbind, xyz)
-	if (rgl::cur3d() != 0) {
-		scene_offset = get_scene_depth()
-	} else {
-		warning(
-			"No rgl window open--animation coordinates will be vertically offset from specified values"
-		)
-		scene_offset = 0
-	}
-	xyz[, 2] = xyz[, 2] - scene_offset
-	if (resample_path_evenly) {
-		xyz = get_interpolated_points_path(xyz, n = frames)
-	}
-	animation_coords = rayrender::generate_camera_motion(
-		xyz,
-		lookats = xyz,
-		frames = frames,
-		type = type,
-		offset_lookat = offset_lookat,
-		constant_step = constant_step,
-		curvature_adjust = curvature_adjust,
-		damp_motion = damp_motion,
-		damp_magnitude = damp_magnitude,
-		...
-	)
+  distance_multiplier = resolve_scene_distance_multiplier(
+    units = distance_units,
+    caller = "convert_path_to_animation_coords"
+  )
+  offset_look_at = offset_look_at * distance_multiplier
+  follow_distance = follow_distance * distance_multiplier
+  follow_fixed_offset = follow_fixed_offset * distance_multiplier
 
-	if (follow_camera) {
-		xyz_follow = animation_coords
-		if (!follow_fixed) {
-			forward_vec = animation_coords[, 4:6] - animation_coords[, 1:3]
-			forward_vec[, 2] = 0
-			normalized_forward_vec = t(apply(forward_vec, 1, unit_vector))
-			if (follow_rotations != 0) {
-				angle_vals = seq(
-					0,
-					2 * pi * follow_rotations,
-					length.out = nrow(normalized_forward_vec) + 1
-				)[-(nrow(normalized_forward_vec) + 1)]
-				for (i in seq_len(nrow(normalized_forward_vec))) {
-					normalized_forward_vec[i, ] = normalized_forward_vec[i, ] %*%
-						generate_rot_matrix(c(0, angle_vals[i], 0))
-				}
-			}
-			follow_dist = follow_distance * cospi(follow_angle / 180)
-			follow_height = follow_distance * sinpi(follow_angle / 180)
+  xyz = do.call(rbind, xyz)
+  if (rgl::cur3d() != 0) {
+    scene_offset = get_scene_depth()
+  } else {
+    warning(
+      "No rgl window open--animation coordinates will be vertically offset from specified values"
+    )
+    scene_offset = 0
+  }
+  xyz[, 2] = xyz[, 2] - scene_offset
+  if (resample_path_evenly) {
+    xyz = get_interpolated_points_path(xyz, n = frames)
+  }
+  animation_coords = rayrender::generate_camera_motion(
+    xyz,
+    lookats = xyz,
+    frames = frames,
+    type = type,
+    offset_lookat = offset_look_at,
+    constant_step = constant_step,
+    curvature_adjust = curvature_adjust,
+    damp_motion = damp_motion,
+    damp_magnitude = damp_magnitude,
+    ...
+  )
 
-			xyz_follow[, 2] = xyz_follow[, 2] + follow_height
-			xyz_follow[, c(1:3)] = xyz_follow[, c(1:3)] +
-				follow_dist * (-normalized_forward_vec)
-			xyz_follow$focal = sqrt(apply(
-				(xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
-				1,
-				sum
-			))
-			return(xyz_follow)
-		} else {
-			stopifnot(length(follow_fixed_offset) == 3)
-			if (follow_rotations != 0) {
-				angle_vals = seq(
-					0,
-					2 * pi * follow_rotations,
-					length.out = nrow(xyz_follow) + 1
-				)[-(nrow(xyz_follow) + 1)]
-				for (i in seq_len(nrow(xyz_follow))) {
-					follow_fixed_offset_rot = follow_fixed_offset %*%
-						generate_rot_matrix(c(0, angle_vals[i], 0))
-					xyz_follow[i, 1:3] = xyz_follow[i, 1:3] + follow_fixed_offset_rot
-				}
-			} else {
-				xyz_follow[, 1:3] = xyz_follow[, 1:3] +
-					matrix(
-						follow_fixed_offset,
-						nrow = nrow(xyz_follow),
-						ncol = 3L,
-						byrow = TRUE
-					)
-			}
-			xyz_follow$focal = sqrt(apply(
-				(xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
-				1,
-				sum
-			))
-			return(xyz_follow)
-		}
-	}
-	return(animation_coords)
+  if (follow_camera) {
+    xyz_follow = animation_coords
+    if (!follow_fixed) {
+      forward_vec = animation_coords[, 4:6] - animation_coords[, 1:3]
+      forward_vec[, 2] = 0
+      normalized_forward_vec = t(apply(forward_vec, 1, unit_vector))
+      if (follow_rotations != 0) {
+        angle_vals = seq(
+          0,
+          2 * pi * follow_rotations,
+          length.out = nrow(normalized_forward_vec) + 1
+        )[-(nrow(normalized_forward_vec) + 1)]
+        for (i in seq_len(nrow(normalized_forward_vec))) {
+          normalized_forward_vec[i, ] = normalized_forward_vec[i, ] %*%
+            generate_rot_matrix(c(0, angle_vals[i], 0))
+        }
+      }
+      follow_dist = follow_distance * cospi(follow_angle / 180)
+      follow_height = follow_distance * sinpi(follow_angle / 180)
+
+      xyz_follow[, 2] = xyz_follow[, 2] + follow_height
+      xyz_follow[, c(1:3)] = xyz_follow[, c(1:3)] +
+        follow_dist * (-normalized_forward_vec)
+      xyz_follow$focal = sqrt(apply(
+        (xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
+        1,
+        sum
+      ))
+      return(xyz_follow)
+    } else {
+      if (length(follow_fixed_offset) != 3) {
+        stop(
+          "`follow_fixed_offset` must contain exactly three values.",
+          call. = FALSE
+        )
+      }
+      if (follow_rotations != 0) {
+        angle_vals = seq(
+          0,
+          2 * pi * follow_rotations,
+          length.out = nrow(xyz_follow) + 1
+        )[-(nrow(xyz_follow) + 1)]
+        for (i in seq_len(nrow(xyz_follow))) {
+          follow_fixed_offset_rot = follow_fixed_offset %*%
+            generate_rot_matrix(c(0, angle_vals[i], 0))
+          xyz_follow[i, 1:3] = xyz_follow[i, 1:3] + follow_fixed_offset_rot
+        }
+      } else {
+        xyz_follow[, 1:3] = xyz_follow[, 1:3] +
+          matrix(
+            follow_fixed_offset,
+            nrow = nrow(xyz_follow),
+            ncol = 3L,
+            byrow = TRUE
+          )
+      }
+      xyz_follow$focal = sqrt(apply(
+        (xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
+        1,
+        sum
+      ))
+      return(xyz_follow)
+    }
+  }
+  return(animation_coords)
 }

@@ -15,13 +15,13 @@ raster_to_matrix(raster, verbose = interactive())
 Turns a raster into a matrix suitable for rayshader.
 }
 \examples{
-#Save montereybay as a raster and open using the filename.
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Save montereybay_spatial as a raster and open using the filename.
 temp_raster_filename = paste0(tempfile(),".tif")
-raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
+terra::writeRaster(montereybay_spatial, temp_raster_filename, overwrite = TRUE)
 elmat = raster_to_matrix(temp_raster_filename)
 elmat |>
  sphere_shade() |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

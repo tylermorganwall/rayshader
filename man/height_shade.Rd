@@ -23,34 +23,32 @@ RGB array of hillshaded texture mappings.
 }
 \description{
 Calculates a color for each point on the surface using a direct elevation-to-color mapping.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a direct mapping of elevation to color:
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
  plot_map()
 
-#Add a shadow:
-if(run_documentation()) {
-montereybay |>
+# Add lambertian shadows:
+montereybay_spatial |>
  height_shade() |>
- add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
  plot_map()
-}
 
-#Change the palette:
-if(run_documentation()) {
-montereybay |>
+# Change the palette:
+montereybay_spatial |>
  height_shade(texture = topo.colors(256)) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
  plot_map()
-}
 
-#Really change the palette (warning: gratuitous use of rainbow palette):
-if(run_documentation()) {
-montereybay |>
- height_shade(texture = rainbow(256)) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+#Really change the palette (shield your eyes: gratuitous use of `rainbow()`):
+montereybay_spatial |>
+ height_shade(texture = rev(rainbow(256))) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }
