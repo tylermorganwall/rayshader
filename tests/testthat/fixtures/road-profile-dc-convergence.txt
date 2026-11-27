@@ -1,0 +1,16 @@
+road-profile-dc-convergence.rds
+
+Retained profile specification and context from the first 1,000 complete
+DC road features in the local DC GeoJSON example, after the 5 km centroid
+filter around the Washington Monument. Contains 16 small solve components.
+No native external pointers are serialized; the test recompiles the problem.
+
+Component 9 contains Washington Boulevard fragments 158 and 970, with
+8 variables and 14 constraints. On the original OSQP configuration it reaches
+100,000 iterations with a constraint violation of about 0.002418 m. A constant
+absolute-height, zero-grade witness satisfies every bound (residual < 1e-14),
+so this is a convergence regression rather than an infeasible physical model.
+Updating rho every 25 iterations solves this component in 150 iterations with
+unchanged 1e-7 solver tolerances, objective, and engineering bounds.
+
+Captured 2026-10-31. See test-road-profile-parts.R for full solver validation.

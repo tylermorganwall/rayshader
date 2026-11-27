@@ -1,0 +1,4 @@
+case_id,state,xmin,ymin,xmax,ymax,note
+massachusetts-coastal-network,Massachusetts,-70.0501825062114,41.6919521324710,-70.0308579909870,41.7093700714668,Passing layered-road smoke case discovered by seed 20260809
+south-carolina-large-network,South Carolina,-82.0203222884209,33.9930582580686,-81.7145676795812,34.2272264870115,Regression for batched terrain-profile refinement discovered by seed 20260809
+oklahoma-large-network,Oklahoma,-97.4039263659878,35.5749113625406,-97.0707197524288,35.8047436315224,Regression for batched terrain-profile refinement discovered by seed 20260809
